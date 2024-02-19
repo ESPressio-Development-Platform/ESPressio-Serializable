@@ -20,6 +20,12 @@
             "version": "6.21.0",
             "url": "https://github.com/bblanchon/ArduinoJson.git",
             "platforms": "*"
+        },
+        {
+            "name": "Flowduino ESPressio-Tree",
+            "version": "0.0.1",
+            "url": "https://github.com/Flowduino/ESPressio-Tree.git",
+            "platforms": "*"
         }
     ]
 }
