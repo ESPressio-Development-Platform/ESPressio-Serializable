@@ -1,0 +1,25 @@
+{
+    "name": "Flowduino ESPressio-Serializable",
+    "description": "Serializable Library intended for use with all microcontrollers",
+    "keywords": "serializable,serialize,deserialize,json,property,properties,command,commands,espressio",
+    "authors": {
+        "name": "Flowduino",
+        "maintainer": true
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Flowduino/ESPressio-Serializable.git"
+    },
+    "version": "0.0.1",
+    "license": "Apache-2.0",
+    "frameworks": "arduino,espressif32",
+    "platforms": "*",
+    "dependencies": [
+        {
+            "name": "ArduinoJson",
+            "version": "6.21.0",
+            "url": "https://github.com/bblanchon/ArduinoJson.git",
+            "platforms": "*"
+        }
+    ]
+}
