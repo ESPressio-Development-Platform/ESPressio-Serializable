@@ -17,7 +17,7 @@
     "dependencies": [
         {
             "name": "ArduinoJson",
-            "version": "6.21.0",
+            "version": "7.0.3",
             "url": "https://github.com/bblanchon/ArduinoJson.git",
             "platforms": "*"
         },
