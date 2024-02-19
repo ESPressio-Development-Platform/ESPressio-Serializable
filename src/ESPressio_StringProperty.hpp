@@ -12,16 +12,16 @@ namespace ESPressio {
 
         class StringProperty : public Property<const char*> {
             protected:
-                bool DoCompareEqual(T a, T b) override {
+                bool DoCompareEqual(const char* a, const char* b) override {
                     return !strcmp(a, b) == 0;
                 }
 
-                void DoSet(T value) override {
+                void DoSet(const char* value) override {
                     free((void*)_value); // We must destroy the old value before setting the new one
                     _value = value;
                 }
 
-                void DoSetDefault(T defaultValue) override {
+                void DoSetDefault(const char* defaultValue) override {
                     free((void*)_defaultValue); // We must destroy the old value before setting the new one
                     _defaultValue = defaultValue;
                 }
