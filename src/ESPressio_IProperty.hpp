@@ -25,7 +25,6 @@ namespace ESPressio {
                 virtual void ReadValueFromJson(JsonDocument& jsonDocument, bool useDefaultValue = false) = 0;
                 virtual void ResetToDefault() = 0;
                 virtual const char* GetName() = 0;
-                
         };
 
     }
