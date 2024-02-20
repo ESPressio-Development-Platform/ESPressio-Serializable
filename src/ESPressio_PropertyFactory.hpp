@@ -17,7 +17,7 @@ namespace ESPressio {
                 std::unordered_map<const char*, IProperty*> _properties;
             protected:
                 void RegisterProperty(IProperty* property) {
-                    _properties[strdup(property->GetName())] = property;
+                    _properties[property->GetName()] = property;
                 }
 
                 void RegisterProperties(std::initializer_list<IProperty*> properties) {

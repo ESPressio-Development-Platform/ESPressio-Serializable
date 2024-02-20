@@ -56,7 +56,7 @@ namespace ESPressio {
 
                 // Default operators for get and set
                 operator T() const {
-                    return _value;
+                    return DoGet();
                 }
 
                 T operator=(T value) {
@@ -137,6 +137,7 @@ namespace ESPressio {
                 // Setters
 
                 virtual void SetValue(T value) {
+                    // Print the value to the Serial port
                     T oldValue = GetValue();
                     if (DoCompareEqual(oldValue, _value)) { return; } // If the value hasn't changed, don't notify the Parent
                     DoSet(value);

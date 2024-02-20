@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ArduinoJson.h>
+#include <cstring>
 
 namespace ESPressio {
 
@@ -10,7 +11,7 @@ namespace ESPressio {
             protected:
                 const char* _name;
             public:
-                IProperty(const char* name) : _name(name) {
+                IProperty(const char* name) : _name(strdup(name)) {
 
                 }
 

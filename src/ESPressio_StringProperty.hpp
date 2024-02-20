@@ -12,18 +12,18 @@ namespace ESPressio {
 
         class StringProperty : public Property<const char*> {
             protected:
-                bool DoCompareEqual(const char* a, const char* b) override {
-                    return !strcmp(a, b) == 0;
+                inline bool DoCompareEqual(const char* a, const char* b) override {
+                    return strcmp(a, b) == 0;
                 }
 
                 void DoSet(const char* value) override {
                     free((void*)_value); // We must destroy the old value before setting the new one
-                    _value = value;
+                    _value = strdup(value);
                 }
 
                 void DoSetDefault(const char* defaultValue) override {
                     free((void*)_defaultValue); // We must destroy the old value before setting the new one
-                    _defaultValue = defaultValue;
+                    _defaultValue = strdup(defaultValue);
                 }
             public:
                 StringProperty(const char* name, const char* value, const char* defaultValue, TOnValueChanged onValueChanged = nullptr) : Property<const char*>(name, strdup(value), strdup(defaultValue), onValueChanged) { }
@@ -33,6 +33,17 @@ namespace ESPressio {
                 ~StringProperty() {
                     free((void*)_value);
                     free((void*)_defaultValue);
+                }
+
+                void SetValue(const char* value)  override {
+                    const char* newVal = strdup(value);
+                    const char* oldValue = _value;
+                    if (DoCompareEqual(oldValue, newVal)) {
+                        free((void*)newVal);
+                        return;
+                    }
+                    DoSet(newVal);
+                    if (_onValueChanged != nullptr) { _onValueChanged(oldValue, _value); }
                 }
         };
 
