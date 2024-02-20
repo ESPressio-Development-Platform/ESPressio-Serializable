@@ -12,10 +12,10 @@ namespace ESPressio {
 
         class Command : public ICommand {
             private:
-                char* _name;
+                const char* _name;
                 std::function<void(JsonObject&)> _callback;
             public:
-                Command(char* name, std::function<void(JsonObject&)> callback) : _name(strdup(name)), _callback(callback) { }
+                Command(const char* name, std::function<void(JsonObject&)> callback) : _name(strdup(name)), _callback(callback) { }
 
                 ~Command() {
                     free((void*)_name);
@@ -30,7 +30,7 @@ namespace ESPressio {
             
             // Getters
 
-                char* GetName() override {
+                const char* GetName() override {
                     return _name;
                 }
 
@@ -40,7 +40,8 @@ namespace ESPressio {
 
             // Setters
 
-                void SetName(char* name) override {
+                void SetName(const char* name) override {
+                    if (strcmp(_name, name) == 0) { return; }
                     free((void*)_name);
                     _name = strdup(name);
                 }

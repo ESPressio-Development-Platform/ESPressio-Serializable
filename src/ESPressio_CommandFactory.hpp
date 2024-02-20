@@ -12,15 +12,15 @@ namespace ESPressio {
 
         class CommandFactory : public ICommandFactory {
             private:
-                std::unordered_map<const char*, ICommand*> _commands;
+                std::unordered_map<std::string, ICommand*> _commands;
             protected:
                 void RegisterCommand(ICommand* command) {
-                    _commands[command->GetName()] = command;
+                    _commands[std::string(command->GetName())] = command;
                 }
 
                 void RegisterCommands(std::initializer_list<ICommand*> commands) {
                     for (auto command : commands) {
-                        _commands[command->GetName()] = command;
+                        _commands[std::string(command->GetName())] = command;
                     }
                 }
 
@@ -29,7 +29,7 @@ namespace ESPressio {
                 }
 
                 void UnregisterCommand(const char* commandName) {
-                    _commands.erase(commandName);
+                    _commands.erase(std::string(commandName));
                 }
 
                 void ClearCommands() {
@@ -40,8 +40,12 @@ namespace ESPressio {
 
                 }
 
+                ~CommandFactory() {
+                    ClearCommands();
+                }
+
                 ICommand* GetCommand(const char* commandName) override {
-                    return _commands[commandName];
+                    return _commands[std::string(commandName)];
                 }
 
 
