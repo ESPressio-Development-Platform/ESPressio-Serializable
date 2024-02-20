@@ -15,12 +15,12 @@ namespace ESPressio {
                 std::unordered_map<const char*, ICommand*> _commands;
             protected:
                 void RegisterCommand(ICommand* command) {
-                    _commands[strdup(command->GetName())] = command;
+                    _commands[command->GetName()] = command;
                 }
 
                 void RegisterCommands(std::initializer_list<ICommand*> commands) {
                     for (auto command : commands) {
-                        _commands[strdup(command->GetName())] = command;
+                        _commands[command->GetName()] = command;
                     }
                 }
 
