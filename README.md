@@ -32,7 +32,7 @@ ESPressio (and its component libraries, including this one) are subject to the *
 Please see the [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE) accompanying this library for full details.
 
 ## Namespace
-Every type/variable/constant/etc. related to *ESPressio* Serializable are located within the `Serializable` submaspace of the `ESPressio` parent namespace.
+Every type/variable/constant/etc. related to *ESPressio* Serializable are located within the `Serializable` sub-namespace of the `ESPressio` parent namespace.
 
 ## Platformio.ini
 You can quickly and easily add this library to your project in PlatformIO by simply including the following in your `platformio.ini` file:
