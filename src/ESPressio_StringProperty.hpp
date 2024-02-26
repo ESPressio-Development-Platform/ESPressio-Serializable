@@ -2,8 +2,6 @@
 
 #include <functional>
 
-#include <ArduinoJson.h>
-
 #include "ESPressio_Property.hpp"
 
 namespace ESPressio {
@@ -12,18 +10,20 @@ namespace ESPressio {
 
         class StringProperty : public Property<const char*> {
             protected:
+                using TOnValueChanged = std::function<void(const char* oldValue, const char* newValue)>;
+
                 inline bool DoCompareEqual(const char* a, const char* b) override {
                     return strcmp(a, b) == 0;
                 }
 
                 void DoSet(const char* value) override {
                     free((void*)_value); // We must destroy the old value before setting the new one
-                    _value = strdup(value);
+                    Property<const char*>::DoSet(strdup(value));
                 }
 
                 void DoSetDefault(const char* defaultValue) override {
                     free((void*)_defaultValue); // We must destroy the old value before setting the new one
-                    _defaultValue = strdup(defaultValue);
+                    Property<const char*>::DoSetDefault(strdup(defaultValue));
                 }
             public:
                 StringProperty(const char* name, const char* value, const char* defaultValue, TOnValueChanged onValueChanged = nullptr) : Property<const char*>(name, strdup(value), strdup(defaultValue), onValueChanged) { }
@@ -35,15 +35,8 @@ namespace ESPressio {
                     free((void*)_defaultValue);
                 }
 
-                void SetValue(const char* value)  override {
-                    const char* newVal = strdup(value);
-                    const char* oldValue = _value;
-                    if (DoCompareEqual(oldValue, newVal)) {
-                        free((void*)newVal);
-                        return;
-                    }
-                    DoSet(newVal);
-                    if (_onValueChanged != nullptr) { _onValueChanged(oldValue, _value); }
+                void SetValue(const char* value) override {
+                    Property<const char*>::SetValue(strdup(value));
                 }
         };
 

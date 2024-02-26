@@ -41,6 +41,14 @@ namespace ESPressio {
                     return _defaultValue;
                 }
 
+                virtual TOnValueChanged DoGetOnValueChanged() {
+                    return _onValueChanged;
+                }
+
+                virtual TOnValueChanged DoGetOnDefaultValueChanged() {
+                    return _onDefaultValueChanged;
+                }
+
                 virtual void DoSet(T value) {
                     _value = value;
                 }
@@ -61,33 +69,33 @@ namespace ESPressio {
 
                 T operator=(T value) {
                     SetValue(value);
-                    return _value;
+                    return value;
                 }
 
                 // Methods
 
                 void WriteToJson(JsonArray& array) {
-                    this->AddPropertyValue(_name, array, _value);
+                    this->AddPropertyValue(_name, array, DoGet());
                 }
 
                 void WriteToJson(JsonObject& object) {
-                    object[_name] = _value;
+                    object[_name] = DoGet();
                 }
 
                 void WriteToJson(JsonDocument& document) {
-                    document[_name] = _value;
+                    document[_name] = DoGet();
                 }
 
                 void WriteDefaultToJson(JsonArray& array) {
-                    AddPropertyValue(_name, array, _defaultValue);
+                    AddPropertyValue(_name, array, DoGetDefault());
                 }
 
                 void WriteDefaultToJson(JsonObject& object) {
-                    object[_name] = _defaultValue;
+                    object[_name] = DoGetDefault();
                 }
 
                 void WriteDefaultToJson(JsonDocument& document) {
-                    document[_name] = _defaultValue;
+                    document[_name] = DoGetDefault();
                 }
 
                 void ReadValueFromJson(JsonObject& jsonObject, bool useDefaultValue = false) {
@@ -95,7 +103,7 @@ namespace ESPressio {
                         SetValue(jsonObject[_name]);
                     }
                     else if (useDefaultValue) {
-                        SetValue(_defaultValue);
+                        SetValue(DoGetDefault());
                     }
                 }
             
@@ -104,12 +112,12 @@ namespace ESPressio {
                         SetValue(jsonDocument[_name]);
                     }
                     else if (useDefaultValue) {
-                        SetValue(_defaultValue);
+                        SetValue(DoGetDefault();
                     }
                 }
 
                 void ResetToDefault() {
-                    SetValue(_defaultValue);
+                    SetValue(DoGetDefault());
                 }
 
                 // Getters
@@ -127,11 +135,11 @@ namespace ESPressio {
                 }
 
                 TOnValueChanged GetOnValueChanged() {
-                    return _onValueChanged;
+                    return DoGetOnValueChanged();
                 }
 
                 TOnValueChanged GetOnDefaultValueChanged() {
-                    return _onDefaultValueChanged;
+                    return DoGetOnDefaultValueChanged();
                 }
 
                 // Setters
@@ -139,24 +147,26 @@ namespace ESPressio {
                 virtual void SetValue(T value) {
                     // Print the value to the Serial port
                     T oldValue = GetValue();
-                    if (DoCompareEqual(oldValue, _value)) { return; } // If the value hasn't changed, don't notify the Parent
+                    if (DoCompareEqual(oldValue, value)) { return; } // If the value hasn't changed, don't notify the Parent
                     DoSet(value);
-                    if (_onValueChanged != nullptr) { _onValueChanged(oldValue, _value); } // Notify the Parent that this Property's value has changed (if a callback was provided)
+                    TOnValueChanged onValueChanged = GetOnValueChanged();
+                    if (onValueChanged != nullptr) { onValueChanged(oldValue, value); } // Notify the Parent that this Property's value has changed (if a callback was provided)
                 }
 
                 void SetDefaultValue(T defaultValue) {
                     T oldValue = GetDefaultValue();
-                    if (DoCompareEqual(oldValue, _defaultValue)) { return; } // If the value hasn't changed, don't notify the Parent
+                    if (DoCompareEqual(oldValue, defaultValue)) { return; } // If the value hasn't changed, don't notify the Parent
                     DoSetDefault(defaultValue);
-                    if (_onDefaultValueChanged != nullptr) { _onDefaultValueChanged(oldValue, _defaultValue); } // Notify the Parent that this Property's default value has changed (if a callback was provided)
+                    TOnValueChanged onDefaultValueChanged = GetOnDefaultValueChanged();
+                    if (onDefaultValueChanged != nullptr) { onDefaultValueChanged(oldValue, defaultValue); } // Notify the Parent that this Property's default value has changed (if a callback was provided)
                 }
 
                 void SetOnValueChanged(TOnValueChanged onValueChanged) {
-                    _onValueChanged = onValueChanged;
+                    DoSetOnValueChanged(onValueChanged);
                 }
 
                 void SetOnDefaultValueChanged(TOnValueChanged onDefaultValueChanged) {
-                    _onDefaultValueChanged = onDefaultValueChanged;
+                    DoSetOnDefaultValueChanged(onDefaultValueChanged);
                 }
         };
 
