@@ -16,26 +16,125 @@ namespace ESPressio {
             private:
                 std::unordered_map<std::string, IProperty*> _properties;
             protected:
-                void RegisterProperty(IProperty* property) {
+                virtual void DoRegisterProperty(IProperty* property) {
                     _properties[std::string(property->GetName())] = property;
                 }
 
-                void RegisterProperties(std::initializer_list<IProperty*> properties) {
+                virtual void DoRegisterProperties(std::initializer_list<IProperty*> properties) {
                     for (auto property : properties) {
                         _properties[std::string(property->GetName())] = property;
                     }
                 }
 
-                void UnregisterProperty(IProperty* property) {
+                virtual void DoUnregisterProperty(IProperty* property) {
                     _properties.erase(std::string(property->GetName()));
                 }
 
-                void UnregisterProperty(const char* propertyName) {
+                virtual void DoUnregisterProperty(const char* propertyName) {
                     _properties.erase(std::string(propertyName));
                 }
 
-                void ClearProperties() {
+                virtual void DoClearProperties() {
                     _properties.clear();
+                }
+
+                virtual uint16_t DoWithProperties(std::function<void(IProperty*)> propertyFunction) {
+                    uint32_t count = 0;
+
+                    for (auto property : _properties) {
+                        count++;
+                        propertyFunction(property.second);
+                    }
+
+                    return count;
+                }
+
+                virtual uint16_t DoWritePropertiesToJson(JsonArray& array) {
+                    uint32_t count = 0;
+
+                    for (auto property : _properties) {
+                        count++;
+                        property.second->WriteToJson(array);
+                    }
+
+                    return count;
+                }
+
+                virtual uint16_t DoWritePropertiesToJson(JsonObject& object) {
+                    uint32_t count = 0;
+
+                    for (auto property : _properties) {
+                        count++;
+                        property.second->WriteToJson(object);
+                    }
+
+                    return count;
+                }
+
+                virtual uint16_t DoWritePropertiesToJson(JsonDocument& document) {
+                    uint32_t count = 0;
+
+                    for (auto property : _properties) {
+                        count++;
+                        property.second->WriteToJson(document);
+                    }
+
+                    return count;
+                }
+
+                virtual uint16_t DoWriteDefaultPropertiesToJson(JsonArray& array) {
+                    uint32_t count = 0;
+
+                    for (auto property : _properties) {
+                        count++;
+                        property.second->WriteDefaultToJson(array);
+                    }
+
+                    return count;
+                }
+
+                virtual uint16_t DoWriteDefaultPropertiesToJson(JsonObject& object) {
+                    uint32_t count = 0;
+
+                    for (auto property : _properties) {
+                        count++;
+                        property.second->WriteDefaultToJson(object);
+                    }
+
+                    return count;
+                }
+
+                virtual uint16_t DoWriteDefaultPropertiesToJson(JsonDocument& document) {
+                    uint32_t count = 0;
+
+                    for (auto property : _properties) {
+                        count++;
+                        property.second->WriteDefaultToJson(document);
+                    }
+
+                    return count;
+                }
+
+                virtual uint16_t DoReadPropertiesFromJson(JsonObject& jsonObject, bool useDefaultValue = false) {
+                    uint32_t count = 0;
+
+                    for (auto property : _properties) {
+                        count++;
+                        property.second->ReadValueFromJson(jsonObject, useDefaultValue);
+                    }
+
+                    return count;
+                }
+
+                virtual uint16_t DoReadPropertiesFromJson(JsonDocument& jsonDocument, bool useDefaultValue = false) {
+                    uint32_t count = 0;
+
+                    for (auto property : _properties) {
+                        count++;
+                        property.second->ReadValueFromJson(jsonDocument, useDefaultValue);
+                    }
+
+                    return count;
                 }
             public:
                 PropertyFactory() {
@@ -51,103 +150,60 @@ namespace ESPressio {
                     return GetProperty(propertyName) != nullptr;
                 }
 
-                uint16_t WithProperties(std::function<void(IProperty*)> propertyFunction) override {
-                    uint32_t count = 0;
-
-                    for (auto property : _properties) {
-                        count++;
-                        propertyFunction(property.second);
-                    }
-
-                    return count;
+                inline void RegisterProperty(IProperty* property) {
+                    DoRegisterProperty(property);
                 }
 
-                uint16_t WritePropertiesToJson(JsonArray& array) override {
-                    uint32_t count = 0;
-
-                    for (auto property : _properties) {
-                        count++;
-                        property.second->WriteToJson(array);
-                    }
-
-                    return count;
+                inline void RegisterProperties(std::initializer_list<IProperty*> properties) {
+                    DoRegisterProperties(properties);
                 }
 
-                uint16_t WritePropertiesToJson(JsonObject& object) override {
-                    uint32_t count = 0;
-
-                    for (auto property : _properties) {
-                        count++;
-                        property.second->WriteToJson(object);
-                    }
-
-                    return count;
+                inline void UnregisterProperty(IProperty* property) {
+                    DoUnregisterProperty(property);
                 }
 
-                uint16_t WritePropertiesToJson(JsonDocument& document) override {
-                    uint32_t count = 0;
-
-                    for (auto property : _properties) {
-                        count++;
-                        property.second->WriteToJson(document);
-                    }
-
-                    return count;
+                inline void UnregisterProperty(const char* propertyName) {
+                    DoUnregisterProperty(propertyName);
                 }
 
-                uint16_t WriteDefaultPropertiesToJson(JsonArray& array) override {
-                    uint32_t count = 0;
-
-                    for (auto property : _properties) {
-                        count++;
-                        property.second->WriteDefaultToJson(array);
-                    }
-
-                    return count;
+                inline void ClearProperties() {
+                    DoClearProperties();
                 }
 
-                uint16_t WriteDefaultPropertiesToJson(JsonObject& object) override {
-                    uint32_t count = 0;
-
-                    for (auto property : _properties) {
-                        property.second->WriteDefaultToJson(object);
-                        count++;
-                    }
-
-                    return count;
+                inline uint16_t WithProperties(std::function<void(IProperty*)> propertyFunction) override {
+                    return DoWithProperties(propertyFunction);
                 }
 
-                uint16_t WriteDefaultPropertiesToJson(JsonDocument& document) override {
-                    uint32_t count = 0;
-
-                    for (auto property : _properties) {
-                        count++;
-                        property.second->WriteDefaultToJson(document);
-                    }
-
-                    return count;
+                inline uint16_t WritePropertiesToJson(JsonArray& array) override {
+                    return DoWritePropertiesToJson(array);
                 }
 
-                uint16_t ReadPropertiesFromJson(JsonObject& jsonObject, bool useDefaultValue = false) override {
-                    uint32_t count = 0;
-
-                    for (auto property : _properties) {
-                        count++;
-                        property.second->ReadValueFromJson(jsonObject, useDefaultValue);
-                    }
-
-                    return count;
+                inline uint16_t WritePropertiesToJson(JsonObject& object) override {
+                    return DoWritePropertiesToJson(object);
                 }
 
-                uint16_t ReadPropertiesFromJson(JsonDocument& jsonDocument, bool useDefaultValue = false) override {
-                    uint32_t count = 0;
+                inline uint16_t WritePropertiesToJson(JsonDocument& document) override {
+                    return DoWritePropertiesToJson(document);
+                }
 
-                    for (auto property : _properties) {
-                        count++;
-                        property.second->ReadValueFromJson(jsonDocument, useDefaultValue);
-                    }
+                inline uint16_t WriteDefaultPropertiesToJson(JsonArray& array) override {
+                    return DoWriteDefaultPropertiesToJson(array);
+                }
 
-                    return count;
+                inline uint16_t WriteDefaultPropertiesToJson(JsonObject& object) override {
+                    return DoWriteDefaultPropertiesToJson(object);
+                }
+
+                inline uint16_t WriteDefaultPropertiesToJson(JsonDocument& document) override {
+                    return DoWriteDefaultPropertiesToJson(document);
+                }
+
+                inline uint16_t ReadPropertiesFromJson(JsonObject& jsonObject, bool useDefaultValue = false) override {
+                    return DoReadPropertiesFromJson(jsonObject, useDefaultValue);
+                }
+
+                inline uint16_t ReadPropertiesFromJson(JsonDocument& jsonDocument, bool useDefaultValue = false) override {
+                    return DoReadPropertiesFromJson(jsonDocument, useDefaultValue);
                 }
         };
 

@@ -12,6 +12,11 @@ namespace ESPressio {
 
             class IPropertyFactory {
             public:
+                virtual void DoRegisterProperty(IProperty* property) = 0;
+                virtual void RegisterProperties(std::initializer_list<IProperty*> properties) = 0;
+                virtual void UnregisterProperty(IProperty* property) = 0;
+                virtual void UnregisterProperty(const char* propertyName) = 0;
+                virtual void ClearProperties() = 0;
                 virtual IProperty* GetProperty(const char* propertyName) = 0;
                 virtual bool HasProperty(const char* propertyName) = 0;
                 virtual uint16_t WithProperties(std::function<void(IProperty*)> propertyFunction) = 0;
