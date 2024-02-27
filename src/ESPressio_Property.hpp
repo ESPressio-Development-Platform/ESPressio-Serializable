@@ -12,7 +12,7 @@ namespace ESPressio {
     namespace Serializable {
 
         template <typename T>
-        class Property : ITypedProperty<T> {
+        class Property : public ITypedProperty<T> {
             private:
                 const char* _name; // Name is Idempotent by design
             protected:
