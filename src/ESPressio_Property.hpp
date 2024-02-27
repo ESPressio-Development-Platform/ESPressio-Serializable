@@ -24,10 +24,10 @@ namespace ESPressio {
 
                 void AddPropertyValue(const char* propertyName, JsonArray& properties, T value) {
                     // Create a new JSON object
-                    JsonObject property = properties.createNestedObject();
+                    // JsonObject property = properties.createNestedObject();
                     // property["name"] = propertyName; // Add the name of the property
                     // property["value"] = value; // Add the value of the property
-                    property[propertyName] = value; // Moved to "<name>": <value> format
+                    properties[propertyName] = value; // Moved to "<name>": <value> format
                 }
 
                 virtual bool DoCompareEqual(T a, T b) {
