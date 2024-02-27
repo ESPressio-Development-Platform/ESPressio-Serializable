@@ -58,6 +58,14 @@ namespace ESPressio {
                     _defaultValue = defaultValue;
                 }
 
+                virtual void DoSetOnValueChanged(TOnValueChanged onValueChanged) {
+                    _onValueChanged = onValueChanged;
+                }
+
+                virtual void DoSetOnDefaultValueChanged(TOnValueChanged onDefaultValueChanged) {
+                    _onDefaultValueChanged = onDefaultValueChanged;
+                }
+
             public:
                 Property(const char* name, T value, T defaultValue, TOnValueChanged onValueChanged = nullptr) : _name(strdup(name)), _value(value), _defaultValue(defaultValue), _onValueChanged(onValueChanged) { }
 
