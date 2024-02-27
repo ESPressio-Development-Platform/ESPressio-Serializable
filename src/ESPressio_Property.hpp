@@ -118,7 +118,7 @@ namespace ESPressio {
                         SetValue(jsonDocument[_name]);
                     }
                     else if (useDefaultValue) {
-                        SetValue(DoGetDefault();
+                        SetValue(DoGetDefault());
                     }
                 }
 
