@@ -18,72 +18,77 @@ namespace ESPressio {
             private:
                 std::shared_mutex _propertiesMutex;
             protected:
-                virtual void DoRegisterProperty(IProperty* property) {
+                IProperty* DoGetProperty(const char* propertyName) override {
+                    std::shared_lock<std::shared_mutex> lock(_propertiesMutex);
+                    return PropertyFactory::DoGetProperty(propertyName);
+                }
+
+                void DoRegisterProperty(IProperty* property) override {
                     std::unique_lock<std::shared_mutex> lock(_propertiesMutex);
                     PropertyFactory::DoRegisterProperty(property);
                 }
 
-                virtual void DoRegisterProperties(std::initializer_list<IProperty*> properties) {
+                void DoRegisterProperties(std::initializer_list<IProperty*> properties) override {
                     std::unique_lock<std::shared_mutex> lock(_propertiesMutex);
                     PropertyFactory::DoRegisterProperties(properties);
                 }
 
-                virtual void DoUnregisterProperty(IProperty* property) {
+                void DoUnregisterProperty(IProperty* property) override {
                     std::unique_lock<std::shared_mutex> lock(_propertiesMutex);
                     PropertyFactory::DoUnregisterProperty(property);
                 }
 
-                virtual void DoUnregisterProperty(const char* propertyName) {
+                void DoUnregisterProperty(const char* propertyName) override {
                     std::unique_lock<std::shared_mutex> lock(_propertiesMutex);
                     PropertyFactory::DoUnregisterProperty(propertyName);
                 }
 
-                virtual void DoClearProperties() {
+                void DoClearProperties() override {
                     std::unique_lock<std::shared_mutex> lock(_propertiesMutex);
                     PropertyFactory::DoClearProperties();
                 }
 
-                virtual uint16_t DoWithProperties(std::function<void(IProperty*)> propertyFunction) {
+                uint16_t DoWithProperties(std::function<void(IProperty*)> propertyFunction) override {
                     std::shared_lock<std::shared_mutex> lock(_propertiesMutex);
                     return PropertyFactory::DoWithProperties(propertyFunction);
                 }
 
-                virtual uint16_t DoWritePropertiesToJson(JsonArray& array) {
+                uint16_t DoWritePropertiesToJson(JsonArray& array) override {
                     std::shared_lock<std::shared_mutex> lock(_propertiesMutex);
                     return PropertyFactory::DoWritePropertiesToJson(array);
                 }
 
-                virtual uint16_t DoWritePropertiesToJson(JsonObject& object) {
+                uint16_t DoWritePropertiesToJson(JsonObject& object) override {
                     std::shared_lock<std::shared_mutex> lock(_propertiesMutex);
                     return PropertyFactory::DoWritePropertiesToJson(object);
                 }
 
-                virtual uint16_t DoWritePropertiesToJson(JsonDocument& document) {
+                uint16_t DoWritePropertiesToJson(JsonDocument& document) override {
                     std::shared_lock<std::shared_mutex> lock(_propertiesMutex);
                     return PropertyFactory::DoWritePropertiesToJson(document);
                 }
 
-                virtual uint16_t DoWriteDefaultPropertiesToJson(JsonArray& array) {
+                uint16_t DoWriteDefaultPropertiesToJson(JsonArray& array) override {
                     std::shared_lock<std::shared_mutex> lock(_propertiesMutex);
                     return PropertyFactory::DoWriteDefaultPropertiesToJson(array);
                 }
 
-                virtual uint16_t DoWriteDefaultPropertiesToJson(JsonObject& object) {
+                uint16_t DoWriteDefaultPropertiesToJson(JsonObject& object) override {
                     std::shared_lock<std::shared_mutex> lock(_propertiesMutex);
                     return PropertyFactory::DoWriteDefaultPropertiesToJson(object);
                 }
 
-                virtual uint16_t DoWriteDefaultPropertiesToJson(JsonDocument& document) {
+                uint16_t DoWriteDefaultPropertiesToJson(JsonDocument& document) override {
                     std::shared_lock<std::shared_mutex> lock(_propertiesMutex);
                     return PropertyFactory::DoWriteDefaultPropertiesToJson(document);
                 }
 
-                virtual uint16_t DoReadPropertiesFromJson(JsonObject& jsonObject, bool useDefaultValue = false) {
+                uint16_t DoReadPropertiesFromJson(JsonObject& jsonObject, bool useDefaultValue = false) override {
                     std::shared_lock<std::shared_mutex> lock(_propertiesMutex);
                     return PropertyFactory::DoReadPropertiesFromJson(jsonObject, useDefaultValue);
                 }
 
-                virtual uint16_t DoReadPropertiesFromJson(JsonDocument& jsonDocument, bool useDefaultValue = false) {
+                uint16_t DoReadPropertiesFromJson(JsonDocument& jsonDocument, bool useDefaultValue = false) override {
                     std::shared_lock<std::shared_mutex> lock(_propertiesMutex);
                     return PropertyFactory::DoReadPropertiesFromJson(jsonDocument, useDefaultValue);
                 }

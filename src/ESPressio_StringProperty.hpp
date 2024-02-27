@@ -17,12 +17,12 @@ namespace ESPressio {
                     return strcmp(a, b) == 0;
                 }
 
-                void DoSet(const char* value) override {
+                virtual void DoSet(const char* value) override {
                     free((void*)_value); // We must destroy the old value before setting the new one
                     Property<const char*>::DoSet(strdup(value));
                 }
 
-                void DoSetDefault(const char* defaultValue) override {
+                virtual void DoSetDefault(const char* defaultValue) override {
                     free((void*)_defaultValue); // We must destroy the old value before setting the new one
                     Property<const char*>::DoSetDefault(strdup(defaultValue));
                 }

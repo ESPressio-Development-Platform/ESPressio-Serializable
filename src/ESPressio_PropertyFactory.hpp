@@ -16,6 +16,10 @@ namespace ESPressio {
             private:
                 std::unordered_map<std::string, IProperty*> _properties;
             protected:
+                virtual IProperty* DoGetProperty(const char* propertyName) {
+                    return _properties[std::string(propertyName)];
+                }
+
                 virtual void DoRegisterProperty(IProperty* property) {
                     _properties[std::string(property->GetName())] = property;
                 }
@@ -141,12 +145,12 @@ namespace ESPressio {
 
                 }
 
-                IProperty* GetProperty(const char* propertyName) override {
-                    return _properties[std::string(propertyName)];
+                inline IProperty* GetProperty(const char* propertyName) override {
+                    return DoGetProperty(propertyName);
                 }
 
 
-                bool HasProperty(const char* propertyName) override {
+                inline bool HasProperty(const char* propertyName) override {
                     return GetProperty(propertyName) != nullptr;
                 }
 

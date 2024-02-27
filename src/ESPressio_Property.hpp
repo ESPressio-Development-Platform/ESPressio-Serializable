@@ -80,27 +80,27 @@ namespace ESPressio {
 
                 // Methods
 
-                void WriteToJson(JsonArray& array) {
+                inline void WriteToJson(JsonArray& array) {
                     this->AddPropertyValue(_name, array, DoGet());
                 }
 
-                void WriteToJson(JsonObject& object) {
+                inline void WriteToJson(JsonObject& object) {
                     object[_name] = DoGet();
                 }
 
-                void WriteToJson(JsonDocument& document) {
+                inline void WriteToJson(JsonDocument& document) {
                     document[_name] = DoGet();
                 }
 
-                void WriteDefaultToJson(JsonArray& array) {
+                inline void WriteDefaultToJson(JsonArray& array) {
                     AddPropertyValue(_name, array, DoGetDefault());
                 }
 
-                void WriteDefaultToJson(JsonObject& object) {
+                inline void WriteDefaultToJson(JsonObject& object) {
                     object[_name] = DoGetDefault();
                 }
 
-                void WriteDefaultToJson(JsonDocument& document) {
+                inline void WriteDefaultToJson(JsonDocument& document) {
                     document[_name] = DoGetDefault();
                 }
 
@@ -122,29 +122,29 @@ namespace ESPressio {
                     }
                 }
 
-                void ResetToDefault() {
+                inline void ResetToDefault() {
                     SetValue(DoGetDefault());
                 }
 
                 // Getters
 
-                const char* GetName() {
+                inline const char* GetName() {
                     return _name;
                 }
 
-                T GetValue() {
+                inline T GetValue() {
                     return DoGet();
                 }
 
-                T GetDefaultValue() {
+                inline T GetDefaultValue() {
                     return DoGetDefault();
                 }
 
-                TOnValueChanged GetOnValueChanged() {
+                inline TOnValueChanged GetOnValueChanged() {
                     return DoGetOnValueChanged();
                 }
 
-                TOnValueChanged GetOnDefaultValueChanged() {
+                inline TOnValueChanged GetOnDefaultValueChanged() {
                     return DoGetOnDefaultValueChanged();
                 }
 
@@ -167,11 +167,11 @@ namespace ESPressio {
                     if (onDefaultValueChanged != nullptr) { onDefaultValueChanged(oldValue, defaultValue); } // Notify the Parent that this Property's default value has changed (if a callback was provided)
                 }
 
-                void SetOnValueChanged(TOnValueChanged onValueChanged) {
+                inline void SetOnValueChanged(TOnValueChanged onValueChanged) {
                     DoSetOnValueChanged(onValueChanged);
                 }
 
-                void SetOnDefaultValueChanged(TOnValueChanged onDefaultValueChanged) {
+                inline void SetOnDefaultValueChanged(TOnValueChanged onDefaultValueChanged) {
                     DoSetOnDefaultValueChanged(onDefaultValueChanged);
                 }
         };

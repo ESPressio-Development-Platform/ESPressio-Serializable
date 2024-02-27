@@ -20,12 +20,12 @@ namespace ESPressio {
                 std::shared_mutex _onValueChangedMutex;
                 std::shared_mutex _onDefaultValueChangedMutex;
 
-                virtual T DoGet() override {
+                T DoGet() override {
                     std::shared_lock<std::shared_mutex> lock(_valueMutex);
                     return Property<T>::DoGet();
                 }
 
-                virtual T DoGetDefault() override {
+                T DoGetDefault() override {
                     std::shared_lock<std::shared_mutex> lock(_defaultValueMutex);
                     return Property<T>::DoGetDefault();
                 }
@@ -40,12 +40,12 @@ namespace ESPressio {
                     return Property<T>::DoGetOnDefaultValueChanged();
                 }
 
-                virtual void DoSet(T value) override {
+                void DoSet(T value) override {
                     std::unique_lock<std::shared_mutex> lock(_valueMutex);
                     Property<T>::DoSet(value);
                 }
 
-                virtual void DoSetDefault(T defaultValue) override {
+                void DoSetDefault(T defaultValue) override {
                     std::unique_lock<std::shared_mutex> lock(_defaultValueMutex);
                     Property<T>::DoSetDefault(defaultValue);
                 }
