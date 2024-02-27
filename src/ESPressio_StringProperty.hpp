@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <cstdlib>
 
 #include "ESPressio_Property.hpp"
 

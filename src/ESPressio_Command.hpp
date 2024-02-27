@@ -14,6 +14,25 @@ namespace ESPressio {
             private:
                 const char* _name;
                 std::function<void(JsonObject&)> _callback;
+            protected:
+            // Methods
+
+                virtual void DoCall(JsonObject& parameters) {
+                    if (_callback == nullptr) { return; }
+                    _callback(parameters);
+                }
+
+            // Getters
+
+                virtual std::function<void(JsonObject&)> DoGetCallback() {
+                    return _callback;
+                }
+
+            // Setters
+
+                virtual void DoSetCallback(std::function<void(JsonObject&)> callback) {
+                    _callback = callback;
+                }
             public:
                 Command(const char* name, std::function<void(JsonObject&)> callback) : _name(strdup(name)), _callback(callback) { }
 
@@ -23,31 +42,24 @@ namespace ESPressio {
 
             // Methods
 
-                void Call(JsonObject& parameters) override {
-                    if (_callback == nullptr) { return; }
-                    _callback(parameters);
+                inline void Call(JsonObject& parameters) override {
+                    DoCall(parameters);
                 }
             
             // Getters
 
-                const char* GetName() override {
+                inline const char* GetName() override {
                     return _name;
                 }
 
-                std::function<void(JsonObject&)> GetCallback() override {
-                    return _callback;
+                inline std::function<void(JsonObject&)> GetCallback() override {
+                    return DoGetCallback();
                 }
 
             // Setters
 
-                void SetName(const char* name) override {
-                    if (strcmp(_name, name) == 0) { return; }
-                    free((void*)_name);
-                    _name = strdup(name);
-                }
-
-                void SetCallback(std::function<void(JsonObject&)> callback) override {
-                    _callback = callback;
+                inline void SetCallback(std::function<void(JsonObject&)> callback) override {
+                    DoSetCallback(callback);
                 }
         };
 

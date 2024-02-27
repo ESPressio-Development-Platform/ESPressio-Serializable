@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <cstdlib>
 #include <shared_mutex>
 
 #include "ESPressio_StringProperty.hpp"

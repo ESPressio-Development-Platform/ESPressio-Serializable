@@ -64,6 +64,13 @@ namespace ESPressio {
                 PropertyThreadSafe(const char* name, T value, T defaultValue, TOnValueChanged onValueChanged = nullptr) : Property<T>(name, value, defaultValue, onValueChanged) { }
 
                 PropertyThreadSafe(const char* name, T value, TOnValueChanged onValueChanged = nullptr) : Property<T>(name, value, onValueChanged) { }
+
+                ~PropertyThreadSafe() {
+                    std::unique_lock<std::shared_mutex> lockValue(_valueMutex);
+                    std::unique_lock<std::shared_mutex> lockDefaultValue(_defaultValueMutex);
+                    std::unique_lock<std::shared_mutex> lockOnValueChanged(_onValueChangedMutex);
+                    std::unique_lock<std::shared_mutex> lockOnDefaultValueChanged(_onDefaultValueChangedMutex);
+                }
         };
 
     }

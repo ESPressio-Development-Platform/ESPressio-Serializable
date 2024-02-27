@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ArduinoJson.h>
+#include <cstdlib>
 #include <cstring>
 
 namespace ESPressio {
@@ -8,13 +9,7 @@ namespace ESPressio {
     namespace Serializable {
 
         class IProperty {
-            protected:
-                const char* _name;
             public:
-                IProperty(const char* name) : _name(strdup(name)) {
-
-                }
-
                 virtual ~IProperty() = default;
                 virtual void WriteToJson(JsonArray& array) = 0;
                 virtual void WriteToJson(JsonObject& object) = 0;

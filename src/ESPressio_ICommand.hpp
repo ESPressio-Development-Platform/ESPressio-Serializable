@@ -10,15 +10,17 @@ namespace ESPressio {
 
         class ICommand {
             public:
-                // Methods
+            // Methods
+            
                 virtual void Call(JsonObject& parameters) = 0;
 
-                // Getters
+            // Getters
+
                 virtual const char* GetName() = 0;
                 virtual std::function<void(JsonObject&)> GetCallback() = 0;
 
-                // Setters
-                virtual void SetName(const char* name) = 0;
+            // Setters
+
                 virtual void SetCallback(std::function<void(JsonObject&)> callback) = 0;
         };
 

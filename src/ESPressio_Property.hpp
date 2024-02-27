@@ -13,6 +13,8 @@ namespace ESPressio {
 
         template <typename T>
         class Property : public IProperty {
+            private:
+                const char* _name; // Name is Idempotent by design
             protected:
                 using TOnValueChanged = std::function<void(T oldValue, T newValue)>;
                 volatile T _value;
@@ -58,9 +60,13 @@ namespace ESPressio {
                 }
 
             public:
-                Property(const char* name, T value, T defaultValue, TOnValueChanged onValueChanged = nullptr) : IProperty(name), _value(value), _defaultValue(defaultValue), _onValueChanged(onValueChanged) { }
+                Property(const char* name, T value, T defaultValue, TOnValueChanged onValueChanged = nullptr) : _name(strdup(name)), _value(value), _defaultValue(defaultValue), _onValueChanged(onValueChanged) { }
 
-                Property(const char* name, T value, TOnValueChanged onValueChanged = nullptr) : IProperty(name), _value(value), _defaultValue(value), _onValueChanged(onValueChanged) { }
+                Property(const char* name, T value, TOnValueChanged onValueChanged = nullptr) : _name(strdup(name)), _value(value), _defaultValue(value), _onValueChanged(onValueChanged) { }
+
+                virtual ~Property() { 
+                    free((void*)_name);
+                }
 
                 // Default operators for get and set
                 operator T() const {
