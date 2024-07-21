@@ -7,12 +7,14 @@
 
 #include "ESPressio_IProperty.hpp"
 #include "ESPressio_IPropertyFactory.hpp"
+#include "ESPressio_ISerializable.hpp"
+#include "ESPressio_SerializableBase.hpp"
 
 namespace ESPressio {
 
     namespace Serializable {
 
-        class PropertyFactory : public IPropertyFactory {
+        class PropertyFactory : public IPropertyFactory, public SerializableBase {
             private:
                 std::unordered_map<std::string, IProperty*> _properties;
             protected:
@@ -139,6 +141,42 @@ namespace ESPressio {
                     }
 
                     return count;
+                }
+
+            // SerializableBase Overrides
+
+                virtual bool DoDeSerializeNonProperty(JsonVariant& jsonVariant, IDeserializeResults* results = nullptr) {
+                    if (results != nullptr) {
+                        //TODO: Add implementation to use for DeserializeResult
+                        // results->AddResult(new DeserializeResult(jsonVariant.key().c_str(), DeserializeResultType::SUCCESS));
+                    }
+                    return false;
+                }
+
+                virtual bool DoDeserialize(JsonObject& jsonObject, IDeserializeResults* results = nullptr) override {
+                    bool success = true;
+
+                    for (auto keyValuePair : jsonObject) {
+                        IProperty* property = GetProperty(keyValuePair.key().c_str());
+                        if (property != nullptr) {
+                            property->ReadValueFromJson(jsonObject, false);
+                            //TODO: Add implementation to use for DeserializeResult
+                            // results->AddResult(new DeserializeResult(keyValuePair.key().c_str(), DeserializeResultType::SUCCESS));
+                        }
+                        else if (!DoDeSerializeNonProperty(keyValuePair, results)) {
+                            success = false;
+                        }
+                    }
+
+                    return success;
+                }
+
+                virtual bool DoValidateJson(JsonObject& jsonObject, IDeserializeResults* results = nullptr) override {
+
+                }
+
+                virtual void DoSerialize(JsonObject& jsonObject) override {
+                    WritePropertiesToJson(jsonObject);
                 }
             public:
                 PropertyFactory() {

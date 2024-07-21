@@ -23,11 +23,8 @@ namespace ESPressio {
                 TOnValueChanged _onDefaultValueChanged = nullptr; // Callback to notify the Parent when this Property's default value changes
 
                 void AddPropertyValue(const char* propertyName, JsonArray& properties, T value) {
-                    // Create a new JSON object
                     JsonObject property = properties.add<JsonObject>();
-                    // property["name"] = propertyName; // Add the name of the property
-                    // property["value"] = value; // Add the value of the property
-                    property[propertyName] = value; // Moved to "<name>": <value> format
+                    property[propertyName] = value;
                 }
 
                 virtual bool DoCompareEqual(T a, T b) {
