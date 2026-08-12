@@ -1,6 +1,6 @@
 {
     "name": "ESPressio-Serializable",
-    "description": "Serializable Library intended for use with all microcontrollers",
+    "description": "JSON serialization library for modern Arduino-capable microcontrollers",
     "keywords": "serializable,serialize,deserialize,json,property,properties,command,commands,espressio",
     "authors": {
         "name": "Flowduino",
@@ -18,7 +18,7 @@
     },
     "version": "0.0.1",
     "license": "Apache-2.0",
-    "frameworks": "arduino,espressif32",
+    "frameworks": "arduino",
     "platforms": "*",
     "dependencies": [
         {

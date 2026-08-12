@@ -6,6 +6,14 @@ Provides a templated implementation of Serializable Types and Type Handlers, whi
 ## Latest Stable Version
 There is currently no stable released version.
 
+## Compatibility
+
+ESPressio Serializable is intended for modern Arduino-capable microcontrollers. ESP32 is the primary supported target. RP2040, SAMD, STM32, Renesas UNO R4, Teensy, and similar targets may be compatible when their Arduino core supplies the required C++ standard-library features and supports ArduinoJson 7.
+
+The library uses ArduinoJson, ESPressio Tree, STL containers, and—within its thread-safe variants—`std::mutex` and `std::shared_mutex`. Classic AVR targets are not recommended for the complete library because those synchronization facilities may be unavailable and the library's dynamic-memory footprint may be impractical. Applications that use only non-thread-safe headers may support a wider set of targets, but must be compile-tested separately.
+
+The broad manifest declarations describe the lack of processor-specific code, not guaranteed compatibility with every toolchain.
+
 ## ESPressio Development Platform
 The **ESPressio** Development Platform is a collection of discrete (sometimes intra-connected) Component Libraries developed with a particular development ethos in mind.
 
