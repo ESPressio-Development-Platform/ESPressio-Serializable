@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <string>
 
 #include <ArduinoJson.h>
 
@@ -12,7 +13,7 @@ namespace ESPressio {
 
         class Command : public ICommand {
             private:
-                const char* _name;
+                std::string _name;
                 std::function<void(JsonObject&)> _callback;
             protected:
             // Methods
@@ -34,11 +35,14 @@ namespace ESPressio {
                     _callback = callback;
                 }
             public:
-                Command(const char* name, std::function<void(JsonObject&)> callback) : _name(strdup(name)), _callback(callback) { }
+                Command(const char* name, std::function<void(JsonObject&)> callback) : _name(name == nullptr ? "" : name), _callback(callback) { }
 
-                ~Command() {
-                    free((void*)_name);
-                }
+                Command(const Command&) = delete;
+                Command& operator=(const Command&) = delete;
+                Command(Command&&) = delete;
+                Command& operator=(Command&&) = delete;
+
+                ~Command() = default;
 
             // Methods
 
@@ -49,7 +53,7 @@ namespace ESPressio {
             // Getters
 
                 inline const char* GetName() override {
-                    return _name;
+                    return _name.c_str();
                 }
 
                 inline std::function<void(JsonObject&)> GetCallback() override {

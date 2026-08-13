@@ -42,6 +42,18 @@ Please see the [![License](https://img.shields.io/badge/License-Apache%202.0-blu
 ## Namespace
 Every type/variable/constant/etc. related to *ESPressio* Serializable are located within the `Serializable` sub-namespace of the `ESPressio` parent namespace.
 
+## Object Ownership
+
+`PropertyFactory` and `CommandFactory` store non-owning references. The application
+must keep every registered property or command alive until it is unregistered or
+the corresponding factory is destroyed. Clearing or destroying a factory does not
+delete registered objects.
+
+Properties and commands cannot be copied or moved. Their names and, for
+`StringProperty`, string values are owned by the object. String change callbacks
+receive valid old and new value pointers for the duration of the callback; callers
+must copy either string if it needs to be retained afterward.
+
 ## Platformio.ini
 You can quickly and easily add this library to your project in PlatformIO by simply including the following in your `platformio.ini` file:
 

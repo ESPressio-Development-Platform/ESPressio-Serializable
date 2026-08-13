@@ -16,27 +16,34 @@ namespace ESPressio {
 
         class PropertyFactory : public IPropertyFactory, public SerializableBase {
             private:
+                // Registered properties are borrowed. The caller retains ownership.
                 std::unordered_map<std::string, IProperty*> _properties;
             protected:
                 virtual IProperty* DoGetProperty(const char* propertyName) {
-                    return _properties[std::string(propertyName)];
+                    if (propertyName == nullptr) { return nullptr; }
+                    auto property = _properties.find(std::string(propertyName));
+                    return property == _properties.end() ? nullptr : property->second;
                 }
 
                 virtual void DoRegisterProperty(IProperty* property) {
+                    if (property == nullptr) { return; }
                     _properties[std::string(property->GetName())] = property;
                 }
 
                 virtual void DoRegisterProperties(std::initializer_list<IProperty*> properties) {
                     for (auto property : properties) {
+                        if (property == nullptr) { continue; }
                         _properties[std::string(property->GetName())] = property;
                     }
                 }
 
                 virtual void DoUnregisterProperty(IProperty* property) {
+                    if (property == nullptr) { return; }
                     _properties.erase(std::string(property->GetName()));
                 }
 
                 virtual void DoUnregisterProperty(const char* propertyName) {
+                    if (propertyName == nullptr) { return; }
                     _properties.erase(std::string(propertyName));
                 }
 

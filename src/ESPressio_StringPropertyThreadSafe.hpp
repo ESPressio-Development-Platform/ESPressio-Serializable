@@ -39,14 +39,14 @@ namespace ESPressio {
                     return StringProperty::DoGetOnDefaultValueChanged();
                 }
 
-                void DoSet(const char* value) override {
+                const char* DoExchangeValue(const char* value) override {
                     std::unique_lock<std::shared_mutex> lock(_valueMutex);
-                    StringProperty::DoSet(strdup(value));
+                    return StringProperty::DoExchangeValue(value);
                 }
 
-                void DoSetDefault(const char* defaultValue) override {
+                const char* DoExchangeDefaultValue(const char* defaultValue) override {
                     std::unique_lock<std::shared_mutex> lock(_defaultValueMutex);
-                    StringProperty::DoSetDefault(strdup(defaultValue));
+                    return StringProperty::DoExchangeDefaultValue(defaultValue);
                 }
 
                 void DoSetOnValueChanged(TOnValueChanged onValueChanged) override {
@@ -59,9 +59,9 @@ namespace ESPressio {
                     StringProperty::DoSetOnDefaultValueChanged(onDefaultValueChanged);
                 }
             public:
-                StringPropertyThreadSafe(const char* name, const char* value, const char* defaultValue, TOnValueChanged onValueChanged = nullptr) : StringProperty(name, strdup(value), strdup(defaultValue), onValueChanged) { }
+                StringPropertyThreadSafe(const char* name, const char* value, const char* defaultValue, TOnValueChanged onValueChanged = nullptr) : StringProperty(name, value, defaultValue, onValueChanged) { }
 
-                StringPropertyThreadSafe(const char* name, const char* value, TOnValueChanged onValueChanged = nullptr) : StringProperty(name, strdup(value), onValueChanged) { }
+                StringPropertyThreadSafe(const char* name, const char* value, TOnValueChanged onValueChanged = nullptr) : StringProperty(name, value, onValueChanged) { }
 
                 ~StringPropertyThreadSafe() { }
         };

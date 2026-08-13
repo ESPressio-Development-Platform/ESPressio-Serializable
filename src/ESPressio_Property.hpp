@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <string>
 
 #include <ArduinoJson.h>
 
@@ -14,7 +15,7 @@ namespace ESPressio {
         template <typename T>
         class Property : public ITypedProperty<T> {
             private:
-                const char* _name; // Name is Idempotent by design
+                std::string _name; // Name is immutable after construction by design
             protected:
                 using TOnValueChanged = std::function<void(T oldValue, T newValue)>;
                 volatile T _value;
@@ -64,13 +65,16 @@ namespace ESPressio {
                 }
 
             public:
-                Property(const char* name, T value, T defaultValue, TOnValueChanged onValueChanged = nullptr) : _name(strdup(name)), _value(value), _defaultValue(defaultValue), _onValueChanged(onValueChanged) { }
+                Property(const char* name, T value, T defaultValue, TOnValueChanged onValueChanged = nullptr) : _name(name == nullptr ? "" : name), _value(value), _defaultValue(defaultValue), _onValueChanged(onValueChanged) { }
 
-                Property(const char* name, T value, TOnValueChanged onValueChanged = nullptr) : _name(strdup(name)), _value(value), _defaultValue(value), _onValueChanged(onValueChanged) { }
+                Property(const char* name, T value, TOnValueChanged onValueChanged = nullptr) : _name(name == nullptr ? "" : name), _value(value), _defaultValue(value), _onValueChanged(onValueChanged) { }
 
-                virtual ~Property() { 
-                    free((void*)_name);
-                }
+                Property(const Property&) = delete;
+                Property& operator=(const Property&) = delete;
+                Property(Property&&) = delete;
+                Property& operator=(Property&&) = delete;
+
+                virtual ~Property() = default;
 
                 // Default operators for get and set
                 operator T() const {
@@ -85,32 +89,32 @@ namespace ESPressio {
                 // Methods
 
                 inline void WriteToJson(JsonArray& array) {
-                    this->AddPropertyValue(_name, array, DoGet());
+                    this->AddPropertyValue(_name.c_str(), array, DoGet());
                 }
 
                 inline void WriteToJson(JsonObject& object) {
-                    object[_name] = DoGet();
+                    object[_name.c_str()] = DoGet();
                 }
 
                 inline void WriteToJson(JsonDocument& document) {
-                    document[_name] = DoGet();
+                    document[_name.c_str()] = DoGet();
                 }
 
                 inline void WriteDefaultToJson(JsonArray& array) {
-                    AddPropertyValue(_name, array, DoGetDefault());
+                    AddPropertyValue(_name.c_str(), array, DoGetDefault());
                 }
 
                 inline void WriteDefaultToJson(JsonObject& object) {
-                    object[_name] = DoGetDefault();
+                    object[_name.c_str()] = DoGetDefault();
                 }
 
                 inline void WriteDefaultToJson(JsonDocument& document) {
-                    document[_name] = DoGetDefault();
+                    document[_name.c_str()] = DoGetDefault();
                 }
 
                 void ReadValueFromJson(JsonObject& jsonObject, bool useDefaultValue = false) {
-                    if (jsonObject.containsKey(_name)) {
-                        SetValue(jsonObject[_name]);
+                    if (jsonObject.containsKey(_name.c_str())) {
+                        SetValue(jsonObject[_name.c_str()]);
                     }
                     else if (useDefaultValue) {
                         SetValue(DoGetDefault());
@@ -118,8 +122,8 @@ namespace ESPressio {
                 }
             
                 void ReadValueFromJson(JsonDocument& jsonDocument, bool useDefaultValue = false) {
-                    if (jsonDocument.containsKey(_name)) {
-                        SetValue(jsonDocument[_name]);
+                    if (jsonDocument.containsKey(_name.c_str())) {
+                        SetValue(jsonDocument[_name.c_str()]);
                     }
                     else if (useDefaultValue) {
                         SetValue(DoGetDefault());
@@ -133,7 +137,7 @@ namespace ESPressio {
                 // Getters
 
                 inline const char* GetName() {
-                    return _name;
+                    return _name.c_str();
                 }
 
                 inline T GetValue() {
@@ -163,7 +167,7 @@ namespace ESPressio {
                     if (onValueChanged != nullptr) { onValueChanged(oldValue, value); } // Notify the Parent that this Property's value has changed (if a callback was provided)
                 }
 
-                void SetDefaultValue(T defaultValue) {
+                virtual void SetDefaultValue(T defaultValue) {
                     T oldValue = GetDefaultValue();
                     if (DoCompareEqual(oldValue, defaultValue)) { return; } // If the value hasn't changed, don't notify the Parent
                     DoSetDefault(defaultValue);

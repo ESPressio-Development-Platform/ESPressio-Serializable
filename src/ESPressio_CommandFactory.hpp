@@ -12,23 +12,28 @@ namespace ESPressio {
 
         class CommandFactory : public ICommandFactory {
             private:
+                // Registered commands are borrowed. The caller retains ownership.
                 std::unordered_map<std::string, ICommand*> _commands;
             protected:
                 void RegisterCommand(ICommand* command) {
+                    if (command == nullptr) { return; }
                     _commands[std::string(command->GetName())] = command;
                 }
 
                 void RegisterCommands(std::initializer_list<ICommand*> commands) {
                     for (auto command : commands) {
+                        if (command == nullptr) { continue; }
                         _commands[std::string(command->GetName())] = command;
                     }
                 }
 
                 void UnregisterCommand(ICommand* command) {
+                    if (command == nullptr) { return; }
                     _commands.erase(command->GetName());
                 }
 
                 void UnregisterCommand(const char* commandName) {
+                    if (commandName == nullptr) { return; }
                     _commands.erase(std::string(commandName));
                 }
 
@@ -45,7 +50,9 @@ namespace ESPressio {
                 }
 
                 ICommand* GetCommand(const char* commandName) override {
-                    return _commands[std::string(commandName)];
+                    if (commandName == nullptr) { return nullptr; }
+                    auto command = _commands.find(std::string(commandName));
+                    return command == _commands.end() ? nullptr : command->second;
                 }
 
 

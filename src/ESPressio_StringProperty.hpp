@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <cstdlib>
+#include <cstring>
 
 #include "ESPressio_Property.hpp"
 
@@ -14,22 +15,33 @@ namespace ESPressio {
                 using TOnValueChanged = std::function<void(const char* oldValue, const char* newValue)>;
 
                 inline bool DoCompareEqual(const char* a, const char* b) override {
+                    if (a == b) { return true; }
+                    if (a == nullptr || b == nullptr) { return false; }
                     return strcmp(a, b) == 0;
                 }
 
-                virtual void DoSet(const char* value) override {
-                    free((void*)_value); // We must destroy the old value before setting the new one
-                    Property<const char*>::DoSet(strdup(value));
+                static const char* Duplicate(const char* value) {
+                    return value == nullptr ? nullptr : strdup(value);
                 }
 
-                virtual void DoSetDefault(const char* defaultValue) override {
-                    free((void*)_defaultValue); // We must destroy the old value before setting the new one
-                    Property<const char*>::DoSetDefault(strdup(defaultValue));
+                virtual const char* DoExchangeValue(const char* value) {
+                    const char* oldValue = _value;
+                    Property<const char*>::DoSet(value);
+                    return oldValue;
+                }
+
+                virtual const char* DoExchangeDefaultValue(const char* defaultValue) {
+                    const char* oldDefaultValue = _defaultValue;
+                    Property<const char*>::DoSetDefault(defaultValue);
+                    return oldDefaultValue;
                 }
             public:
-                StringProperty(const char* name, const char* value, const char* defaultValue, TOnValueChanged onValueChanged = nullptr) : Property<const char*>(name, strdup(value), strdup(defaultValue), onValueChanged) { }
+                StringProperty(const char* name, const char* value, const char* defaultValue, TOnValueChanged onValueChanged = nullptr) : Property<const char*>(name, nullptr, nullptr, onValueChanged) {
+                    _value = Duplicate(value);
+                    _defaultValue = Duplicate(defaultValue);
+                }
 
-                StringProperty(const char* name, const char* value, TOnValueChanged onValueChanged = nullptr) : Property<const char*>(name, strdup(value), onValueChanged) { }
+                StringProperty(const char* name, const char* value, TOnValueChanged onValueChanged = nullptr) : StringProperty(name, value, value, onValueChanged) { }
 
                 ~StringProperty() {
                     free((void*)_value);
@@ -37,7 +49,33 @@ namespace ESPressio {
                 }
 
                 void SetValue(const char* value) override {
-                    Property<const char*>::SetValue(strdup(value));
+                    const char* currentValue = GetValue();
+                    if (DoCompareEqual(currentValue, value)) { return; }
+
+                    const char* newValue = Duplicate(value);
+                    if (value != nullptr && newValue == nullptr) { return; }
+
+                    const char* oldValue = DoExchangeValue(newValue);
+                    TOnValueChanged onValueChanged = GetOnValueChanged();
+                    if (onValueChanged != nullptr) {
+                        onValueChanged(oldValue, newValue);
+                    }
+                    free((void*)oldValue);
+                }
+
+                void SetDefaultValue(const char* defaultValue) override {
+                    const char* currentDefaultValue = GetDefaultValue();
+                    if (DoCompareEqual(currentDefaultValue, defaultValue)) { return; }
+
+                    const char* newDefaultValue = Duplicate(defaultValue);
+                    if (defaultValue != nullptr && newDefaultValue == nullptr) { return; }
+
+                    const char* oldDefaultValue = DoExchangeDefaultValue(newDefaultValue);
+                    TOnValueChanged onDefaultValueChanged = GetOnDefaultValueChanged();
+                    if (onDefaultValueChanged != nullptr) {
+                        onDefaultValueChanged(oldDefaultValue, newDefaultValue);
+                    }
+                    free((void*)oldDefaultValue);
                 }
         };
 
