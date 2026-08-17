@@ -1,37 +1,35 @@
 {
     "name": "ESPressio-Serializable",
-    "description": "JSON serialization library for modern Arduino-capable microcontrollers",
-    "keywords": "serializable,serialize,deserialize,json,property,properties,command,commands,espressio",
-    "authors": {
-        "name": "Flowduino",
-        "maintainer": true
-    },
-    "build": {
-        "flags": [
-            "-DESPRESSIO_SERIALIZABLE"
-        ],
-        "unflags": []
-    },
+    "version": "0.1.0",
+    "description": "Compile-time declarative serialization components for the Flowduino ESPressio Development Platform.",
+    "keywords": [
+        "serialization",
+        "deserialization",
+        "reflection",
+        "properties",
+        "esp32",
+        "arduino",
+        "espressio"
+    ],
     "repository": {
         "type": "git",
         "url": "https://github.com/Flowduino/ESPressio-Serializable.git"
     },
-    "version": "0.0.1",
-    "license": "Apache-2.0",
-    "frameworks": "arduino",
-    "platforms": "*",
-    "dependencies": [
+    "authors": [
         {
-            "name": "ArduinoJson",
-            "version": "7.0.3",
-            "url": "https://github.com/bblanchon/ArduinoJson.git",
-            "platforms": "*"
-        },
-        {
-            "name": "Flowduino ESPressio-Tree",
-            "version": ">=1.0.0",
-            "url": "https://github.com/Flowduino/ESPressio-Tree.git",
-            "platforms": "*"
+            "name": "Flowduino",
+            "maintainer": true
         }
-    ]
+    ],
+    "license": "Apache-2.0",
+    "frameworks": [
+        "arduino"
+    ],
+    "platforms": "*",
+    "headers": [
+        "ESPressio_Serializable.hpp"
+    ],
+    "build": {
+        "includeDir": "src"
+    }
 }

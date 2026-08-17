@@ -1,39 +1,65 @@
 #pragma once
 
-#include <ArduinoJson.h>
+#include <tuple>
+#include <utility>
 
-#include "ESPressio_ISerializable.hpp"
+namespace ESPressio::Serializable {
 
-namespace ESPressio {
+    /*
+     * CRTP base for compile-time serializable types.
+     *
+     * TArchive is intentionally duck-typed: an archive only needs to provide
+     * Write(name, value) and/or Read(name, value). This keeps the core
+     * representation-neutral and dependency-free.
+     */
+    template<typename TDerived>
+    class SerializableBase {
+        protected:
+            constexpr SerializableBase() = default;
+            ~SerializableBase() = default;
 
-    namespace Serializable {
+        public:
+            template<typename TArchive>
+            void Serialize(TArchive& archive) const {
+                const TDerived& object =
+                    static_cast<const TDerived&>(*this);
 
-        class SerializableBase : public ISerializable {
-            protected:
-                virtual bool DoDeserialize(JsonObject& jsonObject, IDeserializeResults* results = nullptr) = 0;
-                virtual bool DoValidateJson(JsonObject& jsonObject, IDeserializeResults* results = nullptr) = 0;
-                virtual void DoSerialize(JsonObject& jsonObject) = 0;
-            public:
-                SerializableBase() = default;
+                std::apply(
+                    [&](const auto&... property) {
+                        (
+                            archive.Write(
+                                property.GetName(),
+                                property.GetValue(object)
+                            ),
+                            ...
+                        );
+                    },
+                    TDerived::GetSerializableProperties()
+                );
+            }
 
-                SerializableBase(JsonObject& jsonObject, IDeserializeResults* results = nullptr) {
-                    DoDeserialize(jsonObject, results);
-                }
+            template<typename TArchive>
+            void Deserialize(TArchive& archive) {
+                TDerived& object =
+                    static_cast<TDerived&>(*this);
 
-                inline bool Deserialize(JsonObject& jsonObject, IDeserializeResults* results = nullptr) override {
-                    return DoDeserialize(jsonObject, results);
-                }
+                std::apply(
+                    [&](const auto&... property) {
+                        (
+                            archive.Read(
+                                property.GetName(),
+                                property.GetValue(object)
+                            ),
+                            ...
+                        );
+                    },
+                    TDerived::GetSerializableProperties()
+                );
+            }
+    };
 
-                inline bool ValidateJson(JsonObject& jsonObject, IDeserializeResults* results = nullptr) override {
-                    return DoValidateJson(jsonObject, results);
-                }
-
-                inline void Serialize(JsonObject& jsonObject) override {
-                    DoSerialize(jsonObject);
-                }
-
-        };
-
-    }
+    // Short public name for consumers.
+    template<typename TDerived>
+    using Serializable = SerializableBase<TDerived>;
 
 }
