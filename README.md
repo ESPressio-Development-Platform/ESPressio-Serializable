@@ -50,10 +50,12 @@ Every type/variable/constant/etc. related to ESPressio Serializable is located w
 
 For example:
 
-    ESPressio::Serializable::Serializable<T>
-    ESPressio::Serializable::SerializableBase<T>
-    ESPressio::Serializable::SerializationProperty<TObject, TValue>
-    ESPressio::Serializable::KeyValueArchive
+```cpp
+ESPressio::Serializable::Serializable<T>
+ESPressio::Serializable::SerializableBase<T>
+ESPressio::Serializable::SerializationProperty<TObject, TValue>
+ESPressio::Serializable::KeyValueArchive
+```
 
 The namespace currently provides the following principal components:
 
@@ -85,13 +87,17 @@ You can add a local development checkout to a PlatformIO project using an approp
 
 Once the library is published to the PlatformIO Registry, the intended form will be:
 
-    lib_deps =
-        flowduino/ESPressio-Serializable@^0.1.0
+```ini
+lib_deps =
+    flowduino/ESPressio-Serializable@^0.1.0
+```
 
 Alternatively, once the GitHub repository is public, the latest development sources can be referenced directly:
 
-    lib_deps =
-        https://github.com/Flowduino/ESPressio-Serializable.git
+```ini
+lib_deps =
+    https://github.com/Flowduino/ESPressio-Serializable.git
+```
 
 Please note that using the GitHub repository directly will use the latest commits pushed into the repository, so volatility is possible.
 
@@ -103,23 +109,25 @@ C++17 does not provide the runtime reflection or user-defined annotation facilit
 
 For example:
 
-    class DeviceConfiguration final
-        : public ESPressio::Serializable::Serializable<DeviceConfiguration> {
+```cpp
+class DeviceConfiguration final
+    : public ESPressio::Serializable::Serializable<DeviceConfiguration> {
 
-        ESPRESSIO_SERIALIZABLE_TYPE(DeviceConfiguration)
+    ESPRESSIO_SERIALIZABLE_TYPE(DeviceConfiguration)
 
-        private:
-            uint32_t _sampleRate = 1000;
-            float _threshold = 0.5f;
-            bool _loggingEnabled = true;
+    private:
+        uint32_t _sampleRate = 1000;
+        float _threshold = 0.5f;
+        bool _loggingEnabled = true;
 
-        public:
-            ESPRESSIO_SERIALIZABLE_PROPERTIES(
-                ESPRESSIO_PROPERTY("sampleRate", _sampleRate),
-                ESPRESSIO_PROPERTY("threshold", _threshold),
-                ESPRESSIO_PROPERTY("loggingEnabled", _loggingEnabled)
-            )
-    };
+    public:
+        ESPRESSIO_SERIALIZABLE_PROPERTIES(
+            ESPRESSIO_PROPERTY("sampleRate", _sampleRate),
+            ESPRESSIO_PROPERTY("threshold", _threshold),
+            ESPRESSIO_PROPERTY("loggingEnabled", _loggingEnabled)
+        )
+};
+```
 
 The implementing class describes **what** is serializable, but does not describe **how** that state is represented.
 
@@ -137,23 +145,25 @@ If that same object later needs to be persisted to NVS, transferred as CBOR, wri
 
 ESPressio Serializable instead applies the Dependency Inversion Principle:
 
-    Serializable Object
-            |
-            v
-    Serializable Property Metadata
-            |
-            v
-    Archive Abstraction
-            |
-            +---- JSON
-            |
-            +---- CBOR
-            |
-            +---- NVS
-            |
-            +---- Binary
-            |
-            +---- Custom Representation
+```text
+Serializable Object
+        |
+        v
+Serializable Property Metadata
+        |
+        v
+Archive Abstraction
+        |
+        +---- JSON
+        |
+        +---- CBOR
+        |
+        +---- NVS
+        |
+        +---- Binary
+        |
+        +---- Custom Representation
+```
 
 The object owns its state.
 
@@ -171,14 +181,18 @@ Before looking at complete examples, it is useful to understand the individual c
 
 It is currently an alias of `SerializableBase<T>`:
 
-    template<typename TDerived>
-    using Serializable = SerializableBase<TDerived>;
+```cpp
+template<typename TDerived>
+using Serializable = SerializableBase<TDerived>;
+```
 
 The library uses the Curiously Recurring Template Pattern (CRTP), meaning that the implementing type passes itself as the template parameter:
 
-    class Settings
-        : public ESPressio::Serializable::Serializable<Settings> {
-    };
+```cpp
+class Settings
+    : public ESPressio::Serializable::Serializable<Settings> {
+};
+```
 
 This allows serialization traversal to be resolved at compile time without requiring runtime type discovery.
 
@@ -188,21 +202,29 @@ This allows serialization traversal to be resolved at compile time without requi
 
 Calling:
 
-    configuration.Serialize(archive);
+```cpp
+configuration.Serialize(archive);
+```
 
 enumerates the properties declared by the implementing type and invokes:
 
-    archive.Write(propertyName, propertyValue);
+```cpp
+archive.Write(propertyName, propertyValue);
+```
 
 for each property.
 
 Likewise:
 
-    configuration.Deserialize(archive);
+```cpp
+configuration.Deserialize(archive);
+```
 
 invokes:
 
-    archive.Read(propertyName, propertyValue);
+```cpp
+archive.Read(propertyName, propertyValue);
+```
 
 for each property.
 
@@ -214,13 +236,17 @@ A `SerializationProperty` associates a serialized property name with a pointer-t
 
 For example:
 
-    ESPRESSIO_PROPERTY("sampleRate", _sampleRate)
+```cpp
+ESPRESSIO_PROPERTY("sampleRate", _sampleRate)
+```
 
 ultimately describes the relationship between:
 
-    Serialized Name        C++ Member
-    ---------------        ----------
-    sampleRate          -> _sampleRate
+```text
+Serialized Name        C++ Member
+---------------        ----------
+sampleRate          -> _sampleRate
+```
 
 The descriptor itself does not store a copy of the member value.
 
@@ -232,15 +258,19 @@ Three macros currently provide the annotation-like declaration syntax.
 
 First, identify the implementing type:
 
-    ESPRESSIO_SERIALIZABLE_TYPE(DeviceConfiguration)
+```cpp
+ESPRESSIO_SERIALIZABLE_TYPE(DeviceConfiguration)
+```
 
 Then declare its serializable properties:
 
-    ESPRESSIO_SERIALIZABLE_PROPERTIES(
-        ESPRESSIO_PROPERTY("sampleRate", _sampleRate),
-        ESPRESSIO_PROPERTY("threshold", _threshold),
-        ESPRESSIO_PROPERTY("loggingEnabled", _loggingEnabled)
-    )
+```cpp
+ESPRESSIO_SERIALIZABLE_PROPERTIES(
+    ESPRESSIO_PROPERTY("sampleRate", _sampleRate),
+    ESPRESSIO_PROPERTY("threshold", _threshold),
+    ESPRESSIO_PROPERTY("loggingEnabled", _loggingEnabled)
+)
+```
 
 The macros are deliberately restricted to schema declaration.
 
@@ -252,9 +282,11 @@ They do not create a runtime property registry and they do not determine the out
 
 For example:
 
-    static_assert(
-        ESPressio::Serializable::IsSerializable<DeviceConfiguration>
-    );
+```cpp
+static_assert(
+    ESPressio::Serializable::IsSerializable<DeviceConfiguration>
+);
+```
 
 This will become increasingly useful as Archive implementations gain recursive support for nested serializable objects and collections.
 
@@ -264,13 +296,17 @@ An Archive is responsible for converting between C++ values and some external re
 
 For serialization, an Archive exposes compatible `Write()` operations:
 
-    archive.Write("sampleRate", sampleRate);
-    archive.Write("enabled", enabled);
+```cpp
+archive.Write("sampleRate", sampleRate);
+archive.Write("enabled", enabled);
+```
 
 For deserialization, it exposes compatible `Read()` operations:
 
-    archive.Read("sampleRate", sampleRate);
-    archive.Read("enabled", enabled);
+```cpp
+archive.Read("sampleRate", sampleRate);
+archive.Read("enabled", enabled);
+```
 
 The core library deliberately does not require Archives to derive from a common runtime-polymorphic base class.
 
@@ -293,48 +329,50 @@ Its purpose is to:
 
 ## Basic Serialization Example
 
-    #include <Arduino.h>
-    #include <ESPressio_Serializable.hpp>
+```cpp
+#include <Arduino.h>
+#include <ESPressio_Serializable.hpp>
 
-    using namespace ESPressio;
+using namespace ESPressio;
 
-    class DeviceConfiguration final
-        : public Serializable::Serializable<DeviceConfiguration> {
+class DeviceConfiguration final
+    : public Serializable::Serializable<DeviceConfiguration> {
 
-        ESPRESSIO_SERIALIZABLE_TYPE(DeviceConfiguration)
+    ESPRESSIO_SERIALIZABLE_TYPE(DeviceConfiguration)
 
-        private:
-            uint32_t _sampleRate = 1000;
-            float _threshold = 0.5f;
-            bool _loggingEnabled = true;
+    private:
+        uint32_t _sampleRate = 1000;
+        float _threshold = 0.5f;
+        bool _loggingEnabled = true;
 
-        public:
-            ESPRESSIO_SERIALIZABLE_PROPERTIES(
-                ESPRESSIO_PROPERTY("sampleRate", _sampleRate),
-                ESPRESSIO_PROPERTY("threshold", _threshold),
-                ESPRESSIO_PROPERTY("loggingEnabled", _loggingEnabled)
-            )
-    };
+    public:
+        ESPRESSIO_SERIALIZABLE_PROPERTIES(
+            ESPRESSIO_PROPERTY("sampleRate", _sampleRate),
+            ESPRESSIO_PROPERTY("threshold", _threshold),
+            ESPRESSIO_PROPERTY("loggingEnabled", _loggingEnabled)
+        )
+};
 
-    void setup() {
-        Serial.begin(115200);
+void setup() {
+    Serial.begin(115200);
 
-        DeviceConfiguration configuration;
-        Serializable::KeyValueArchive archive;
+    DeviceConfiguration configuration;
+    Serializable::KeyValueArchive archive;
 
-        configuration.Serialize(archive);
+    configuration.Serialize(archive);
 
-        for (const auto& entry : archive.GetEntries()) {
-            Serial.printf(
-                "%s = %s\n",
-                entry.Name.c_str(),
-                entry.Value.c_str()
-            );
-        }
+    for (const auto& entry : archive.GetEntries()) {
+        Serial.printf(
+            "%s = %s\n",
+            entry.Name.c_str(),
+            entry.Value.c_str()
+        );
     }
+}
 
-    void loop() {
-    }
+void loop() {
+}
+```
 
 The important point is that `DeviceConfiguration` contains no `KeyValueArchive`-specific functionality.
 
@@ -344,15 +382,17 @@ Replacing `KeyValueArchive` with a future `JsonArchive`, `NVSArchive`, or anothe
 
 The same property declarations are used in the opposite direction:
 
-    Serializable::KeyValueArchive persisted;
+```cpp
+Serializable::KeyValueArchive persisted;
 
-    persisted.Write("minimumSpeed", 10);
-    persisted.Write("maximumSpeed", 240);
-    persisted.Write("reversed", true);
+persisted.Write("minimumSpeed", 10);
+persisted.Write("maximumSpeed", 240);
+persisted.Write("reversed", true);
 
-    MotorConfiguration configuration;
+MotorConfiguration configuration;
 
-    configuration.Deserialize(persisted);
+configuration.Deserialize(persisted);
+```
 
 Each declared property is looked up by its serialized name and, when available, assigned back to the corresponding member.
 
@@ -362,25 +402,29 @@ The Archive contract is intentionally small.
 
 For example, a diagnostic output Archive can be implemented as:
 
-    class DebugArchive {
-        public:
-            template<typename TValue>
-            void Write(
-                const char* name,
-                const TValue& value
-            ) {
-                Serial.print(name);
-                Serial.print(" = ");
-                Serial.println(value);
-            }
-    };
+```cpp
+class DebugArchive {
+    public:
+        template<typename TValue>
+        void Write(
+            const char* name,
+            const TValue& value
+        ) {
+            Serial.print(name);
+            Serial.print(" = ");
+            Serial.println(value);
+        }
+};
+```
 
 It can immediately be used with any compatible Serializable object:
 
-    Example example;
-    DebugArchive archive;
+```cpp
+Example example;
+DebugArchive archive;
 
-    example.Serialize(archive);
+example.Serialize(archive);
+```
 
 No changes to `Example` or the ESPressio Serializable core are necessary.
 
@@ -390,24 +434,26 @@ Recursive serialization of nested Serializable objects is a planned core capabil
 
 The intended usage is:
 
-    class Position
-        : public Serializable::Serializable<Position> {
-        // x, y and z properties...
-    };
+```cpp
+class Position
+    : public Serializable::Serializable<Position> {
+    // x, y and z properties...
+};
 
-    class Robot
-        : public Serializable::Serializable<Robot> {
+class Robot
+    : public Serializable::Serializable<Robot> {
 
-        ESPRESSIO_SERIALIZABLE_TYPE(Robot)
+    ESPRESSIO_SERIALIZABLE_TYPE(Robot)
 
-        private:
-            Position _position;
+    private:
+        Position _position;
 
-        public:
-            ESPRESSIO_SERIALIZABLE_PROPERTIES(
-                ESPRESSIO_PROPERTY("position", _position)
-            )
-    };
+    public:
+        ESPRESSIO_SERIALIZABLE_PROPERTIES(
+            ESPRESSIO_PROPERTY("position", _position)
+        )
+};
+```
 
 A representation-aware Archive will then be able to recursively process `_position` as another Serializable object.
 
@@ -447,11 +493,15 @@ For this reason, future versions of ESPressio Serializable are intended to suppo
 
 For example, a future API may permit a property currently called:
 
-    sampleRate
+```text
+sampleRate
+```
 
 to continue accepting an older persisted name:
 
-    samplingFrequency
+```text
+samplingFrequency
+```
 
 without requiring the implementing class to maintain duplicate members.
 
@@ -475,9 +525,11 @@ Demonstrates the intended Archive extension point by implementing a simple outpu
 
 The core library can be compiled and tested on a host machine without requiring an ESP32.
 
-    cmake -S tests -B build/tests
-    cmake --build build/tests
-    ctest --test-dir build/tests --output-on-failure
+```sh
+cmake -S tests -B build/tests
+cmake --build build/tests
+ctest --test-dir build/tests --output-on-failure
+```
 
 This is intentional: the serialization metadata and traversal machinery should remain independently testable from Arduino and ESP32-specific functionality.
 
