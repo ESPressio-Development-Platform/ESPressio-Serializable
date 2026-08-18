@@ -10,7 +10,7 @@ The core library deliberately does not prescribe JSON, CBOR, NVS, filesystem, ne
 
 ESPressio Serializable is currently under initial development.
 
-The starter implementation is version `0.6.0` and should be considered a development version rather than a stable public release.
+The starter implementation is version `0.6.1` and should be considered a development version rather than a stable public release.
 
 ## Compatibility
 
@@ -89,7 +89,7 @@ Once the library is published to the PlatformIO Registry, the intended form will
 
 ```ini
 lib_deps =
-    flowduino/ESPressio-Serializable@^0.6.0
+    flowduino/ESPressio-Serializable@^0.6.1
 ```
 
 Alternatively, once the GitHub repository is public, the latest development sources can be referenced directly:
@@ -163,7 +163,7 @@ The ESPressio library itself does **not** declare ArduinoJson as an unconditiona
 
 ```ini
 lib_deps =
-    flowduino/ESPressio-Serializable@^0.6.0
+    flowduino/ESPressio-Serializable@^0.6.1
     bblanchon/ArduinoJson
 ```
 
@@ -761,6 +761,11 @@ Demonstrates restoring persisted values into an object through the same property
 
 Demonstrates the intended Archive extension point by implementing a simple output Archive without modifying the Serializable core.
 
+
+### `ESPNowSerializableMesh`
+
+Demonstrates using the same sketch on two or more ESP32 devices to broadcast a Serializable object over ESP-NOW. The object is streamed directly into CBOR, fragmented into ESP-NOW-compatible packets, identified by its originating ESP32 MAC address, reassembled outside the Wi-Fi callback, and deserialized back into the original type.
+
 ## Host Tests
 
 The core library can be compiled and tested on a host machine without requiring an ESP32.
@@ -911,20 +916,15 @@ Tree-aware archives expose `Policy()` and support `Include`, `Redact`, or `Omit`
 
 ## Development Roadmap
 
-The core serialization, schema-evolution, validation, collection, streaming, allocator, introspection, and constrained-binary foundations are now implemented.
+With the common traversal, schema and persistence foundations now in place, likely next milestones are:
 
-Future development will focus primarily on hardening, performance, and additional interoperability:
-
-1. fuzz testing and malformed-input hardening across JSON, CBOR, Binary, and streaming deserializers;
-2. formal wire-format compatibility guarantees and compatibility test vectors between library versions;
-3. RAM, flash, and runtime benchmarking across representative ESP32 targets and payload sizes;
-4. further streaming-deserialization optimizations, particularly for very large JSON documents where the underlying JSON parser still requires a document representation;
-5. additional serializer/deserializer adapters where they provide clear embedded-system value;
-6. richer schema-documentation output formats derived from the existing property metadata and schema introspection facilities;
-7. expanded validation diagnostics, including nested-path aggregation and configurable fail-fast versus collect-all behavior;
-8. additional allocator/pool strategies tuned specifically for ESP32 memory characteristics and PSRAM;
-9. automated cross-version schema-migration regression testing;
-10. continued API consistency, documentation, examples, and PlatformIO/Arduino compatibility testing.
+1. property default-value metadata and validation callbacks;
+2. migration helper utilities for common rename/move/remove operations;
+3. `std::set` / `std::unordered_set` and other sequence containers;
+4. user-defined enum name/string mappings;
+5. serializer-aware sensitive-property redaction policies;
+6. more complete numeric range validation during deserialization;
+7. memory/streaming optimizations for very large object graphs.
 
 ## Design Principle
 
