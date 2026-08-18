@@ -5,6 +5,7 @@
 #include <type_traits>
 #include <utility>
 #include "ESPressio_SerializationSchema.hpp"
+#include "ESPressio_SerializationResult.hpp"
 
 namespace ESPressio::Serializable::Detail {
     template<typename TArchive, typename = void>
@@ -39,43 +40,56 @@ namespace ESPressio::Serializable {
 
         private:
             template<typename TArchive, typename TProperty>
-            static bool ReadProperty(
+            static bool ReadPropertyDetailed(
                 TArchive& archive,
                 const TProperty& property,
-                TDerived& object
+                TDerived& object,
+                DeserializationResult& result
             ) {
-                if (property.IsReadOnly()) {
-                    return true;
-                }
-
+                if (property.IsReadOnly()) return true;
                 auto& value = property.GetValue(object);
+                const char* canonical = property.GetName();
 
-                if constexpr (Detail::HasContains<TArchive>::value) {
-                    if (archive.Contains(property.GetName())) {
-                        return archive.Read(property.GetName(), value) && property.ValidateValue(value);
+                auto tryName = [&](const char* name) -> int {
+                    if (name == nullptr) return 0;
+                    if constexpr (Detail::HasContains<TArchive>::value) {
+                        if (!archive.Contains(name)) return 0;
+                        if (!archive.Read(name, value)) {
+                            result.Add(SerializationErrorCode::TypeMismatch, name, "Property is present but could not be converted to the declared C++ type");
+                            return -1;
+                        }
+                    } else {
+                        if (!archive.Read(name, value)) return 0;
                     }
-                } else if (archive.Read(property.GetName(), value)) {
-                    return property.ValidateValue(value);
-                }
+                    if (!property.ValidateValue(value)) {
+                        result.Add(SerializationErrorCode::ValidationFailed, canonical ? canonical : name, "Property value failed its validator or numeric range constraint");
+                        return -1;
+                    }
+                    return 1;
+                };
+
+                int status = tryName(canonical);
+                if (status != 0) return status > 0;
 
                 for (size_t index = 0; index < property.GetAliasCount(); ++index) {
-                    const char* alias = property.GetAlias(index);
-                    if (alias == nullptr) continue;
-                    if constexpr (Detail::HasContains<TArchive>::value) {
-                        if (archive.Contains(alias)) {
-                            return archive.Read(alias, value) && property.ValidateValue(value);
-                        }
-                    } else if (archive.Read(alias, value)) {
-                        return property.ValidateValue(value);
-                    }
+                    status = tryName(property.GetAlias(index));
+                    if (status != 0) return status > 0;
                 }
 
                 if (property.HasDefault()) {
                     value = property.GetDefault();
-                    return property.ValidateValue(value);
+                    if (!property.ValidateValue(value)) {
+                        result.Add(SerializationErrorCode::ValidationFailed, canonical ? canonical : "", "Configured default value failed property validation");
+                        return false;
+                    }
+                    return true;
                 }
 
-                return !property.IsRequired();
+                if (property.IsRequired()) {
+                    result.Add(SerializationErrorCode::MissingRequiredProperty, canonical ? canonical : "", "Required property is absent (including all aliases)");
+                    return false;
+                }
+                return true;
             }
 
         public:
@@ -111,7 +125,8 @@ namespace ESPressio::Serializable {
             }
 
             template<typename TArchive>
-            bool Deserialize(TArchive& archive) {
+            DeserializationResult DeserializeDetailed(TArchive& archive) {
+                DeserializationResult result;
                 TDerived& object =
                     static_cast<TDerived&>(*this);
 
@@ -126,10 +141,10 @@ namespace ESPressio::Serializable {
                             GetSchemaVersion()
                         )
                     ) {
-                        return false;
+                        result.Add(SerializationErrorCode::MigrationFailed,"__schemaVersion","Schema migration failed"); return result;
                     }
                 } else if (sourceVersion != GetSchemaVersion()) {
-                    return false;
+                    result.Add(SerializationErrorCode::UnsupportedSchemaVersion,"__schemaVersion","Archive does not support structural migration"); return result;
                 }
 
                 bool success = true;
@@ -138,10 +153,11 @@ namespace ESPressio::Serializable {
                     [&](const auto&... property) {
                         (
                             (success =
-                                ReadProperty(
+                                ReadPropertyDetailed(
                                     archive,
                                     property,
-                                    object
+                                    object,
+                                    result
                                 ) &&
                                 success),
                             ...
@@ -150,8 +166,12 @@ namespace ESPressio::Serializable {
                     TDerived::GetSerializableProperties()
                 );
 
-                return success;
+                (void)success;
+                return result;
             }
+            template<typename TArchive>
+            bool Deserialize(TArchive& archive) { return DeserializeDetailed(archive).Success(); }
+
     };
 
     template<typename TDerived>

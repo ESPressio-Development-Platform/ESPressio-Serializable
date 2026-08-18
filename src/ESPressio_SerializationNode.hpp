@@ -6,6 +6,7 @@
 #include <utility>
 #include <vector>
 #include <algorithm>
+#include "ESPressio_Allocator.hpp"
 
 namespace ESPressio::Serializable {
 
@@ -37,8 +38,8 @@ namespace ESPressio::Serializable {
             double _float64Value = 0.0;
             std::string _stringValue;
 
-            std::vector<NamedChild> _objectChildren;
-            std::vector<SerializationNode> _arrayChildren;
+            std::vector<NamedChild, SerializationAllocator<NamedChild>> _objectChildren;
+            std::vector<SerializationNode, SerializationAllocator<SerializationNode>> _arrayChildren;
 
         public:
             SerializationNode() = default;
@@ -113,19 +114,19 @@ namespace ESPressio::Serializable {
                 return _stringValue;
             }
 
-            std::vector<NamedChild>& ObjectChildren() {
+            std::vector<NamedChild, SerializationAllocator<NamedChild>>& ObjectChildren() {
                 return _objectChildren;
             }
 
-            const std::vector<NamedChild>& ObjectChildren() const {
+            const std::vector<NamedChild, SerializationAllocator<NamedChild>>& ObjectChildren() const {
                 return _objectChildren;
             }
 
-            std::vector<SerializationNode>& ArrayChildren() {
+            std::vector<SerializationNode, SerializationAllocator<SerializationNode>>& ArrayChildren() {
                 return _arrayChildren;
             }
 
-            const std::vector<SerializationNode>& ArrayChildren() const {
+            const std::vector<SerializationNode, SerializationAllocator<SerializationNode>>& ArrayChildren() const {
                 return _arrayChildren;
             }
 

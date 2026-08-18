@@ -10,7 +10,7 @@ The core library deliberately does not prescribe JSON, CBOR, NVS, filesystem, ne
 
 ESPressio Serializable is currently under initial development.
 
-The starter implementation is version `0.5.0` and should be considered a development version rather than a stable public release.
+The starter implementation is version `0.6.0` and should be considered a development version rather than a stable public release.
 
 ## Compatibility
 
@@ -89,7 +89,7 @@ Once the library is published to the PlatformIO Registry, the intended form will
 
 ```ini
 lib_deps =
-    flowduino/ESPressio-Serializable@^0.5.0
+    flowduino/ESPressio-Serializable@^0.6.0
 ```
 
 Alternatively, once the GitHub repository is public, the latest development sources can be referenced directly:
@@ -163,7 +163,7 @@ The ESPressio library itself does **not** declare ArduinoJson as an unconditiona
 
 ```ini
 lib_deps =
-    flowduino/ESPressio-Serializable@^0.5.0
+    flowduino/ESPressio-Serializable@^0.6.0
     bblanchon/ArduinoJson
 ```
 
@@ -869,7 +869,7 @@ Unsupported property types now produce targeted compile-time errors. Raw pointer
 
 ## v0.5 Core Capabilities
 
-Version `0.5.0` adds property defaults and validators, migration helpers, set/list/deque traversal, enum string mappings, sensitive-property policies, strict numeric conversion checks, and a direct JSON streaming serializer for large object graphs.
+Version `0.6.0` adds property defaults and validators, migration helpers, set/list/deque traversal, enum string mappings, sensitive-property policies, strict numeric conversion checks, and a direct JSON streaming serializer for large object graphs.
 
 ### Defaults and Validation
 
@@ -911,15 +911,20 @@ Tree-aware archives expose `Policy()` and support `Include`, `Redact`, or `Omit`
 
 ## Development Roadmap
 
-With the common traversal, schema, validation, policy and streaming foundations now in place, likely next milestones are:
+The core serialization, schema-evolution, validation, collection, streaming, allocator, introspection, and constrained-binary foundations are now implemented.
 
-1. streaming deserialization for large JSON/CBOR payloads;
-2. direct streaming CBOR and native Binary writers;
-3. richer validation result/error reporting rather than boolean-only failures;
-4. reusable migration path helpers for indexed arrays as well as objects;
-5. configurable allocator strategies for node trees and temporary buffers;
-6. schema introspection/documentation generation from property metadata;
-7. optional compile-time elimination of property names for extremely constrained binary-only builds.
+Future development will focus primarily on hardening, performance, and additional interoperability:
+
+1. fuzz testing and malformed-input hardening across JSON, CBOR, Binary, and streaming deserializers;
+2. formal wire-format compatibility guarantees and compatibility test vectors between library versions;
+3. RAM, flash, and runtime benchmarking across representative ESP32 targets and payload sizes;
+4. further streaming-deserialization optimizations, particularly for very large JSON documents where the underlying JSON parser still requires a document representation;
+5. additional serializer/deserializer adapters where they provide clear embedded-system value;
+6. richer schema-documentation output formats derived from the existing property metadata and schema introspection facilities;
+7. expanded validation diagnostics, including nested-path aggregation and configurable fail-fast versus collect-all behavior;
+8. additional allocator/pool strategies tuned specifically for ESP32 memory characteristics and PSRAM;
+9. automated cross-version schema-migration regression testing;
+10. continued API consistency, documentation, examples, and PlatformIO/Arduino compatibility testing.
 
 ## Design Principle
 
@@ -930,3 +935,31 @@ An implementing type should only need to answer one question:
 It should not need to know whether those members will ultimately become JSON, CBOR, NVS entries, binary data, diagnostic output, or some future representation which did not exist when the type was written.
 
 That separation is the fundamental purpose of ESPressio Serializable.
+
+## v0.6 Advanced Streaming, Diagnostics and Schema Tooling
+
+Version `0.6.0` adds optional stream-oriented JSON/CBOR/native Binary I/O, structured `DeserializationResult` diagnostics, indexed migration paths such as `items[3].name`, allocator customization via `ESPRESSIO_SERIALIZATION_ALLOCATOR`, `SchemaInspector<T>` documentation generation, and a nameless native-binary mode for extremely constrained builds.
+
+### Streaming input/output
+
+`JsonStreamDeserializer` passes the Arduino `Stream` directly to ArduinoJson and supports ArduinoJson filtering. `CborStreamDeserializer` consumes a stream without requiring the caller to first materialize the payload. `CborStreamSerializer`, `BinaryStreamSerializer<>`, and `NamelessBinaryStreamSerializer` write directly to Arduino `Print`.
+
+### Structured errors
+
+Use `object.DeserializeDetailed(archive)` to receive `DeserializationResult`, containing one or more `SerializationIssue` records with an error code, property path, and message. Existing `Deserialize()` remains as a boolean compatibility wrapper.
+
+### Indexed migration paths
+
+`Migration::ResolvePath()` understands paths such as `devices[2].settings.name`; `RemoveAt()` and `MovePath()` operate on the same syntax.
+
+### Allocator customization
+
+Define `ESPRESSIO_SERIALIZATION_ALLOCATOR` before including ESPressio headers to replace the allocator used by node-tree child containers and serialization buffers.
+
+### Schema documentation
+
+`SchemaInspector<MyType>::Properties()` exposes property metadata programmatically and `SchemaInspector<MyType>::Markdown()` produces a Markdown schema table.
+
+### Nameless binary-only builds
+
+`ESPRESSIO_PROPERTY_NAMELESS(member)` removes the textual property name from that descriptor. Pair this with `NamelessBinaryStreamSerializer` when the producer/consumer share the same schema and property order. This mode intentionally trades self-description and cross-format compatibility for minimum binary size.

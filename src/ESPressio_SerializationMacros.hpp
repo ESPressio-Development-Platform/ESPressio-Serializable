@@ -33,3 +33,6 @@
         static constexpr uint32_t GetSerializableSchemaVersion() { \
             return static_cast<uint32_t>(Version); \
         }
+
+#define ESPRESSIO_PROPERTY_NAMELESS(Member) \
+    ::ESPressio::Serializable::MakeSerializationProperty(nullptr, &ESPressioSerializableSelf::Member)

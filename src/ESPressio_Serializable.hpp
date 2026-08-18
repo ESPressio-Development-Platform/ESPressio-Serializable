@@ -13,3 +13,5 @@
 #include "ESPressio_EnumSerialization.hpp"
 #include "ESPressio_SerializationPolicy.hpp"
 #include "ESPressio_Migration.hpp"
+#include "ESPressio_SerializationResult.hpp"
+#include "ESPressio_SchemaIntrospection.hpp"

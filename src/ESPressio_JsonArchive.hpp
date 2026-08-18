@@ -272,6 +272,13 @@ namespace ESPressio::Serializable {
             }
 
         public:
+            bool LoadDocument(const ArduinoJson::JsonDocument& document) {
+                SerializationNode root;
+                _valid = JsonToNode(document.as<ArduinoJson::JsonVariantConst>(), root) && root.GetType() == SerializationNodeType::Object;
+                if (_valid) _root = std::move(root);
+                return _valid;
+            }
+
             JsonArchive() = default;
 
             template<typename TInput>
