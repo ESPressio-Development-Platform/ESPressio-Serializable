@@ -916,15 +916,35 @@ Tree-aware archives expose `Policy()` and support `Include`, `Redact`, or `Omit`
 
 ## Development Roadmap
 
-With the common traversal, schema and persistence foundations now in place, likely next milestones are:
+The major serialization, schema-evolution, validation, collection, streaming, allocator, introspection, and constrained-binary foundations are now implemented. Future development is therefore focused primarily on hardening, measurement, interoperability, and developer experience:
 
-1. property default-value metadata and validation callbacks;
-2. migration helper utilities for common rename/move/remove operations;
-3. `std::set` / `std::unordered_set` and other sequence containers;
-4. user-defined enum name/string mappings;
-5. serializer-aware sensitive-property redaction policies;
-6. more complete numeric range validation during deserialization;
-7. memory/streaming optimizations for very large object graphs.
+1. fuzz testing and malformed-input hardening across JSON, CBOR, Binary, and streaming deserializers;
+2. formal wire-format compatibility guarantees and cross-version compatibility test vectors;
+3. RAM, flash, and runtime benchmarks across representative ESP32 targets and payload sizes;
+4. further streaming-deserialization optimizations for very large payloads, especially JSON parser/document memory usage;
+5. richer validation diagnostics, including nested-path aggregation and configurable fail-fast versus collect-all behaviour;
+6. additional allocator/pool strategies tuned for ESP32 internal RAM and PSRAM;
+7. automated cross-version schema-migration regression testing;
+8. additional schema-documentation output formats derived from `SchemaInspector<T>` metadata;
+9. transport-oriented examples and adapters, building on the ESP-NOW Serializable mesh example;
+10. continued API consistency, documentation, examples, and PlatformIO/Arduino compatibility testing.
+
+The following capabilities that appeared on earlier roadmaps are **already implemented** and are not future work:
+
+* property default-value metadata and validation callbacks;
+* migration helpers for rename, move, remove, and indexed object/array paths;
+* `std::set`, `std::unordered_set`, `std::list`, `std::deque`, and other supported collection traversal;
+* user-defined enum name/string mappings;
+* serializer-aware sensitive-property include/redact/omit policies;
+* numeric range and narrowing validation during deserialization;
+* memory-conscious/direct streaming serialization for large object graphs;
+* streaming JSON and CBOR deserialization;
+* direct streaming CBOR and native Binary writers;
+* structured deserialization and validation error reporting;
+* configurable allocator strategies;
+* schema introspection and Markdown documentation generation;
+* optional compile-time property-name elimination for constrained binary-only builds.
+
 
 ## Design Principle
 
