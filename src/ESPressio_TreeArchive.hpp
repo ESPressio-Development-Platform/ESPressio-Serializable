@@ -1,16 +1,38 @@
 #pragma once
 #include "ESPressio_SerializationNode.hpp"
 #include "ESPressio_SerializationTraversal.hpp"
+#include "ESPressio_SerializationPolicy.hpp"
 
 namespace ESPressio::Serializable {
 
     class TreeArchive {
         protected:
             SerializationNode _root;
+            SerializationPolicy _policy;
 
         public:
             TreeArchive() {
                 _root.SetType(SerializationNodeType::Object);
+            }
+
+
+            SerializationPolicy& Policy() { return _policy; }
+            const SerializationPolicy& Policy() const { return _policy; }
+
+            template<typename TProperty, typename TValue>
+            void WriteProperty(const TProperty& property, const TValue& value) {
+                if (property.IsSensitive()) {
+                    switch (_policy.GetSensitivePolicy()) {
+                        case SensitivePropertyPolicy::Omit:
+                            return;
+                        case SensitivePropertyPolicy::Redact:
+                            _root.Set(property.GetName(), Detail::ToNode(std::string(_policy.GetRedactionText())));
+                            return;
+                        case SensitivePropertyPolicy::Include:
+                            break;
+                    }
+                }
+                Write(property.GetName(), value);
             }
 
             SerializationNode& GetNode() { return _root; }
@@ -25,6 +47,10 @@ namespace ESPressio::Serializable {
             template<typename TValue>
             void Write(const char* name, const TValue& value) {
                 _root.Set(name, Detail::ToNode(value));
+            }
+
+            bool Contains(const char* name) const {
+                return _root.Find(name) != nullptr;
             }
 
             template<typename TValue>

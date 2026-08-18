@@ -3,6 +3,10 @@
 #include <cstdint>
 #include <iostream>
 #include <map>
+#include <set>
+#include <unordered_set>
+#include <list>
+#include <deque>
 #include <optional>
 #include <string>
 #include <unordered_map>
@@ -15,6 +19,12 @@
 using namespace ESPressio;
 
 enum class TestMode : uint8_t { Off = 0, On = 1 };
+
+ESPRESSIO_ENUM_MAPPING(
+    TestMode,
+    ESPRESSIO_ENUM_VALUE(TestMode::Off, "off"),
+    ESPRESSIO_ENUM_VALUE(TestMode::On, "on")
+)
 
 class Position final
     : public Serializable::Serializable<Position> {
@@ -169,6 +179,163 @@ void TestRequiredProperty() {
     assert(!sensor.Deserialize(archive));
 }
 
+
+bool ValidateEven(const int32_t& value) {
+    return (value % 2) == 0;
+}
+
+class ValidationConfiguration final
+    : public Serializable::Serializable<ValidationConfiguration> {
+    ESPRESSIO_SERIALIZABLE_TYPE(ValidationConfiguration)
+    private:
+        int32_t _port = 1;
+        int32_t _even = 0;
+    public:
+        ESPRESSIO_SERIALIZABLE_PROPERTIES(
+            ESPRESSIO_PROPERTY("port", _port).Default(80).Range(1, 65535),
+            ESPRESSIO_PROPERTY("even", _even).Validate(&ValidateEven)
+        )
+        int32_t GetPort() const { return _port; }
+        int32_t GetEven() const { return _even; }
+};
+
+class CollectionConfiguration final
+    : public Serializable::Serializable<CollectionConfiguration> {
+    ESPRESSIO_SERIALIZABLE_TYPE(CollectionConfiguration)
+    private:
+        std::set<int32_t> _set {3, 1, 2};
+        std::unordered_set<std::string> _unordered {"a", "b"};
+        std::list<int32_t> _list {4, 5, 6};
+        std::deque<int32_t> _deque {7, 8, 9};
+    public:
+        ESPRESSIO_SERIALIZABLE_PROPERTIES(
+            ESPRESSIO_PROPERTY("set", _set),
+            ESPRESSIO_PROPERTY("unordered", _unordered),
+            ESPRESSIO_PROPERTY("list", _list),
+            ESPRESSIO_PROPERTY("deque", _deque)
+        )
+        const auto& GetSet() const { return _set; }
+        const auto& GetUnordered() const { return _unordered; }
+        const auto& GetList() const { return _list; }
+        const auto& GetDeque() const { return _deque; }
+};
+
+class SensitiveConfiguration final
+    : public Serializable::Serializable<SensitiveConfiguration> {
+    ESPRESSIO_SERIALIZABLE_TYPE(SensitiveConfiguration)
+    private:
+        std::string _public = "hello";
+        std::string _secret = "password";
+    public:
+        ESPRESSIO_SERIALIZABLE_PROPERTIES(
+            ESPRESSIO_PROPERTY("public", _public),
+            ESPRESSIO_PROPERTY("secret", _secret).Sensitive()
+        )
+};
+
+class NarrowConfiguration final
+    : public Serializable::Serializable<NarrowConfiguration> {
+    ESPRESSIO_SERIALIZABLE_TYPE(NarrowConfiguration)
+    private:
+        int8_t _value = 0;
+    public:
+        ESPRESSIO_SERIALIZABLE_PROPERTIES(
+            ESPRESSIO_PROPERTY("value", _value)
+        )
+};
+
+void TestDefaultsAndValidation() {
+    {
+        Serializable::TreeArchive archive;
+        archive.Write("even", static_cast<int32_t>(4));
+        ValidationConfiguration value;
+        assert(value.Deserialize(archive));
+        assert(value.GetPort() == 80);
+        assert(value.GetEven() == 4);
+    }
+
+    {
+        Serializable::TreeArchive archive;
+        archive.Write("port", static_cast<int32_t>(70000));
+        archive.Write("even", static_cast<int32_t>(4));
+        ValidationConfiguration value;
+        assert(!value.Deserialize(archive));
+    }
+
+    {
+        Serializable::TreeArchive archive;
+        archive.Write("port", static_cast<int32_t>(80));
+        archive.Write("even", static_cast<int32_t>(3));
+        ValidationConfiguration value;
+        assert(!value.Deserialize(archive));
+    }
+}
+
+void TestAdditionalCollections() {
+    CollectionConfiguration original;
+    Serializable::CborArchive output;
+    original.Serialize(output);
+
+    Serializable::CborArchive input(output.GetData());
+    CollectionConfiguration restored;
+    assert(restored.Deserialize(input));
+    assert(restored.GetSet().size() == 3);
+    assert(restored.GetUnordered().count("a") == 1);
+    assert(restored.GetList().size() == 3);
+    assert(restored.GetDeque().back() == 9);
+}
+
+void TestEnumMapping() {
+    const auto node = Serializable::Detail::ToNode(TestMode::On);
+    assert(node.GetType() == Serializable::SerializationNodeType::String);
+    assert(node.StringValue() == "on");
+
+    TestMode value = TestMode::Off;
+    assert(Serializable::Detail::FromNode(node, value));
+    assert(value == TestMode::On);
+}
+
+void TestSensitivePolicies() {
+    SensitiveConfiguration value;
+
+    Serializable::TreeArchive redacted;
+    redacted.Policy()
+        .Sensitive(Serializable::SensitivePropertyPolicy::Redact)
+        .RedactionText("***");
+    value.Serialize(redacted);
+    const auto* secret = redacted.GetNode().Find("secret");
+    assert(secret != nullptr);
+    assert(secret->StringValue() == "***");
+
+    Serializable::TreeArchive omitted;
+    omitted.Policy().Sensitive(Serializable::SensitivePropertyPolicy::Omit);
+    value.Serialize(omitted);
+    assert(omitted.GetNode().Find("secret") == nullptr);
+}
+
+void TestMigrationHelpers() {
+    Serializable::SerializationNode root(Serializable::SerializationNodeType::Object);
+    root.Set("old", Serializable::Detail::ToNode(std::string("value")));
+    assert(Serializable::Migration::Rename(root, "old", "new"));
+    assert(root.Find("old") == nullptr);
+    assert(root.Find("new") != nullptr);
+
+    Serializable::SerializationNode nested(Serializable::SerializationNodeType::Object);
+    root.Set("nested", nested);
+    auto* destination = root.Find("nested");
+    assert(destination != nullptr);
+    assert(Serializable::Migration::Move(root, "new", *destination, "moved"));
+    assert(destination->Find("moved") != nullptr);
+    assert(Serializable::Migration::Remove(*destination, "moved"));
+}
+
+void TestNumericNarrowing() {
+    Serializable::TreeArchive archive;
+    archive.Write("value", static_cast<uint64_t>(1000));
+    NarrowConfiguration value;
+    assert(!value.Deserialize(archive));
+}
+
 int main() {
     static_assert(
         Serializable::IsSerializable<TestConfiguration>,
@@ -179,7 +346,13 @@ int main() {
     TestRoundTrip<Serializable::CborArchive>();
     TestAliasAndMigration();
     TestRequiredProperty();
+    TestDefaultsAndValidation();
+    TestAdditionalCollections();
+    TestEnumMapping();
+    TestSensitivePolicies();
+    TestMigrationHelpers();
+    TestNumericNarrowing();
 
-    std::cout << "ESPressio Serializable v0.4 tests passed.\n";
+    std::cout << "ESPressio Serializable v0.5 tests passed.\n";
     return 0;
 }

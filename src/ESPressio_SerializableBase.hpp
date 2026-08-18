@@ -10,6 +10,18 @@ namespace ESPressio::Serializable::Detail {
     template<typename TArchive, typename = void>
     struct HasGetNode : std::false_type {};
 
+    template<typename TArchive, typename = void>
+    struct HasContains : std::false_type {};
+
+    template<typename TArchive>
+    struct HasContains<TArchive,std::void_t<decltype(std::declval<const TArchive&>().Contains(std::declval<const char*>()))>> : std::true_type {};
+
+    template<typename TArchive, typename TProperty, typename TValue, typename = void>
+    struct HasWriteProperty : std::false_type {};
+
+    template<typename TArchive, typename TProperty, typename TValue>
+    struct HasWriteProperty<TArchive,TProperty,TValue,std::void_t<decltype(std::declval<TArchive&>().WriteProperty(std::declval<const TProperty&>(),std::declval<const TValue&>()))>> : std::true_type {};
+
     template<typename TArchive>
     struct HasGetNode<
         TArchive,
@@ -38,19 +50,29 @@ namespace ESPressio::Serializable {
 
                 auto& value = property.GetValue(object);
 
-                if (archive.Read(property.GetName(), value)) {
-                    return true;
+                if constexpr (Detail::HasContains<TArchive>::value) {
+                    if (archive.Contains(property.GetName())) {
+                        return archive.Read(property.GetName(), value) && property.ValidateValue(value);
+                    }
+                } else if (archive.Read(property.GetName(), value)) {
+                    return property.ValidateValue(value);
                 }
 
-                for (
-                    size_t index = 0;
-                    index < property.GetAliasCount();
-                    ++index
-                ) {
+                for (size_t index = 0; index < property.GetAliasCount(); ++index) {
                     const char* alias = property.GetAlias(index);
-                    if (alias != nullptr && archive.Read(alias, value)) {
-                        return true;
+                    if (alias == nullptr) continue;
+                    if constexpr (Detail::HasContains<TArchive>::value) {
+                        if (archive.Contains(alias)) {
+                            return archive.Read(alias, value) && property.ValidateValue(value);
+                        }
+                    } else if (archive.Read(alias, value)) {
+                        return property.ValidateValue(value);
                     }
+                }
+
+                if (property.HasDefault()) {
+                    value = property.GetDefault();
+                    return property.ValidateValue(value);
                 }
 
                 return !property.IsRequired();
@@ -71,10 +93,16 @@ namespace ESPressio::Serializable {
                 std::apply(
                     [&](const auto&... property) {
                         (
-                            archive.Write(
-                                property.GetName(),
-                                property.GetValue(object)
-                            ),
+                            ([&]() {
+                                const auto& value = property.GetValue(object);
+                                using PropertyType = std::decay_t<decltype(property)>;
+                                using ValueType = std::decay_t<decltype(value)>;
+                                if constexpr (Detail::HasWriteProperty<TArchive,PropertyType,ValueType>::value) {
+                                    archive.WriteProperty(property,value);
+                                } else {
+                                    archive.Write(property.GetName(),value);
+                                }
+                            }()),
                             ...
                         );
                     },

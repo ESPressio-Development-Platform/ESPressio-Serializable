@@ -9,3 +9,7 @@
 #include "ESPressio_SerializationMacros.hpp"
 #include "ESPressio_TreeArchive.hpp"
 #include "ESPressio_KeyValueArchive.hpp"
+
+#include "ESPressio_EnumSerialization.hpp"
+#include "ESPressio_SerializationPolicy.hpp"
+#include "ESPressio_Migration.hpp"

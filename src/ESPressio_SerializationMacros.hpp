@@ -24,7 +24,7 @@
 
 #define ESPRESSIO_SERIALIZABLE_PROPERTIES(...) \
     public: \
-        static constexpr auto GetSerializableProperties() { \
+        static auto GetSerializableProperties() { \
             return std::make_tuple(__VA_ARGS__); \
         }
 

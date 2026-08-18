@@ -4,6 +4,12 @@
 #include <cstddef>
 #include <cstdint>
 #include <map>
+#include <set>
+#include <unordered_set>
+#include <list>
+#include <deque>
+#include <limits>
+#include <cmath>
 #include <optional>
 #include <string>
 #include <type_traits>
@@ -12,6 +18,7 @@
 #include <vector>
 
 #include "ESPressio_SerializationAdapter.hpp"
+#include "ESPressio_EnumSerialization.hpp"
 #include "ESPressio_SerializationNode.hpp"
 #include "ESPressio_SerializationTraits.hpp"
 
@@ -29,6 +36,26 @@ namespace ESPressio::Serializable::Detail {
     struct IsStdArray : std::false_type {};
     template<typename TValue, size_t TSize>
     struct IsStdArray<std::array<TValue, TSize>> : std::true_type {};
+
+    template<typename T>
+    struct IsStdDeque : std::false_type {};
+    template<typename V, typename A>
+    struct IsStdDeque<std::deque<V,A>> : std::true_type {};
+
+    template<typename T>
+    struct IsStdList : std::false_type {};
+    template<typename V, typename A>
+    struct IsStdList<std::list<V,A>> : std::true_type {};
+
+    template<typename T>
+    struct IsStdSet : std::false_type {};
+    template<typename V, typename C, typename A>
+    struct IsStdSet<std::set<V,C,A>> : std::true_type {};
+
+    template<typename T>
+    struct IsStdUnorderedSet : std::false_type {};
+    template<typename V, typename H, typename E, typename A>
+    struct IsStdUnorderedSet<std::unordered_set<V,H,E,A>> : std::true_type {};
 
     template<typename T>
     struct IsStdOptional : std::false_type {};
@@ -56,7 +83,11 @@ namespace ESPressio::Serializable::Detail {
     template<typename T>
     inline constexpr bool IsSequence =
         IsStdVector<std::remove_cv_t<std::remove_reference_t<T>>>::value ||
-        IsStdArray<std::remove_cv_t<std::remove_reference_t<T>>>::value;
+        IsStdArray<std::remove_cv_t<std::remove_reference_t<T>>>::value ||
+        IsStdDeque<std::remove_cv_t<std::remove_reference_t<T>>>::value ||
+        IsStdList<std::remove_cv_t<std::remove_reference_t<T>>>::value ||
+        IsStdSet<std::remove_cv_t<std::remove_reference_t<T>>>::value ||
+        IsStdUnorderedSet<std::remove_cv_t<std::remove_reference_t<T>>>::value;
 
     template<typename T>
     inline constexpr bool IsStdString =
@@ -102,6 +133,10 @@ namespace ESPressio::Serializable::Detail {
             SerializationNode& GetNode() { return _object; }
             const SerializationNode& GetNode() const { return _object; }
 
+            bool Contains(const char* name) const {
+                return _object.Find(name) != nullptr;
+            }
+
             template<typename TValue>
             bool Read(const char* name, TValue& value) {
                 SerializationNode* child = _object.Find(name);
@@ -128,6 +163,7 @@ namespace ESPressio::Serializable::Detail {
             }
         } else if constexpr (IsSequence<T>) {
             node.SetType(SerializationNodeType::Array);
+            node.ReserveArray(value.size());
             for (const auto& item : value) {
                 node.Append(ToNode(item));
             }
@@ -140,6 +176,14 @@ namespace ESPressio::Serializable::Detail {
                 node.Append(std::move(entry));
             }
         } else if constexpr (std::is_enum_v<T>) {
+            if constexpr (HasEnumSerializationMapping<T>) {
+                const char* name = EnumToString(value);
+                if (name != nullptr) {
+                    node.SetType(SerializationNodeType::String);
+                    node.StringValue() = name;
+                    return node;
+                }
+            }
             using Underlying = std::underlying_type_t<T>;
             return ToNode(static_cast<Underlying>(value));
         } else if constexpr (std::is_same_v<T, bool>) {
@@ -229,6 +273,24 @@ namespace ESPressio::Serializable::Detail {
                 value.push_back(std::move(item));
             }
             return true;
+        } else if constexpr (IsStdDeque<T>::value || IsStdList<T>::value) {
+            if (node.GetType() != SerializationNodeType::Array) return false;
+            value.clear();
+            for (const auto& child : node.ArrayChildren()) {
+                typename T::value_type item{};
+                if (!FromNode(child,item)) return false;
+                value.push_back(std::move(item));
+            }
+            return true;
+        } else if constexpr (IsStdSet<T>::value || IsStdUnorderedSet<T>::value) {
+            if (node.GetType() != SerializationNodeType::Array) return false;
+            value.clear();
+            for (const auto& child : node.ArrayChildren()) {
+                typename T::value_type item{};
+                if (!FromNode(child,item)) return false;
+                value.insert(std::move(item));
+            }
+            return true;
         } else if constexpr (IsStdArray<T>::value) {
             if (
                 node.GetType() != SerializationNodeType::Array ||
@@ -268,11 +330,14 @@ namespace ESPressio::Serializable::Detail {
             }
             return true;
         } else if constexpr (std::is_enum_v<T>) {
+            if constexpr (HasEnumSerializationMapping<T>) {
+                if (node.GetType() == SerializationNodeType::String) {
+                    return EnumFromString(node.StringValue().c_str(), value);
+                }
+            }
             using Underlying = std::underlying_type_t<T>;
             Underlying decoded{};
-            if (!FromNode(node, decoded)) {
-                return false;
-            }
+            if (!FromNode(node, decoded)) return false;
             value = static_cast<T>(decoded);
             return true;
         } else if constexpr (std::is_same_v<T, bool>) {
@@ -283,25 +348,26 @@ namespace ESPressio::Serializable::Detail {
             return true;
         } else if constexpr (std::is_integral_v<T> && std::is_signed_v<T>) {
             if (node.GetType() == SerializationNodeType::SignedInteger) {
-                value = static_cast<T>(node.SignedIntegerValue());
-                return true;
+                const auto raw=node.SignedIntegerValue();
+                if (raw < static_cast<int64_t>(std::numeric_limits<T>::min()) || raw > static_cast<int64_t>(std::numeric_limits<T>::max())) return false;
+                value=static_cast<T>(raw); return true;
             }
             if (node.GetType() == SerializationNodeType::UnsignedInteger) {
-                value = static_cast<T>(node.UnsignedIntegerValue());
-                return true;
+                const auto raw=node.UnsignedIntegerValue();
+                if (raw > static_cast<uint64_t>(std::numeric_limits<T>::max())) return false;
+                value=static_cast<T>(raw); return true;
             }
             return false;
         } else if constexpr (std::is_integral_v<T> && std::is_unsigned_v<T>) {
             if (node.GetType() == SerializationNodeType::UnsignedInteger) {
-                value = static_cast<T>(node.UnsignedIntegerValue());
-                return true;
+                const auto raw=node.UnsignedIntegerValue();
+                if (raw > static_cast<uint64_t>(std::numeric_limits<T>::max())) return false;
+                value=static_cast<T>(raw); return true;
             }
-            if (
-                node.GetType() == SerializationNodeType::SignedInteger &&
-                node.SignedIntegerValue() >= 0
-            ) {
-                value = static_cast<T>(node.SignedIntegerValue());
-                return true;
+            if (node.GetType() == SerializationNodeType::SignedInteger && node.SignedIntegerValue() >= 0) {
+                const auto raw=static_cast<uint64_t>(node.SignedIntegerValue());
+                if (raw > static_cast<uint64_t>(std::numeric_limits<T>::max())) return false;
+                value=static_cast<T>(raw); return true;
             }
             return false;
         } else if constexpr (std::is_same_v<T, float>) {

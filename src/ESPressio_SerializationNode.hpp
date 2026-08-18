@@ -5,6 +5,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include <algorithm>
 
 namespace ESPressio::Serializable {
 
@@ -195,6 +196,59 @@ namespace ESPressio::Serializable {
                 );
 
                 return _arrayChildren.back();
+            }
+
+            void ReserveObject(size_t count) {
+                SetType(SerializationNodeType::Object);
+                _objectChildren.reserve(count);
+            }
+
+            void ReserveArray(size_t count) {
+                SetType(SerializationNodeType::Array);
+                _arrayChildren.reserve(count);
+            }
+
+            bool Remove(const char* name) {
+                if (name == nullptr || _type != SerializationNodeType::Object) {
+                    return false;
+                }
+
+                const auto iterator = std::find_if(
+                    _objectChildren.begin(),
+                    _objectChildren.end(),
+                    [&](const NamedChild& child) {
+                        return child.first == name;
+                    }
+                );
+
+                if (iterator == _objectChildren.end()) {
+                    return false;
+                }
+
+                _objectChildren.erase(iterator);
+                return true;
+            }
+
+            bool Take(const char* name, SerializationNode& output) {
+                if (name == nullptr || _type != SerializationNodeType::Object) {
+                    return false;
+                }
+
+                const auto iterator = std::find_if(
+                    _objectChildren.begin(),
+                    _objectChildren.end(),
+                    [&](const NamedChild& child) {
+                        return child.first == name;
+                    }
+                );
+
+                if (iterator == _objectChildren.end()) {
+                    return false;
+                }
+
+                output = std::move(iterator->second);
+                _objectChildren.erase(iterator);
+                return true;
             }
     };
 

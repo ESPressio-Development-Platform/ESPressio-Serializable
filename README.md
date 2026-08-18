@@ -10,7 +10,7 @@ The core library deliberately does not prescribe JSON, CBOR, NVS, filesystem, ne
 
 ESPressio Serializable is currently under initial development.
 
-The starter implementation is version `0.4.0` and should be considered a development version rather than a stable public release.
+The starter implementation is version `0.5.0` and should be considered a development version rather than a stable public release.
 
 ## Compatibility
 
@@ -89,7 +89,7 @@ Once the library is published to the PlatformIO Registry, the intended form will
 
 ```ini
 lib_deps =
-    flowduino/ESPressio-Serializable@^0.4.0
+    flowduino/ESPressio-Serializable@^0.5.0
 ```
 
 Alternatively, once the GitHub repository is public, the latest development sources can be referenced directly:
@@ -163,7 +163,7 @@ The ESPressio library itself does **not** declare ArduinoJson as an unconditiona
 
 ```ini
 lib_deps =
-    flowduino/ESPressio-Serializable@^0.4.0
+    flowduino/ESPressio-Serializable@^0.5.0
     bblanchon/ArduinoJson
 ```
 
@@ -866,17 +866,60 @@ ESP32 Preferences support is opt-in:
 Unsupported property types now produce targeted compile-time errors. Raw pointers specifically recommend `std::optional<T>` or a custom `SerializationAdapter<T>`, while unsupported class types recommend `Serializable<T>` or an adapter specialization.
 
 
+
+## v0.5 Core Capabilities
+
+Version `0.5.0` adds property defaults and validators, migration helpers, set/list/deque traversal, enum string mappings, sensitive-property policies, strict numeric conversion checks, and a direct JSON streaming serializer for large object graphs.
+
+### Defaults and Validation
+
+```cpp
+ESPRESSIO_PROPERTY("port", _port)
+    .Default(80)
+    .Range(1, 65535)
+    .Validate(&ValidatePort);
+```
+
+A missing non-required property receives its declared default. Values read from canonical names or aliases are validated before deserialization succeeds. Numeric ranges are additionally checked before narrowing integer conversions.
+
+### Migration Helpers
+
+`ESPressio::Serializable::Migration` provides `Rename`, `Remove`, `Move`, and `ResolveObjectPath` helpers for common schema transformations.
+
+### Additional Containers
+
+The common traversal now supports `std::set`, `std::unordered_set`, `std::list`, and `std::deque` in addition to the existing vector/array/map types.
+
+### Enum String Mappings
+
+```cpp
+ESPRESSIO_ENUM_MAPPING(Mode,
+    ESPRESSIO_ENUM_VALUE(Mode::Off, "off"),
+    ESPRESSIO_ENUM_VALUE(Mode::On,  "on")
+)
+```
+
+Mapped enums serialize by name while still accepting legacy numeric enum payloads during deserialization.
+
+### Sensitive-property Policies
+
+Tree-aware archives expose `Policy()` and support `Include`, `Redact`, or `Omit` for properties marked `.Sensitive()`.
+
+### Large Object Streaming
+
+`ESPressio_Serializable_JSONStream.hpp` provides `JsonStreamSerializer`, which writes directly to Arduino `Print` without first constructing a `SerializationNode` tree. This substantially lowers peak memory for large forward-only JSON serialization jobs.
+
 ## Development Roadmap
 
-With the common traversal, schema and persistence foundations now in place, likely next milestones are:
+With the common traversal, schema, validation, policy and streaming foundations now in place, likely next milestones are:
 
-1. property default-value metadata and validation callbacks;
-2. migration helper utilities for common rename/move/remove operations;
-3. `std::set` / `std::unordered_set` and other sequence containers;
-4. user-defined enum name/string mappings;
-5. serializer-aware sensitive-property redaction policies;
-6. more complete numeric range validation during deserialization;
-7. memory/streaming optimizations for very large object graphs.
+1. streaming deserialization for large JSON/CBOR payloads;
+2. direct streaming CBOR and native Binary writers;
+3. richer validation result/error reporting rather than boolean-only failures;
+4. reusable migration path helpers for indexed arrays as well as objects;
+5. configurable allocator strategies for node trees and temporary buffers;
+6. schema introspection/documentation generation from property metadata;
+7. optional compile-time elimination of property names for extremely constrained binary-only builds.
 
 ## Design Principle
 
