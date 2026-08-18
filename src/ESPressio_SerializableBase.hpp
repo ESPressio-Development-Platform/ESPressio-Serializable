@@ -1,28 +1,72 @@
 #pragma once
-
+#include <cstddef>
+#include <cstdint>
 #include <tuple>
+#include <type_traits>
 #include <utility>
+#include "ESPressio_SerializationSchema.hpp"
+
+namespace ESPressio::Serializable::Detail {
+    template<typename TArchive, typename = void>
+    struct HasGetNode : std::false_type {};
+
+    template<typename TArchive>
+    struct HasGetNode<
+        TArchive,
+        std::void_t<decltype(std::declval<TArchive&>().GetNode())>
+    > : std::true_type {};
+}
 
 namespace ESPressio::Serializable {
 
-    /*
-     * CRTP base for compile-time serializable types.
-     *
-     * TArchive is intentionally duck-typed: an archive only needs to provide
-     * Write(name, value) and/or Read(name, value). This keeps the core
-     * representation-neutral and dependency-free.
-     */
     template<typename TDerived>
     class SerializableBase {
         protected:
             constexpr SerializableBase() = default;
             ~SerializableBase() = default;
 
+        private:
+            template<typename TArchive, typename TProperty>
+            static bool ReadProperty(
+                TArchive& archive,
+                const TProperty& property,
+                TDerived& object
+            ) {
+                if (property.IsReadOnly()) {
+                    return true;
+                }
+
+                auto& value = property.GetValue(object);
+
+                if (archive.Read(property.GetName(), value)) {
+                    return true;
+                }
+
+                for (
+                    size_t index = 0;
+                    index < property.GetAliasCount();
+                    ++index
+                ) {
+                    const char* alias = property.GetAlias(index);
+                    if (alias != nullptr && archive.Read(alias, value)) {
+                        return true;
+                    }
+                }
+
+                return !property.IsRequired();
+            }
+
         public:
+            static constexpr uint32_t GetSchemaVersion() {
+                return Detail::SchemaVersion<TDerived>();
+            }
+
             template<typename TArchive>
             void Serialize(TArchive& archive) const {
                 const TDerived& object =
                     static_cast<const TDerived&>(*this);
+
+                archive.Write("__schemaVersion", GetSchemaVersion());
 
                 std::apply(
                     [&](const auto&... property) {
@@ -39,26 +83,49 @@ namespace ESPressio::Serializable {
             }
 
             template<typename TArchive>
-            void Deserialize(TArchive& archive) {
+            bool Deserialize(TArchive& archive) {
                 TDerived& object =
                     static_cast<TDerived&>(*this);
+
+                uint32_t sourceVersion = 1u;
+                archive.Read("__schemaVersion", sourceVersion);
+
+                if constexpr (Detail::HasGetNode<TArchive>::value) {
+                    if (
+                        !Detail::ApplyMigrations<TDerived>(
+                            archive.GetNode(),
+                            sourceVersion,
+                            GetSchemaVersion()
+                        )
+                    ) {
+                        return false;
+                    }
+                } else if (sourceVersion != GetSchemaVersion()) {
+                    return false;
+                }
+
+                bool success = true;
 
                 std::apply(
                     [&](const auto&... property) {
                         (
-                            archive.Read(
-                                property.GetName(),
-                                property.GetValue(object)
-                            ),
+                            (success =
+                                ReadProperty(
+                                    archive,
+                                    property,
+                                    object
+                                ) &&
+                                success),
                             ...
                         );
                     },
                     TDerived::GetSerializableProperties()
                 );
+
+                return success;
             }
     };
 
-    // Short public name for consumers.
     template<typename TDerived>
     using Serializable = SerializableBase<TDerived>;
 

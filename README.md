@@ -10,7 +10,7 @@ The core library deliberately does not prescribe JSON, CBOR, NVS, filesystem, ne
 
 ESPressio Serializable is currently under initial development.
 
-The starter implementation is version `0.1.0` and should be considered a development version rather than a stable public release.
+The starter implementation is version `0.4.0` and should be considered a development version rather than a stable public release.
 
 ## Compatibility
 
@@ -89,7 +89,7 @@ Once the library is published to the PlatformIO Registry, the intended form will
 
 ```ini
 lib_deps =
-    flowduino/ESPressio-Serializable@^0.1.0
+    flowduino/ESPressio-Serializable@^0.4.0
 ```
 
 Alternatively, once the GitHub repository is public, the latest development sources can be referenced directly:
@@ -100,6 +100,155 @@ lib_deps =
 ```
 
 Please note that using the GitHub repository directly will use the latest commits pushed into the repository, so volatility is possible.
+
+## Optional Archive Implementations
+
+The core umbrella header:
+
+```cpp
+#include <ESPressio_Serializable.hpp>
+```
+
+includes **only the core Serializable implementation**.
+
+None of the optional representation or transport adapters are included implicitly.
+
+A consuming project opts into only the functionality it needs by including the corresponding adapter header.
+
+### Native Binary
+
+```cpp
+#include <ESPressio_Serializable_Binary.hpp>
+```
+
+Provides:
+
+```cpp
+ESPressio::Serializable::BinaryArchive
+```
+
+The Binary Archive uses a compact ESPressio-specific, versioned binary key/value representation and has no dependency on Arduino or any third-party library.
+
+### CBOR
+
+```cpp
+#include <ESPressio_Serializable_CBOR.hpp>
+```
+
+Provides:
+
+```cpp
+ESPressio::Serializable::CborArchive
+```
+
+The initial CBOR Archive is self-contained and emits standards-compatible CBOR maps containing primitive values and UTF-8 strings.
+
+It does not require an external CBOR library.
+
+### JSON
+
+```cpp
+#include <ESPressio_Serializable_JSON.hpp>
+```
+
+Provides:
+
+```cpp
+ESPressio::Serializable::JsonArchive
+```
+
+JSON support is implemented as an adapter over ArduinoJson 7.
+
+The ESPressio library itself does **not** declare ArduinoJson as an unconditional dependency. A project which chooses JSON support should add ArduinoJson to its own PlatformIO dependencies:
+
+```ini
+lib_deps =
+    flowduino/ESPressio-Serializable@^0.4.0
+    bblanchon/ArduinoJson
+```
+
+A project which does not include `ESPressio_Serializable_JSON.hpp` does not compile the JSON adapter and does not need ArduinoJson.
+
+### Arduino Stream Transport
+
+```cpp
+#include <ESPressio_Serializable_Stream.hpp>
+```
+
+Provides:
+
+```cpp
+ESPressio::Serializable::StreamArchive
+```
+
+`StreamArchive` is deliberately considered a **transport adapter rather than a representation**.
+
+It transports the payload produced by another Archive using the Arduino `Stream` abstraction. This permits the same serialized representation to be moved through implementations such as:
+
+* `HardwareSerial`
+* `WiFiClient`
+* `File`
+* other Arduino `Stream` derivatives
+
+For example:
+
+```cpp
+Serializable::StreamArchive::Serialize<
+    Serializable::BinaryArchive
+>(
+    object,
+    Serial
+);
+```
+
+The stream transport uses a 32-bit little-endian payload length prefix so that multiple objects can safely share a continuous stream.
+
+Because this adapter uses Arduino `Stream`, the header is available only when the Arduino framework is present.
+
+### Why the Optional Headers are Separate
+
+This separation is intentional:
+
+```text
+ESPressio_Serializable.hpp
+        |
+        +---- Core only
+        |
+        +---- no ArduinoJson
+        +---- no Arduino Stream
+        +---- no CBOR dependency
+        +---- no format-specific code
+```
+
+The consuming project explicitly opts into additional functionality:
+
+```text
+ESPressio_Serializable_Binary.hpp
+        |
+        +---- Core
+        +---- BinaryArchive
+
+ESPressio_Serializable_CBOR.hpp
+        |
+        +---- Core
+        +---- CborArchive
+
+ESPressio_Serializable_JSON.hpp
+        |
+        +---- Core
+        +---- JsonArchive
+        +---- ArduinoJson (consumer-selected dependency)
+
+ESPressio_Serializable_Stream.hpp
+        |
+        +---- Core
+        +---- StreamArchive
+        +---- Arduino Stream
+```
+
+This means the absence of an optional header reference prevents that adapter from participating in the compilation unit.
+
+In particular, including the main `ESPressio_Serializable.hpp` header will never silently pull JSON, CBOR, binary, or Arduino Stream functionality into the consuming application.
 
 ## What is ESPressio Serializable?
 
@@ -428,16 +577,19 @@ example.Serialize(archive);
 
 No changes to `Example` or the ESPressio Serializable core are necessary.
 
-## Nested Serializable Types
 
-Recursive serialization of nested Serializable objects is a planned core capability.
+## Transparent Nested Objects and Collections
 
-The intended usage is:
+Nested traversal is implemented by the **common Serializable core**, rather than separately by JSON, CBOR, Binary, or other Archive implementations.
+
+The core converts the declared object graph into a representation-neutral `SerializationNode` tree.
+
+This means that a property can itself be another Serializable object:
 
 ```cpp
 class Position
     : public Serializable::Serializable<Position> {
-    // x, y and z properties...
+    // ...
 };
 
 class Robot
@@ -455,9 +607,97 @@ class Robot
 };
 ```
 
-A representation-aware Archive will then be able to recursively process `_position` as another Serializable object.
+The same declaration works with every tree-aware Archive:
 
-This functionality is not yet implemented in the `0.1.0` starter.
+```cpp
+Serializable::BinaryArchive binary;
+robot.Serialize(binary);
+
+Serializable::CborArchive cbor;
+robot.Serialize(cbor);
+
+Serializable::JsonArchive json;
+robot.Serialize(json);
+```
+
+No format-specific code is required in `Robot` or `Position`.
+
+### Supported Common Property Types
+
+The shared traversal layer currently handles:
+
+* nested `Serializable<T>` objects;
+* `std::array<T, N>`;
+* `std::vector<T>`;
+* collections containing nested Serializable objects;
+* arbitrarily nested arrays/vectors of supported values;
+* enumerations through their underlying integer type;
+* signed integers;
+* unsigned integers;
+* `bool`;
+* `float`;
+* `double`;
+* `std::string`.
+
+For example:
+
+```cpp
+class Device
+    : public Serializable::Serializable<Device> {
+
+    ESPRESSIO_SERIALIZABLE_TYPE(Device)
+
+    private:
+        Position _position;
+        std::array<uint16_t, 3> _calibration;
+        std::vector<Sensor> _sensors;
+
+    public:
+        ESPRESSIO_SERIALIZABLE_PROPERTIES(
+            ESPRESSIO_PROPERTY("position", _position),
+            ESPRESSIO_PROPERTY("calibration", _calibration),
+            ESPRESSIO_PROPERTY("sensors", _sensors)
+        )
+};
+```
+
+The serializer-specific layer only needs to understand the common node types:
+
+```text
+Object
+Array
+Null
+Boolean
+SignedInteger
+UnsignedInteger
+Float32
+Float64
+String
+```
+
+Consequently, support for a new nested/container type is normally added once in the common traversal layer and immediately becomes available to every compatible serializer.
+
+### Representation-Neutral Object Tree
+
+The internal relationship is now:
+
+```text
+Serializable<T>
+      |
+      v
+Property traversal
+      |
+      v
+SerializationNode tree
+      |
+      +--------+--------+--------+
+      |        |        |        |
+      v        v        v        v
+    JSON      CBOR    Binary    Future
+```
+
+This avoids implementing recursive object traversal separately for every representation and significantly reduces the opportunity for behavioural differences between serializers.
+
 
 ## Collections
 
@@ -533,22 +773,110 @@ ctest --test-dir build/tests --output-on-failure
 
 This is intentional: the serialization metadata and traversal machinery should remain independently testable from Arduino and ESP32-specific functionality.
 
+
+## v0.4 Core Capabilities
+
+Version `0.4.0` extends the common traversal/schema layer rather than adding format-specific special cases.
+
+### Arduino `String`
+
+The portable core does not include `Arduino.h`. Projects that need Arduino `String` support explicitly opt in with:
+
+```cpp
+#include <ESPressio_Serializable_Arduino.hpp>
+```
+
+This header specializes the portable `SerializationAdapter<T>` customization point for Arduino `String`.
+
+### Property Metadata
+
+Properties can be decorated fluently:
+
+```cpp
+ESPRESSIO_PROPERTY("name", _name)
+    .Required()
+    .Alias("oldName")
+    .Sensitive()
+```
+
+Convenience macros are also available:
+
+```cpp
+ESPRESSIO_PROPERTY_REQUIRED("id", _id)
+ESPRESSIO_PROPERTY_READONLY("serialNumber", _serialNumber)
+ESPRESSIO_PROPERTY_SENSITIVE("password", _password)
+```
+
+Current metadata flags are `Required`, `ReadOnly`, and `Sensitive`.
+
+### Aliases and Backwards Compatibility
+
+A property can accept up to four historic names:
+
+```cpp
+ESPRESSIO_PROPERTY("sampleRate", _sampleRate)
+    .Alias("samplingFrequency")
+    .Alias("frequency")
+```
+
+Serialization always uses the canonical current name. Deserialization attempts the canonical name first and then its aliases.
+
+### Versioned Schemas and Migrations
+
+Types default to schema version `1`.
+
+```cpp
+ESPRESSIO_SERIALIZABLE_SCHEMA_VERSION(3)
+```
+
+Every Serializable object receives a `__schemaVersion` property.
+
+A type can optionally implement:
+
+```cpp
+static bool Migrate(
+    ESPressio::Serializable::SerializationNode& node,
+    uint32_t fromVersion,
+    uint32_t toVersion
+);
+```
+
+Migrations run one version at a time before property deserialization and operate on the common representation-neutral tree.
+
+### `std::optional<T>`
+
+`std::optional<T>` is supported. An empty optional is represented as `Null`; a populated optional is represented as its contained value.
+
+### Map-like Containers
+
+The common traversal supports `std::map<TKey, TValue>` and `std::unordered_map<TKey, TValue>`. Maps are represented as arrays of `{ "key": ..., "value": ... }` entries so non-string key types remain portable across serializers.
+
+### ESP32 Preferences / NVS
+
+ESP32 Preferences support is opt-in:
+
+```cpp
+#include <ESPressio_Serializable_NVS.hpp>
+```
+
+`NvsArchive` stores the common Binary Archive payload as a byte blob in a Preferences/NVS entry.
+
+### Compile-time Diagnostics
+
+Unsupported property types now produce targeted compile-time errors. Raw pointers specifically recommend `std::optional<T>` or a custom `SerializationAdapter<T>`, while unsupported class types recommend `Serializable<T>` or an adapter specialization.
+
+
 ## Development Roadmap
 
-The initial implementation deliberately establishes the smallest useful foundation before adding representation-specific functionality.
+With the common traversal, schema and persistence foundations now in place, likely next milestones are:
 
-Likely next milestones are:
-
-1. Nested Serializable object support.
-2. `std::array` and `std::vector` support.
-3. Arduino `String` support where appropriate.
-4. Property metadata/options.
-5. Property aliases and backwards-compatible schema evolution.
-6. Versioned schemas and migration support.
-7. JSON Archive adapter.
-8. CBOR Archive adapter.
-9. ESP32 Preferences/NVS Archive adapter.
-10. Compile-time diagnostics for unsupported member types.
+1. property default-value metadata and validation callbacks;
+2. migration helper utilities for common rename/move/remove operations;
+3. `std::set` / `std::unordered_set` and other sequence containers;
+4. user-defined enum name/string mappings;
+5. serializer-aware sensitive-property redaction policies;
+6. more complete numeric range validation during deserialization;
+7. memory/streaming optimizations for very large object graphs.
 
 ## Design Principle
 
