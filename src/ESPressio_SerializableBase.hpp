@@ -8,6 +8,12 @@
 #include "ESPressio_SerializationResult.hpp"
 
 namespace ESPressio::Serializable::Detail {
+    template<typename TArchive, typename TValue, typename = void>
+    struct HasReadDetailed : std::false_type {};
+
+    template<typename TArchive, typename TValue>
+    struct HasReadDetailed<TArchive,TValue,std::void_t<decltype(std::declval<TArchive&>().ReadDetailed(std::declval<const char*>(),std::declval<TValue&>(),std::declval<const DeserializationOptions&>()))>> : std::true_type {};
+
     template<typename TArchive, typename = void>
     struct HasGetNode : std::false_type {};
 
@@ -44,7 +50,8 @@ namespace ESPressio::Serializable {
                 TArchive& archive,
                 const TProperty& property,
                 TDerived& object,
-                DeserializationResult& result
+                DeserializationResult& result,
+                const DeserializationOptions& options
             ) {
                 if (property.IsReadOnly()) return true;
                 auto& value = property.GetValue(object);
@@ -54,15 +61,18 @@ namespace ESPressio::Serializable {
                     if (name == nullptr) return 0;
                     if constexpr (Detail::HasContains<TArchive>::value) {
                         if (!archive.Contains(name)) return 0;
+                    }
+                    if constexpr (Detail::HasReadDetailed<TArchive,decltype(value)>::value) {
+                        auto nested = archive.ReadDetailed(name, value, options);
+                        if (!nested) { result.Merge(nested, "", options); return -1; }
+                    } else {
                         if (!archive.Read(name, value)) {
-                            result.Add(SerializationErrorCode::TypeMismatch, name, "Property is present but could not be converted to the declared C++ type");
+                            result.Add(SerializationErrorCode::TypeMismatch, name, "Property is present but could not be converted to the declared C++ type", options);
                             return -1;
                         }
-                    } else {
-                        if (!archive.Read(name, value)) return 0;
                     }
                     if (!property.ValidateValue(value)) {
-                        result.Add(SerializationErrorCode::ValidationFailed, canonical ? canonical : name, "Property value failed its validator or numeric range constraint");
+                        result.Add(SerializationErrorCode::ValidationFailed, canonical ? canonical : name, "Property value failed its validator or numeric range constraint", options);
                         return -1;
                     }
                     return 1;
@@ -79,14 +89,14 @@ namespace ESPressio::Serializable {
                 if (property.HasDefault()) {
                     value = property.GetDefault();
                     if (!property.ValidateValue(value)) {
-                        result.Add(SerializationErrorCode::ValidationFailed, canonical ? canonical : "", "Configured default value failed property validation");
+                        result.Add(SerializationErrorCode::ValidationFailed, canonical ? canonical : "", "Configured default value failed property validation", options);
                         return false;
                     }
                     return true;
                 }
 
                 if (property.IsRequired()) {
-                    result.Add(SerializationErrorCode::MissingRequiredProperty, canonical ? canonical : "", "Required property is absent (including all aliases)");
+                    result.Add(SerializationErrorCode::MissingRequiredProperty, canonical ? canonical : "", "Required property is absent (including all aliases)", options);
                     return false;
                 }
                 return true;
@@ -125,7 +135,10 @@ namespace ESPressio::Serializable {
             }
 
             template<typename TArchive>
-            DeserializationResult DeserializeDetailed(TArchive& archive) {
+            DeserializationResult DeserializeDetailed(
+                TArchive& archive,
+                const DeserializationOptions& options = {}
+            ) {
                 DeserializationResult result;
                 TDerived& object =
                     static_cast<TDerived&>(*this);
@@ -141,10 +154,10 @@ namespace ESPressio::Serializable {
                             GetSchemaVersion()
                         )
                     ) {
-                        result.Add(SerializationErrorCode::MigrationFailed,"__schemaVersion","Schema migration failed"); return result;
+                        result.Add(SerializationErrorCode::MigrationFailed,"__schemaVersion","Schema migration failed", options); return result;
                     }
                 } else if (sourceVersion != GetSchemaVersion()) {
-                    result.Add(SerializationErrorCode::UnsupportedSchemaVersion,"__schemaVersion","Archive does not support structural migration"); return result;
+                    result.Add(SerializationErrorCode::UnsupportedSchemaVersion,"__schemaVersion","Archive does not support structural migration", options); return result;
                 }
 
                 bool success = true;
@@ -152,12 +165,13 @@ namespace ESPressio::Serializable {
                 std::apply(
                     [&](const auto&... property) {
                         (
-                            (success =
+                            (success = result.ShouldContinue(options) &&
                                 ReadPropertyDetailed(
                                     archive,
                                     property,
                                     object,
-                                    result
+                                    result,
+                                    options
                                 ) &&
                                 success),
                             ...

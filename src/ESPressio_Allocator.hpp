@@ -1,6 +1,7 @@
 #pragma once
 #include <cstddef>
 #include <memory>
+#include <vector>
 #ifndef ESPRESSIO_SERIALIZATION_ALLOCATOR
 #define ESPRESSIO_SERIALIZATION_ALLOCATOR std::allocator
 #endif

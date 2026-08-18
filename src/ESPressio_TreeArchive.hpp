@@ -58,6 +58,17 @@ namespace ESPressio::Serializable {
                 SerializationNode* child = _root.Find(name);
                 return child != nullptr && Detail::FromNode(*child, value);
             }
+
+            template<typename TValue>
+            DeserializationResult ReadDetailed(
+                const char* name,
+                TValue& value,
+                const DeserializationOptions& options = {}
+            ) {
+                SerializationNode* child = _root.Find(name);
+                if (child == nullptr) return {};
+                return Detail::FromNodeDetailed(*child, value, name == nullptr ? "" : name, options);
+            }
     };
 
 }

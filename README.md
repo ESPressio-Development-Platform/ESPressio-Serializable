@@ -10,7 +10,7 @@ The core library deliberately does not prescribe JSON, CBOR, NVS, filesystem, ne
 
 ESPressio Serializable is currently under initial development.
 
-The starter implementation is version `0.6.1` and should be considered a development version rather than a stable public release.
+The starter implementation is version `0.7.0` and should be considered a development version rather than a stable public release.
 
 ## Compatibility
 
@@ -89,7 +89,7 @@ Once the library is published to the PlatformIO Registry, the intended form will
 
 ```ini
 lib_deps =
-    flowduino/ESPressio-Serializable@^0.6.1
+    flowduino/ESPressio-Serializable@^0.7.0
 ```
 
 Alternatively, once the GitHub repository is public, the latest development sources can be referenced directly:
@@ -163,7 +163,7 @@ The ESPressio library itself does **not** declare ArduinoJson as an unconditiona
 
 ```ini
 lib_deps =
-    flowduino/ESPressio-Serializable@^0.6.1
+    flowduino/ESPressio-Serializable@^0.7.0
     bblanchon/ArduinoJson
 ```
 
@@ -914,37 +914,26 @@ Tree-aware archives expose `Policy()` and support `Include`, `Redact`, or `Omit`
 
 `ESPressio_Serializable_JSONStream.hpp` provides `JsonStreamSerializer`, which writes directly to Arduino `Print` without first constructing a `SerializationNode` tree. This substantially lowers peak memory for large forward-only JSON serialization jobs.
 
+
+## v0.7 Hardening, Compatibility and Tooling
+
+Version `0.7.0` adds a reproducible hardening layer around the serialization framework: deterministic malformed-input mutation tests, libFuzzer entry points for Binary and CBOR, immutable wire-format compatibility policy/test vectors, nested diagnostic paths with configurable `FailFast`/`CollectAll` behavior, ESP32 internal-RAM/PSRAM allocator adapters, a portable static-pool allocator, additional `SchemaInspector<T>` JSON/CSV/Mermaid outputs, migration regression tests, benchmark firmware, and further transport examples.
+
+Hardware benchmark results are intentionally **not fabricated or generalized from host measurements**. The repository supplies an ESP32 benchmark harness and documentation so numbers can be collected on explicitly identified physical targets and committed reproducibly.
+
+The direct streaming serializers remain the preferred path for very large forward-only output. JSON streaming deserialization continues to use ArduinoJson's document model; callers can use the filter overload to limit materialized fields, while CBOR streaming can avoid retaining the complete encoded payload.
+
 ## Development Roadmap
 
-The major serialization, schema-evolution, validation, collection, streaming, allocator, introspection, and constrained-binary foundations are now implemented. Future development is therefore focused primarily on hardening, measurement, interoperability, and developer experience:
+The v0.7 release implements the previous hardening/tooling roadmap. Remaining forward-looking work is now narrower:
 
-1. fuzz testing and malformed-input hardening across JSON, CBOR, Binary, and streaming deserializers;
-2. formal wire-format compatibility guarantees and cross-version compatibility test vectors;
-3. RAM, flash, and runtime benchmarks across representative ESP32 targets and payload sizes;
-4. further streaming-deserialization optimizations for very large payloads, especially JSON parser/document memory usage;
-5. richer validation diagnostics, including nested-path aggregation and configurable fail-fast versus collect-all behaviour;
-6. additional allocator/pool strategies tuned for ESP32 internal RAM and PSRAM;
-7. automated cross-version schema-migration regression testing;
-8. additional schema-documentation output formats derived from `SchemaInspector<T>` metadata;
-9. transport-oriented examples and adapters, building on the ESP-NOW Serializable mesh example;
-10. continued API consistency, documentation, examples, and PlatformIO/Arduino compatibility testing.
-
-The following capabilities that appeared on earlier roadmaps are **already implemented** and are not future work:
-
-* property default-value metadata and validation callbacks;
-* migration helpers for rename, move, remove, and indexed object/array paths;
-* `std::set`, `std::unordered_set`, `std::list`, `std::deque`, and other supported collection traversal;
-* user-defined enum name/string mappings;
-* serializer-aware sensitive-property include/redact/omit policies;
-* numeric range and narrowing validation during deserialization;
-* memory-conscious/direct streaming serialization for large object graphs;
-* streaming JSON and CBOR deserialization;
-* direct streaming CBOR and native Binary writers;
-* structured deserialization and validation error reporting;
-* configurable allocator strategies;
-* schema introspection and Markdown documentation generation;
-* optional compile-time property-name elimination for constrained binary-only builds.
-
+1. continuously grow fuzz corpora from real failures and CI sanitizer findings;
+2. populate the benchmark-results directory with measurements from identified physical ESP32/ESP32-S3 targets;
+3. extend optional JSON streaming toward schema-directed incremental parsing where ArduinoJson APIs permit it without compromising portability;
+4. add more transport adapters only where they provide reusable framing/reliability semantics beyond Arduino `Stream` itself;
+5. maintain immutable compatibility vectors for every released Binary wire version and representative JSON/CBOR schemas;
+6. expand PlatformIO CI across Arduino-ESP32 core versions and representative board families;
+7. continue migration, API-consistency and documentation regression testing as the public surface evolves.
 
 ## Design Principle
 

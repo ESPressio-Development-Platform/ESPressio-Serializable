@@ -10,3 +10,31 @@ target_include_directories(espressio_serializable_v06_tests PRIVATE ../src)
 enable_testing()
 add_test(NAME ESPressioSerializableTests COMMAND espressio_serializable_tests)
 add_test(NAME ESPressioSerializableV06Tests COMMAND espressio_serializable_v06_tests)
+
+add_executable(espressio_serializable_malformed test_malformed.cpp)
+target_include_directories(espressio_serializable_malformed PRIVATE ../src)
+add_test(NAME espressio_serializable_malformed COMMAND espressio_serializable_malformed)
+
+add_executable(espressio_serializable_diagnostics test_diagnostics.cpp)
+target_include_directories(espressio_serializable_diagnostics PRIVATE ../src)
+add_test(NAME espressio_serializable_diagnostics COMMAND espressio_serializable_diagnostics)
+
+add_executable(espressio_serializable_migrations test_migration_regression.cpp)
+target_include_directories(espressio_serializable_migrations PRIVATE ../src)
+add_test(NAME espressio_serializable_migrations COMMAND espressio_serializable_migrations)
+
+add_executable(espressio_serializable_compatibility test_compatibility.cpp)
+target_include_directories(espressio_serializable_compatibility PRIVATE ../src)
+add_test(NAME espressio_serializable_compatibility COMMAND espressio_serializable_compatibility)
+
+add_executable(espressio_serializable_pool test_pool_allocator.cpp)
+target_include_directories(espressio_serializable_pool PRIVATE ../src)
+add_test(NAME espressio_serializable_pool COMMAND espressio_serializable_pool)
+
+add_executable(espressio_serializable_schema_formats test_schema_formats.cpp)
+target_include_directories(espressio_serializable_schema_formats PRIVATE ../src)
+add_test(NAME espressio_serializable_schema_formats COMMAND espressio_serializable_schema_formats)
+
+add_executable(espressio_serializable_headers test_headers.cpp)
+target_include_directories(espressio_serializable_headers PRIVATE ../src)
+add_test(NAME espressio_serializable_headers COMMAND espressio_serializable_headers)

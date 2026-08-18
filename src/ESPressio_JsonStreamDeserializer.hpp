@@ -5,8 +5,17 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include "ESPressio_JsonArchive.hpp"
+#include "ESPressio_SchemaIntrospection.hpp"
 namespace ESPressio::Serializable {
 class JsonStreamDeserializer { Stream&_in; public: explicit JsonStreamDeserializer(Stream&i):_in(i){}
  template<class T> DeserializationResult Deserialize(T&object){ ArduinoJson::JsonDocument d; auto e=ArduinoJson::deserializeJson(d,_in); if(e){DeserializationResult r;r.Add(SerializationErrorCode::MalformedInput,"",e.c_str());return r;} JsonArchive a; if(!a.LoadDocument(d)){DeserializationResult r;r.Add(SerializationErrorCode::MalformedInput,"","Unable to map JSON document");return r;} return object.DeserializeDetailed(a); }
  template<class T,class TFilter> DeserializationResult Deserialize(T&object,const TFilter&filter){ ArduinoJson::JsonDocument d; auto e=ArduinoJson::deserializeJson(d,_in,ArduinoJson::DeserializationOption::Filter(filter)); if(e){DeserializationResult r;r.Add(SerializationErrorCode::MalformedInput,"",e.c_str());return r;} JsonArchive a;if(!a.LoadDocument(d)){DeserializationResult r;r.Add(SerializationErrorCode::MalformedInput,"","Unable to map filtered JSON");return r;}return object.DeserializeDetailed(a); }
+ template<class T> DeserializationResult DeserializeSchemaFiltered(T& object,const DeserializationOptions& options=DeserializationOptions{}) {
+   ArduinoJson::JsonDocument filter; filter["__schemaVersion"]=true;
+   for(const auto& p:SchemaInspector<T>::Properties()){ if(!p.Name.empty()) filter[p.Name.c_str()]=true; for(const auto&a:p.Aliases) filter[a.c_str()]=true; }
+   ArduinoJson::JsonDocument d; auto e=ArduinoJson::deserializeJson(d,_in,ArduinoJson::DeserializationOption::Filter(filter));
+   if(e){DeserializationResult r;r.Add(SerializationErrorCode::MalformedInput,"",e.c_str(),options);return r;}
+   JsonArchive a;if(!a.LoadDocument(d)){DeserializationResult r;r.Add(SerializationErrorCode::MalformedInput,"","Unable to map schema-filtered JSON",options);return r;}
+   return object.DeserializeDetailed(a,options);
+ }
 }; }

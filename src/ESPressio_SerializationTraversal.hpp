@@ -21,6 +21,7 @@
 #include "ESPressio_EnumSerialization.hpp"
 #include "ESPressio_SerializationNode.hpp"
 #include "ESPressio_SerializationTraits.hpp"
+#include "ESPressio_SerializationResult.hpp"
 
 namespace ESPressio::Serializable::Detail {
 
@@ -416,6 +417,47 @@ namespace ESPressio::Serializable::Detail {
         }
 
         return false;
+    }
+
+
+    template<typename TValue>
+    DeserializationResult FromNodeDetailed(
+        const SerializationNode& node,
+        TValue& value,
+        const std::string& path = "",
+        const DeserializationOptions& options = DeserializationOptions{}
+    ) {
+        using T = std::remove_cv_t<std::remove_reference_t<TValue>>;
+        DeserializationResult result;
+        auto fail = [&]() {
+            auto code = SerializationErrorCode::TypeMismatch;
+            if constexpr (std::is_integral_v<T> && !std::is_same_v<T,bool>) {
+                if (node.GetType()==SerializationNodeType::SignedInteger || node.GetType()==SerializationNodeType::UnsignedInteger)
+                    code=SerializationErrorCode::NumericOutOfRange;
+            } else if constexpr (std::is_enum_v<T>) {
+                if (node.GetType()==SerializationNodeType::String) code=SerializationErrorCode::UnknownEnumValue;
+            }
+            result.Add(code,path,"Value cannot be converted to the declared C++ type",options);
+        };
+        if constexpr (IsSerializable<T>) {
+            if(node.GetType()!=SerializationNodeType::Object){fail();return result;}
+            SerializationNode copy=node; NodeReaderArchive archive(copy);
+            auto nested=value.DeserializeDetailed(archive,options); result.Merge(nested,path,options); return result;
+        } else if constexpr (IsStdOptional<T>::value) {
+            if(node.GetType()==SerializationNodeType::Null){value.reset();return result;}
+            typename T::value_type item{}; auto nested=FromNodeDetailed(node,item,path,options); result.Merge(nested,"",options); if(nested)value=std::move(item); return result;
+        } else if constexpr (IsStdVector<T>::value || IsStdDeque<T>::value || IsStdList<T>::value) {
+            if(node.GetType()!=SerializationNodeType::Array){fail();return result;} value.clear(); if constexpr(IsStdVector<T>::value)value.reserve(node.ArrayChildren().size());
+            size_t i=0; for(const auto& child:node.ArrayChildren()){typename T::value_type item{};auto nested=FromNodeDetailed(child,item,path+"["+std::to_string(i)+"]",options);result.Merge(nested,"",options);if(nested)value.push_back(std::move(item));if(!result.ShouldContinue(options))break;++i;} return result;
+        } else if constexpr (IsStdSet<T>::value || IsStdUnorderedSet<T>::value) {
+            if(node.GetType()!=SerializationNodeType::Array){fail();return result;} value.clear();size_t i=0;for(const auto&child:node.ArrayChildren()){typename T::value_type item{};auto nested=FromNodeDetailed(child,item,path+"["+std::to_string(i)+"]",options);result.Merge(nested,"",options);if(nested)value.insert(std::move(item));if(!result.ShouldContinue(options))break;++i;}return result;
+        } else if constexpr (IsStdArray<T>::value) {
+            if(node.GetType()!=SerializationNodeType::Array||node.ArrayChildren().size()!=std::tuple_size<T>::value){fail();return result;}for(size_t i=0;i<value.size();++i){auto nested=FromNodeDetailed(node.ArrayChildren()[i],value[i],path+"["+std::to_string(i)+"]",options);result.Merge(nested,"",options);if(!result.ShouldContinue(options))break;}return result;
+        } else if constexpr (IsMapLike<T>) {
+            if(node.GetType()!=SerializationNodeType::Array){fail();return result;}value.clear();size_t i=0;for(const auto&child:node.ArrayChildren()){std::string ep=path+"["+std::to_string(i)+"]";if(child.GetType()!=SerializationNodeType::Object){result.Add(SerializationErrorCode::TypeMismatch,ep,"Map entry must be an object",options);}else{auto*kn=child.Find("key");auto*vn=child.Find("value");if(!kn||!vn)result.Add(SerializationErrorCode::MalformedInput,ep,"Map entry requires key and value",options);else{typename T::key_type key{};typename T::mapped_type mapped{};auto kr=FromNodeDetailed(*kn,key,ep+".key",options);auto vr=FromNodeDetailed(*vn,mapped,ep+".value",options);result.Merge(kr,"",options);result.Merge(vr,"",options);if(kr&&vr)value.emplace(std::move(key),std::move(mapped));}}if(!result.ShouldContinue(options))break;++i;}return result;
+        } else {
+            if(!FromNode(node,value))fail(); return result;
+        }
     }
 
 }
