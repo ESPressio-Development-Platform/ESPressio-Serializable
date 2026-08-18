@@ -1,5 +1,14 @@
 # ESPressio Serializable
 
+## Pre-release Status
+
+> **Version 0.9.0 — API Freeze / Downstream Validation**
+
+This release is intended to be tagged and consumed by downstream projects before `1.0.0`. The implementation is considered feature-complete for the initial stable release, but hardware validation, integration testing, benchmarking, fuzzing, and final API review are still in progress.
+
+Breaking API changes remain possible during the `0.9.x` line if downstream testing exposes a release-blocking design problem. The goal is to make those corrections now so that `1.0.0` can establish a stable compatibility contract.
+
+
 Serialization and Deserialization Components of the Flowduino ESPressio Development Platform
 
 Provides a foundation for declaratively describing the serializable state of C++ types and serializing or deserializing that state through interchangeable Archive implementations.
@@ -8,9 +17,25 @@ The core library deliberately does not prescribe JSON, CBOR, NVS, filesystem, ne
 
 ## Latest Stable Version
 
-ESPressio Serializable is currently under initial development.
+ESPressio Serializable is currently in **pre-release API-freeze validation**.
 
-The starter implementation is version `0.7.0` and should be considered a development version rather than a stable public release.
+The current pre-release is version `0.9.0`.
+
+Version `0.9.0` is intended for downstream integration, hardware validation, compatibility testing, and final API review before the first stable `1.0.0` release.
+
+No new feature work is planned for the `0.9.x` line unless it is required to correct a design flaw, compatibility issue, or release-blocking defect. The focus of this phase is:
+
+* validating the public API from real consuming projects;
+* compiling and running on representative ESP32 targets;
+* verifying PlatformIO and Arduino IDE compatibility;
+* exercising JSON, CBOR, Binary, NVS, streaming, and ESP-NOW paths on hardware;
+* extending fuzzing and malformed-input coverage;
+* confirming wire-format compatibility guarantees;
+* measuring RAM, flash, and runtime characteristics;
+* refining documentation and examples; and
+* resolving any issues discovered before `1.0.0`.
+
+The public API should now be treated as **provisionally frozen**. Any breaking change discovered during `0.9.x` validation should be made before `1.0.0`, not deferred until after it.
 
 ## Compatibility
 
@@ -89,7 +114,7 @@ Once the library is published to the PlatformIO Registry, the intended form will
 
 ```ini
 lib_deps =
-    flowduino/ESPressio-Serializable@^0.7.0
+    flowduino/ESPressio-Serializable@^0.9.0
 ```
 
 Alternatively, once the GitHub repository is public, the latest development sources can be referenced directly:
@@ -163,7 +188,7 @@ The ESPressio library itself does **not** declare ArduinoJson as an unconditiona
 
 ```ini
 lib_deps =
-    flowduino/ESPressio-Serializable@^0.7.0
+    flowduino/ESPressio-Serializable@^0.9.0
     bblanchon/ArduinoJson
 ```
 
@@ -925,15 +950,46 @@ The direct streaming serializers remain the preferred path for very large forwar
 
 ## Development Roadmap
 
-The v0.7 release implements the previous hardening/tooling roadmap. Remaining forward-looking work is now narrower:
+ESPressio Serializable `0.9.0` is considered **feature-complete for the planned `1.0.0` scope**.
 
-1. continuously grow fuzz corpora from real failures and CI sanitizer findings;
-2. populate the benchmark-results directory with measurements from identified physical ESP32/ESP32-S3 targets;
-3. extend optional JSON streaming toward schema-directed incremental parsing where ArduinoJson APIs permit it without compromising portability;
-4. add more transport adapters only where they provide reusable framing/reliability semantics beyond Arduino `Stream` itself;
-5. maintain immutable compatibility vectors for every released Binary wire version and representative JSON/CBOR schemas;
-6. expand PlatformIO CI across Arduino-ESP32 core versions and representative board families;
-7. continue migration, API-consistency and documentation regression testing as the public surface evolves.
+The remaining work before `1.0.0` is release hardening and downstream validation rather than additional feature development:
+
+1. compile all examples against representative ESP32, ESP32-S3, and ESP32-C3 PlatformIO targets;
+2. run JSON, CBOR, native Binary, NVS, Stream, TCP, and ESP-NOW examples on physical hardware;
+3. verify clean installation and example compilation in the Arduino IDE;
+4. run the benchmark harness on identified boards and record real RAM, flash, and runtime measurements;
+5. run the fuzz harnesses for extended periods and preserve useful corpora/regressions;
+6. verify frozen Binary/CBOR compatibility vectors and cross-version schema migration fixtures;
+7. review the complete public API, macro names, serializer names, result/error types, and wire-format contracts for final `1.0.0` stability;
+8. add/expand CI for host tests and representative PlatformIO compile targets;
+9. validate the library from downstream consuming projects with no local-path assumptions;
+10. fix only defects, inconsistencies, portability issues, or release blockers discovered during the `0.9.x` validation cycle.
+
+### Feature-complete `1.0.0` scope
+
+The following capabilities are already implemented and are **not roadmap items**:
+
+* declarative Serializable property metadata;
+* defaults, validation callbacks, numeric range validation, aliases, and read-only/sensitive metadata;
+* schema versions and migration support;
+* rename/move/remove/indexed migration helpers;
+* nested Serializable objects;
+* `std::optional`, arrays, vectors, sets, unordered sets, lists, deques, maps, and unordered maps;
+* enum name/string mappings;
+* JSON, CBOR, native Binary, NVS, and Arduino Stream adapters;
+* serializer-aware sensitive-property include/redact/omit policies;
+* direct streaming JSON, CBOR, and Binary serialization;
+* streaming JSON and CBOR deserialization;
+* structured validation/deserialization diagnostics with fail-fast or collect-all behavior;
+* configurable allocator strategies, including static-pool and ESP32/PSRAM-oriented allocators;
+* schema introspection and Markdown/JSON/CSV/Mermaid documentation generation;
+* optional property-name elimination for constrained binary-only builds;
+* malformed-input mutation tests and fuzz harnesses;
+* frozen wire-format compatibility vectors;
+* schema-migration regression tests;
+* transport examples including ESP-NOW, Serial, and TCP;
+* CRC32-framed stream transport support; and
+* reproducible ESP32 benchmark harnesses.
 
 ## Design Principle
 
