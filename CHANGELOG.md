@@ -1,38 +1,66 @@
 # Changelog
 
-## 0.9.0
+All notable changes to this project are documented in this file.
 
-Pre-release API-freeze milestone for downstream integration and hardware validation before `1.0.0`.
+The structure follows the principles of [Keep a
+Changelog](https://keepachangelog.com/en/1.1.0/) and [Semantic
+Versioning](https://semver.org/).
 
-### Status
+> **Historical note:** This changelog was reconstructed retrospectively
+> from published GitHub Releases, tags, release notes, repository
+> history, and the documented public API. Where an historical release
+> had little or no release-note detail, the entry is intentionally terse
+> rather than inferring unsupported intent.
 
-* Feature-complete for the planned `1.0.0` scope.
-* Public API provisionally frozen.
-* Focus shifted from feature development to compatibility, fuzzing, hardware validation, benchmarks, documentation, and downstream testing.
+## \[0.9.0\] - 2026-08-18
 
-### Included capability areas
+### Added
 
-* declarative property metadata, defaults, validation, aliases, ranges, read-only/sensitive flags;
-* schema versions, migration helpers, and migration regression fixtures;
-* nested objects and standard collection support;
-* enum string mappings;
-* JSON, CBOR, native Binary, NVS, and Stream adapters;
-* direct/streaming serialization and large-payload deserialization paths;
-* structured diagnostics and configurable validation behavior;
-* configurable allocators and PSRAM/static-pool strategies;
-* schema introspection and documentation exporters;
-* constrained binary/property-name-elision mode;
-* malformed-input hardening, fuzz harnesses, and frozen compatibility vectors;
-* ESP-NOW, Serial, TCP, CRC32-framed transport examples/adapters;
-* reproducible ESP32 benchmark harnesses.
+-   First public pre-release intended for downstream integration and
+    real-world validation.
+-   Completed the planned 1.0 feature scope for declarative
+    serialization and schema handling.
+-   Added/solidified JSON, CBOR, and direct Binary archive support.
+-   Added nested Serializable objects and container support.
+-   Added Arduino `String` support without making the portable core
+    Arduino-dependent.
+-   Added `std::optional`, map/set support, and enum mapping facilities.
+-   Added redaction metadata.
+-   Added numeric and application-defined validation.
+-   Added schema versions, aliases, default values, and migration
+    helpers.
+-   Added streaming parser/writer facilities.
+-   Added richer compile-time diagnostics.
+-   Added allocator strategy support.
+-   Added schema/documentation facilities.
+-   Added compatibility vectors, fuzz-test infrastructure, and
+    benchmarking support.
 
-### Pre-1.0 validation goals
+### Changed
 
-* physical ESP32/ESP32-S3/ESP32-C3 testing;
-* Arduino IDE verification;
-* downstream clean-install verification;
-* longer fuzz campaigns;
-* real RAM/flash/runtime measurements;
-* final API/wire-format review.
+-   Declared the public API provisionally frozen for the 0.9.x
+    validation cycle.
+-   Shifted development focus toward hardware validation, compatibility
+    testing, fuzzing, benchmarking, documentation, API consistency, and
+    defect correction ahead of 1.0.0.
 
+## Pre-0.9 development milestones
 
+The repository evolved rapidly through internal/pre-release 0.x
+milestones before the first published GitHub Release at 0.9.0.
+
+### Added
+
+-   Established the CRTP/property-descriptor Serializable foundation.
+-   Added declarative property schemas and schema-version metadata.
+-   Added JSON serialization/deserialization.
+-   Added CBOR and Binary representations.
+-   Added nested objects and array/container handling.
+-   Added validation, migrations, aliases, defaults, redaction,
+    streaming, and extensibility in successive development iterations.
+
+> The current GitHub Releases history publishes 0.9.0 as the first
+> release. Earlier 0.x version numbers appeared during repository
+> development, but are grouped here rather than assigning release dates
+> or exact contents that are not fully supported by the published
+> release record.
