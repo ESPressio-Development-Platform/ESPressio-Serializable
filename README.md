@@ -5,7 +5,66 @@ Development Platform.
 
 ## Latest Stable Version
 
-**0.10.0**
+**0.10.1**
+
+### 0.10.1 bounded BinaryArchive decoding
+
+Version 0.10.1 hardens `BinaryArchive` when decoding untrusted or malformed
+ESPB v2 payloads. The default `Load()` overload now applies embedded-friendly
+limits for nesting depth, aggregate node count, object members, array elements,
+property-name length, and string length. Allocation or decoder exceptions are
+converted into a clean invalid-archive result rather than escaping into the
+application.
+
+Applications with different requirements can supply explicit limits:
+
+```cpp
+ESPressio::Serializable::BinaryArchive archive;
+ESPressio::Serializable::BinaryArchiveDecodeLimits limits;
+
+limits.MaximumDepth = 16;
+limits.MaximumTotalNodes = 1024;
+limits.MaximumObjectMembers = 256;
+limits.MaximumArrayElements = 1024;
+limits.MaximumNameLength = 256;
+limits.MaximumStringLength = 16 * 1024;
+
+if (!archive.Load(data, size, limits)) {
+    // Malformed, truncated, unsupported, or outside the configured limits.
+}
+```
+
+The no-options overload remains source-compatible and uses the library defaults.
+The ESPB v2 wire format is unchanged.
+
+### Allocation-free BinaryArchive validation and traversal
+
+For diagnostics, protocol inspection, and other cases that do not require an
+owned `SerializationNode` tree, 0.10.1 also adds an allocation-free ESPB v2
+traversal API:
+
+```cpp
+ESPressio::Serializable::BinaryArchiveDecodeLimits limits;
+limits.MaximumDepth = 12;
+limits.MaximumTotalNodes = 1024;
+
+if (ESPressio::Serializable::ValidateBinaryArchive(
+        data,
+        size,
+        limits
+    )) {
+    // Structurally valid and within the configured limits.
+}
+```
+
+`TraverseBinaryArchive()` accepts a `BinaryArchiveVisitor` and streams object,
+array, property, and scalar callbacks directly from the encoded bytes. The
+traversal uses `std::string_view` for borrowed names/string values and does not
+construct a second tree or copy payload strings merely to inspect them.
+
+This is particularly useful on ESP32 for diagnostic paths where attempting to
+build another heap-backed tree during low-memory conditions would itself be
+undesirable.
 
 ### 0.10.0 direct Binary fast path
 
@@ -162,6 +221,7 @@ Ordinary usage of those libraries remains serialization-free.
 -   Representation-neutral metadata.
 -   Embedded-friendly archives.
 -   Direct CBOR/Binary support.
+-   Bounded and allocation-free BinaryArchive inspection where appropriate.
 -   Validation and schema evolution.
 -   Compile-time diagnostics where possible.
 -   Optional rather than ecosystem-wide dependency.
