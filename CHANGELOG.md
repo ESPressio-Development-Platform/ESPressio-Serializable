@@ -12,6 +12,32 @@ Versioning](https://semver.org/).
 > had little or no release-note detail, the entry is intentionally terse
 > rather than inferring unsupported intent.
 
+## [0.10.1] - 2026-08-20
+
+### Fixed
+
+-   Hardened `BinaryArchive::Load()` against malformed and adversarial ESPB v2
+    payloads by bounding nesting depth, total decoded nodes, object members,
+    array elements, property-name lengths, and string lengths.
+-   Added overflow-safe remaining-buffer checks before copying decoded names and
+    string values.
+-   Converted allocation/decoder exceptions during BinaryArchive loading into a
+    clean invalid-archive result rather than allowing diagnostic or transport
+    callers to be destabilized.
+
+### Added
+
+-   Added `BinaryArchiveDecodeLimits` and explicit `Load(..., limits)` overloads
+    for applications that need tighter or broader decode policies.
+-   Added regression and stress-oriented malformed-input coverage for deep,
+    broad, oversized-name, oversized-string, and aggregate-node payloads.
+
+### Compatibility
+
+-   The existing `Load()` overloads remain source-compatible and use safe
+    defaults.
+-   The ESPB v2 wire format is unchanged.
+
 ## [0.10.0] - 2026-08-20
 
 ### Added
