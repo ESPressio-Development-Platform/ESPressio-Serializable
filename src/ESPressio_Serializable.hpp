@@ -15,3 +15,4 @@
 #include "ESPressio_Migration.hpp"
 #include "ESPressio_SerializationResult.hpp"
 #include "ESPressio_SchemaIntrospection.hpp"
+#include "ESPressio_DirectBinaryArchive.hpp"

@@ -12,7 +12,29 @@ Versioning](https://semver.org/).
 > had little or no release-note detail, the entry is intentionally terse
 > rather than inferring unsupported intent.
 
-## \[0.9.0\] - 2026-08-18
+## [0.10.0] - 2026-08-20
+
+### Added
+
+-   Added `ESPressio_DirectBinaryArchive.hpp`.
+-   Added `SerializeDirectBinary()` for direct schema/property-to-byte
+    serialization without a full intermediate `SerializationNode` tree.
+-   Added `DeserializeDirectBinary()` for direct same-schema binary decoding.
+-   Added `AppendDirectBinary()` so protocol integrations can serialize into an
+    already-prefixed/final output buffer.
+-   Added compatibility tests covering nested Serializable values, containers,
+    optional values, enum mappings, maps, malformed input, and byte-for-byte
+    equivalence with BinaryArchive ESPB v2 output.
+
+### Changed
+
+-   Exported the direct Binary API through `ESPressio_Serializable.hpp`.
+-   Preserved the existing BinaryArchive ESPB v2 wire representation so the new
+    fast path does not require a protocol-version change.
+-   Kept the existing BinaryArchive/TreeArchive path available for structural
+    schema migration and compatibility fallback.
+
+## [0.9.0] - 2026-08-18
 
 ### Added
 

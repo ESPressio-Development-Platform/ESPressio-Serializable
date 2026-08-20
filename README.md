@@ -5,7 +5,38 @@ Development Platform.
 
 ## Latest Stable Version
 
-**0.9.0**
+**0.10.0**
+
+### 0.10.0 direct Binary fast path
+
+Version 0.10.0 adds a public direct Binary serialization/deserialization API
+for latency-sensitive integrations such as ESPressio Event Transport.
+
+```cpp
+std::vector<uint8_t> bytes;
+
+ESPressio::Serializable::SerializeDirectBinary(
+    object,
+    bytes
+);
+
+ESPressio::Serializable::DeserializeDirectBinary(
+    bytes.data(),
+    bytes.size(),
+    object
+);
+```
+
+`AppendDirectBinary()` is also available when a caller has already reserved or
+written a protocol/header prefix and wants the Serializable payload appended to
+the same final buffer.
+
+The direct path preserves the existing BinaryArchive **ESPB v2 wire format**.
+It writes schema/property values directly to bytes and reads same-schema values
+directly from the input buffer, avoiding the full intermediate
+`SerializationNode` object tree. If a consumer requires structural schema
+migration it can continue to use the existing BinaryArchive/TreeArchive path;
+ESPressio Event Transport uses that path as a compatibility fallback.
 
 ## ESPressio Development Platform
 
