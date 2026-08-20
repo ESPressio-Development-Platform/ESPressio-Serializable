@@ -29,8 +29,12 @@ Versioning](https://semver.org/).
 
 -   Added `BinaryArchiveDecodeLimits` and explicit `Load(..., limits)` overloads
     for applications that need tighter or broader decode policies.
+-   Added `BinaryArchiveVisitor`, `TraverseBinaryArchive()`, and
+    `ValidateBinaryArchive()` for bounded, allocation-free ESPB v2 inspection
+    without constructing an intermediate `SerializationNode` tree.
 -   Added regression and stress-oriented malformed-input coverage for deep,
-    broad, oversized-name, oversized-string, and aggregate-node payloads.
+    broad, oversized-name, oversized-string, aggregate-node, and arbitrary-byte
+    payloads, including the allocation-free traversal path.
 
 ### Compatibility
 
