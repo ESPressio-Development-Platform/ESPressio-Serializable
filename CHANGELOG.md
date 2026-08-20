@@ -12,6 +12,20 @@ Versioning](https://semver.org/).
 > had little or no release-note detail, the entry is intentionally terse
 > rather than inferring unsupported intent.
 
+## [0.10.2] - 2026-08-21
+
+### Fixed
+
+-   Made fallback detailed-deserialization control flow explicit in
+    `ESPressio_SerializationTraversal.hpp`, eliminating GCC's
+    `-Wmisleading-indentation` diagnostic when downstream consumers compile
+    ESPressio Serializable headers with warnings treated as errors.
+
+### Compatibility
+
+-   No API, wire-format, or runtime behaviour changes.
+-   ESPB v2 compatibility is unchanged.
+
 ## [0.10.1] - 2026-08-20
 
 ### Fixed

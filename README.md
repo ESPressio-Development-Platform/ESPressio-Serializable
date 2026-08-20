@@ -5,7 +5,16 @@ Development Platform.
 
 ## Latest Stable Version
 
-**0.10.1**
+**0.10.2**
+
+### 0.10.2 warning-clean detailed deserialization
+
+Version 0.10.2 makes the fallback branch in detailed deserialization
+unambiguous to compilers, eliminating GCC's `-Wmisleading-indentation`
+diagnostic when downstream consumers build ESPressio Serializable headers with
+warnings treated as errors.
+
+There are no API, runtime-behaviour, or wire-format changes in this patch.
 
 ### 0.10.1 bounded BinaryArchive decoding
 
