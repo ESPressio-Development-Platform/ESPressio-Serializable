@@ -5,7 +5,37 @@ Development Platform.
 
 ## Latest Stable Version
 
-**0.10.0**
+**0.10.1**
+
+### 0.10.1 bounded BinaryArchive decoding
+
+Version 0.10.1 hardens `BinaryArchive` when decoding untrusted or malformed
+ESPB v2 payloads. The default `Load()` overload now applies embedded-friendly
+limits for nesting depth, aggregate node count, object members, array elements,
+property-name length, and string length. Allocation or decoder exceptions are
+converted into a clean invalid-archive result rather than escaping into the
+application.
+
+Applications with different requirements can supply explicit limits:
+
+```cpp
+ESPressio::Serializable::BinaryArchive archive;
+ESPressio::Serializable::BinaryArchiveDecodeLimits limits;
+
+limits.MaximumDepth = 16;
+limits.MaximumTotalNodes = 1024;
+limits.MaximumObjectMembers = 256;
+limits.MaximumArrayElements = 1024;
+limits.MaximumNameLength = 256;
+limits.MaximumStringLength = 16 * 1024;
+
+if (!archive.Load(data, size, limits)) {
+    // Malformed, truncated, unsupported, or outside the configured limits.
+}
+```
+
+The no-options overload remains source-compatible and uses the library defaults.
+The ESPB v2 wire format is unchanged.
 
 ### 0.10.0 direct Binary fast path
 
