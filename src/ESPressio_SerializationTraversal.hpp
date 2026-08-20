@@ -456,7 +456,10 @@ namespace ESPressio::Serializable::Detail {
         } else if constexpr (IsMapLike<T>) {
             if(node.GetType()!=SerializationNodeType::Array){fail();return result;}value.clear();size_t i=0;for(const auto&child:node.ArrayChildren()){std::string ep=path+"["+std::to_string(i)+"]";if(child.GetType()!=SerializationNodeType::Object){result.Add(SerializationErrorCode::TypeMismatch,ep,"Map entry must be an object",options);}else{auto*kn=child.Find("key");auto*vn=child.Find("value");if(!kn||!vn)result.Add(SerializationErrorCode::MalformedInput,ep,"Map entry requires key and value",options);else{typename T::key_type key{};typename T::mapped_type mapped{};auto kr=FromNodeDetailed(*kn,key,ep+".key",options);auto vr=FromNodeDetailed(*vn,mapped,ep+".value",options);result.Merge(kr,"",options);result.Merge(vr,"",options);if(kr&&vr)value.emplace(std::move(key),std::move(mapped));}}if(!result.ShouldContinue(options))break;++i;}return result;
         } else {
-            if(!FromNode(node,value))fail(); return result;
+            if (!FromNode(node, value)) {
+                fail();
+            }
+            return result;
         }
     }
 
