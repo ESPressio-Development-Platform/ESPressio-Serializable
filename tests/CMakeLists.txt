@@ -38,3 +38,7 @@ add_test(NAME espressio_serializable_schema_formats COMMAND espressio_serializab
 add_executable(espressio_serializable_headers test_headers.cpp)
 target_include_directories(espressio_serializable_headers PRIVATE ../src)
 add_test(NAME espressio_serializable_headers COMMAND espressio_serializable_headers)
+
+add_executable(espressio_serializable_direct_binary test_direct_binary.cpp)
+target_include_directories(espressio_serializable_direct_binary PRIVATE ../src)
+add_test(NAME espressio_serializable_direct_binary COMMAND espressio_serializable_direct_binary)
