@@ -1,9 +1,11 @@
 #include <cassert>
 #include <cstdint>
 #include <random>
+#include <string_view>
 #include <vector>
 
 #include <ESPressio_BinaryArchive.hpp>
+#include <ESPressio_BinaryArchiveTraversal.hpp>
 #include <ESPressio_CborArchive.hpp>
 
 using namespace ESPressio;
@@ -69,6 +71,31 @@ static std::vector<uint8_t> DeepObject(unsigned depth) {
     return data;
 }
 
+class CountingVisitor final :
+    public Serializable::BinaryArchiveVisitor {
+public:
+    unsigned Properties = 0;
+    unsigned UnsignedValues = 0;
+
+    bool OnObjectProperty(
+        std::string_view,
+        uint32_t,
+        uint32_t,
+        std::size_t
+    ) noexcept override {
+        ++Properties;
+        return true;
+    }
+
+    bool OnUnsignedInteger(
+        uint64_t,
+        std::size_t
+    ) noexcept override {
+        ++UnsignedValues;
+        return true;
+    }
+};
+
 int main() {
     Serializable::BinaryArchive b;
     b.Write("x", uint32_t(42));
@@ -94,6 +121,18 @@ int main() {
         Serializable::BinaryArchive archive;
         assert(!archive.Load(data.data(), data.size(), limits));
         assert(!archive.IsValid());
+        assert(!Serializable::ValidateBinaryArchive(
+            data.data(), data.size(), limits
+        ));
+    }
+
+    // Default traversal policy also rejects unreasonable nesting without
+    // constructing a SerializationNode tree.
+    {
+        auto data = DeepObject(64);
+        assert(!Serializable::ValidateBinaryArchive(
+            data.data(), data.size()
+        ));
     }
 
     // Reject collection counts before attempting to construct their children.
@@ -108,6 +147,9 @@ int main() {
         limits.MaximumObjectMembers = 8;
         Serializable::BinaryArchive archive;
         assert(!archive.Load(data.data(), data.size(), limits));
+        assert(!Serializable::ValidateBinaryArchive(
+            data.data(), data.size(), limits
+        ));
     }
 
     {
@@ -121,6 +163,9 @@ int main() {
         limits.MaximumArrayElements = 16;
         Serializable::BinaryArchive archive;
         assert(!archive.Load(data.data(), data.size(), limits));
+        assert(!Serializable::ValidateBinaryArchive(
+            data.data(), data.size(), limits
+        ));
     }
 
     // Reject oversized names and values before allocating/copying them.
@@ -140,6 +185,9 @@ int main() {
         limits.MaximumNameLength = 8;
         Serializable::BinaryArchive archive;
         assert(!archive.Load(data.data(), data.size(), limits));
+        assert(!Serializable::ValidateBinaryArchive(
+            data.data(), data.size(), limits
+        ));
     }
 
     {
@@ -160,6 +208,9 @@ int main() {
         limits.MaximumStringLength = 16;
         Serializable::BinaryArchive archive;
         assert(!archive.Load(data.data(), data.size(), limits));
+        assert(!Serializable::ValidateBinaryArchive(
+            data.data(), data.size(), limits
+        ));
     }
 
     // Aggregate node budget catches broad-but-individually-valid trees.
@@ -181,15 +232,43 @@ int main() {
         limits.MaximumTotalNodes = 3;
         Serializable::BinaryArchive archive;
         assert(!archive.Load(data.data(), data.size(), limits));
+        assert(!Serializable::ValidateBinaryArchive(
+            data.data(), data.size(), limits
+        ));
     }
 
-    // Normal data remains accepted under default limits.
+    // Normal data remains accepted under default limits by both tree-building
+    // loading and the allocation-free traversal API.
     {
         Serializable::BinaryArchive archive;
         assert(archive.Load(bd));
         uint32_t value = 0;
         assert(archive.Read("x", value));
         assert(value == 42);
+
+        CountingVisitor visitor;
+        assert(Serializable::TraverseBinaryArchive(
+            bd.data(), bd.size(), visitor
+        ));
+        assert(visitor.Properties == 1);
+        assert(visitor.UnsignedValues == 1);
+    }
+
+    // Stress allocation-free validation with arbitrary bytes. Rejection is
+    // expected for almost all inputs; bounded completion without state
+    // construction is the property under test.
+    {
+        std::mt19937 rng(0x42545256u);
+        std::vector<uint8_t> bytes(512);
+        for (unsigned iteration = 0; iteration < 5000; ++iteration) {
+            const std::size_t size = 1 + (rng() % bytes.size());
+            for (std::size_t i = 0; i < size; ++i) {
+                bytes[i] = static_cast<uint8_t>(rng());
+            }
+            (void)Serializable::ValidateBinaryArchive(
+                bytes.data(), size
+            );
+        }
     }
 
     return 0;
