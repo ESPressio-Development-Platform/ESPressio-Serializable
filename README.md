@@ -37,6 +37,35 @@ if (!archive.Load(data, size, limits)) {
 The no-options overload remains source-compatible and uses the library defaults.
 The ESPB v2 wire format is unchanged.
 
+### Allocation-free BinaryArchive validation and traversal
+
+For diagnostics, protocol inspection, and other cases that do not require an
+owned `SerializationNode` tree, 0.10.1 also adds an allocation-free ESPB v2
+traversal API:
+
+```cpp
+ESPressio::Serializable::BinaryArchiveDecodeLimits limits;
+limits.MaximumDepth = 12;
+limits.MaximumTotalNodes = 1024;
+
+if (ESPressio::Serializable::ValidateBinaryArchive(
+        data,
+        size,
+        limits
+    )) {
+    // Structurally valid and within the configured limits.
+}
+```
+
+`TraverseBinaryArchive()` accepts a `BinaryArchiveVisitor` and streams object,
+array, property, and scalar callbacks directly from the encoded bytes. The
+traversal uses `std::string_view` for borrowed names/string values and does not
+construct a second tree or copy payload strings merely to inspect them.
+
+This is particularly useful on ESP32 for diagnostic paths where attempting to
+build another heap-backed tree during low-memory conditions would itself be
+undesirable.
+
 ### 0.10.0 direct Binary fast path
 
 Version 0.10.0 adds a public direct Binary serialization/deserialization API
@@ -192,6 +221,7 @@ Ordinary usage of those libraries remains serialization-free.
 -   Representation-neutral metadata.
 -   Embedded-friendly archives.
 -   Direct CBOR/Binary support.
+-   Bounded and allocation-free BinaryArchive inspection where appropriate.
 -   Validation and schema evolution.
 -   Compile-time diagnostics where possible.
 -   Optional rather than ecosystem-wide dependency.
