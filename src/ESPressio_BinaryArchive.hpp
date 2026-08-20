@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <string>
@@ -9,9 +10,39 @@
 
 namespace ESPressio::Serializable {
 
+    struct BinaryArchiveDecodeLimits {
+        std::size_t MaximumDepth = 32;
+        std::size_t MaximumTotalNodes = 4096;
+        uint32_t MaximumObjectMembers = 1024;
+        uint32_t MaximumArrayElements = 4096;
+        std::size_t MaximumNameLength = 1024;
+        std::size_t MaximumStringLength = 64u * 1024u;
+    };
+
+
     class BinaryArchive : public TreeArchive {
         private:
+            struct DecodeState {
+                const BinaryArchiveDecodeLimits& Limits;
+                std::size_t TotalNodes = 0;
+            };
+
             bool _valid = true;
+
+            static std::size_t Remaining(
+                const uint8_t* cursor,
+                const uint8_t* end
+            ) noexcept {
+                if (
+                    cursor == nullptr ||
+                    end == nullptr ||
+                    cursor > end
+                ) {
+                    return 0;
+                }
+
+                return static_cast<std::size_t>(end - cursor);
+            }
 
             static void AppendU16(
                 std::vector<uint8_t>& output,
@@ -67,7 +98,7 @@ namespace ESPressio::Serializable {
                 const uint8_t* end,
                 uint16_t& value
             ) {
-                if (end - cursor < 2) {
+                if (Remaining(cursor, end) < 2) {
                     return false;
                 }
 
@@ -87,7 +118,7 @@ namespace ESPressio::Serializable {
                 const uint8_t* end,
                 uint32_t& value
             ) {
-                if (end - cursor < 4) {
+                if (Remaining(cursor, end) < 4) {
                     return false;
                 }
 
@@ -107,7 +138,7 @@ namespace ESPressio::Serializable {
                 const uint8_t* end,
                 uint64_t& value
             ) {
-                if (end - cursor < 8) {
+                if (Remaining(cursor, end) < 8) {
                     return false;
                 }
 
@@ -276,11 +307,22 @@ namespace ESPressio::Serializable {
             static bool DecodeNode(
                 const uint8_t*& cursor,
                 const uint8_t* end,
-                SerializationNode& node
+                SerializationNode& node,
+                DecodeState& state,
+                std::size_t depth
             ) {
-                if (cursor >= end) {
+                if (
+                    cursor == nullptr ||
+                    end == nullptr ||
+                    cursor >= end ||
+                    depth > state.Limits.MaximumDepth ||
+                    state.TotalNodes >=
+                        state.Limits.MaximumTotalNodes
+                ) {
                     return false;
                 }
+
+                ++state.TotalNodes;
 
                 const auto type =
                     static_cast<SerializationNodeType>(
@@ -301,7 +343,9 @@ namespace ESPressio::Serializable {
                                 cursor,
                                 end,
                                 count
-                            )
+                            ) ||
+                            count >
+                                state.Limits.MaximumObjectMembers
                         ) {
                             return false;
                         }
@@ -319,7 +363,9 @@ namespace ESPressio::Serializable {
                                     end,
                                     nameLength
                                 ) ||
-                                end - cursor <
+                                nameLength >
+                                    state.Limits.MaximumNameLength ||
+                                Remaining(cursor, end) <
                                     nameLength
                             ) {
                                 return false;
@@ -340,7 +386,9 @@ namespace ESPressio::Serializable {
                                 !DecodeNode(
                                     cursor,
                                     end,
-                                    child
+                                    child,
+                                    state,
+                                    depth + 1
                                 )
                             ) {
                                 return false;
@@ -363,7 +411,9 @@ namespace ESPressio::Serializable {
                                 cursor,
                                 end,
                                 count
-                            )
+                            ) ||
+                            count >
+                                state.Limits.MaximumArrayElements
                         ) {
                             return false;
                         }
@@ -379,7 +429,9 @@ namespace ESPressio::Serializable {
                                 !DecodeNode(
                                     cursor,
                                     end,
-                                    child
+                                    child,
+                                    state,
+                                    depth + 1
                                 )
                             ) {
                                 return false;
@@ -394,7 +446,7 @@ namespace ESPressio::Serializable {
                     }
 
                     case SerializationNodeType::Boolean:
-                        if (cursor >= end) {
+                        if (Remaining(cursor, end) < 1) {
                             return false;
                         }
 
@@ -498,9 +550,8 @@ namespace ESPressio::Serializable {
                                 size
                             ) ||
                             size >
-                                static_cast<uint32_t>(
-                                    end - cursor
-                                )
+                                state.Limits.MaximumStringLength ||
+                            Remaining(cursor, end) < size
                         ) {
                             return false;
                         }
@@ -556,54 +607,90 @@ namespace ESPressio::Serializable {
 
             bool Load(
                 const uint8_t* data,
-                size_t size
-            ) {
-                Clear();
+                size_t size,
+                const BinaryArchiveDecodeLimits& limits
+            ) noexcept {
+                try {
+                    Clear();
 
-                if (
-                    data == nullptr ||
-                    size < 6 ||
-                    data[0] != 'E' ||
-                    data[1] != 'S' ||
-                    data[2] != 'P' ||
-                    data[3] != 'B' ||
-                    data[4] != 2u
-                ) {
+                    if (
+                        data == nullptr ||
+                        size < 6 ||
+                        limits.MaximumTotalNodes == 0 ||
+                        data[0] != 'E' ||
+                        data[1] != 'S' ||
+                        data[2] != 'P' ||
+                        data[3] != 'B' ||
+                        data[4] != 2u
+                    ) {
+                        _valid = false;
+                        return false;
+                    }
+
+                    const uint8_t* cursor =
+                        data + 5;
+
+                    const uint8_t* end =
+                        data + size;
+
+                    SerializationNode root;
+                    DecodeState state{limits};
+
+                    _valid =
+                        DecodeNode(
+                            cursor,
+                            end,
+                            root,
+                            state,
+                            0
+                        ) &&
+                        cursor == end &&
+                        root.GetType() ==
+                            SerializationNodeType::Object;
+
+                    if (_valid) {
+                        _root = std::move(root);
+                    } else {
+                        Clear();
+                    }
+
+                    return _valid;
+                } catch (...) {
+                    Clear();
                     _valid = false;
                     return false;
                 }
+            }
 
-                const uint8_t* cursor =
-                    data + 5;
+            bool Load(
+                const uint8_t* data,
+                size_t size
+            ) noexcept {
+                return Load(
+                    data,
+                    size,
+                    BinaryArchiveDecodeLimits{}
+                );
+            }
 
-                const uint8_t* end =
-                    data + size;
-
-                SerializationNode root;
-
-                _valid =
-                    DecodeNode(
-                        cursor,
-                        end,
-                        root
-                    ) &&
-                    cursor == end &&
-                    root.GetType() ==
-                        SerializationNodeType::Object;
-
-                if (_valid) {
-                    _root = std::move(root);
-                }
-
-                return _valid;
+            bool Load(
+                const std::vector<uint8_t>& data,
+                const BinaryArchiveDecodeLimits& limits
+            ) noexcept {
+                return Load(
+                    data.data(),
+                    data.size(),
+                    limits
+                );
             }
 
             bool Load(
                 const std::vector<uint8_t>& data
-            ) {
+            ) noexcept {
                 return Load(
                     data.data(),
-                    data.size()
+                    data.size(),
+                    BinaryArchiveDecodeLimits{}
                 );
             }
     };
