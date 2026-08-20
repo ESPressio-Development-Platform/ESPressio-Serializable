@@ -16,3 +16,4 @@
 #include "ESPressio_SerializationResult.hpp"
 #include "ESPressio_SchemaIntrospection.hpp"
 #include "ESPressio_DirectBinaryArchive.hpp"
+#include "ESPressio_BinaryArchiveTraversal.hpp"
