@@ -1,84 +1,316 @@
 # ESPressio Serializable
 
-Declarative serialization components for the Flowduino ESPressio
-Development Platform.
+Declarative, representation-neutral serialization components for the Flowduino ESPressio Development Platform.
+
+ESPressio Serializable lets a C++ type answer one question—**which members constitute my serializable state?**—without hard-coding whether that state will become JSON, CBOR, ESPB binary, NVS, a stream, or another representation.
 
 ## Latest Stable Version
 
 **0.10.2**
 
-### 0.10.2 warning-clean detailed deserialization
+The 0.10.x line adds the direct ESPB Binary fast path and bounded/allocation-free BinaryArchive validation/traversal used by latency- and memory-sensitive integrations. 0.10.2 itself is warning-clean maintenance and does not change the wire format.
 
-Version 0.10.2 makes the fallback branch in detailed deserialization
-unambiguous to compilers, eliminating GCC's `-Wmisleading-indentation`
-diagnostic when downstream consumers build ESPressio Serializable headers with
-warnings treated as errors.
+# Why not just write `ToJson()` / `FromJson()`?
 
-There are no API, runtime-behaviour, or wire-format changes in this patch.
+Doing so couples the model to JSON.
 
-### 0.10.1 bounded BinaryArchive decoding
+If the same state later needs to be stored in NVS, sent as CBOR, carried over Event Transport, inspected diagnostically, or encoded as compact binary, the object either gains more representation-specific responsibilities or requires parallel conversion code.
 
-Version 0.10.1 hardens `BinaryArchive` when decoding untrusted or malformed
-ESPB v2 payloads. The default `Load()` overload now applies embedded-friendly
-limits for nesting depth, aggregate node count, object members, array elements,
-property-name length, and string length. Allocation or decoder exceptions are
-converted into a clean invalid-archive result rather than escaping into the
-application.
+ESPressio Serializable separates the concerns:
 
-Applications with different requirements can supply explicit limits:
+```text
+Serializable object
+        |
+        v
+Declarative property/schema metadata
+        |
+        v
+Representation-neutral serialization model
+        |
+        +---- JSON
+        +---- CBOR
+        +---- ESPB Binary
+        +---- NVS
+        +---- streaming/custom archive
+```
+
+The object's declaration remains the authoritative schema.
+
+# Compatibility
+
+The core has no required ESPressio dependency and no ESP32-specific runtime requirement. It uses C++17 language/library facilities and is designed for Arduino/PlatformIO targets as well as host-side testing where the selected archive dependencies are available.
+
+Representation-specific adapters may introduce their own dependencies (for example ArduinoJson for JSON).
+
+# ESPressio Development Platform
+
+ESPressio libraries are designed to be light-weight, composable, strongly typed, object-oriented, and explicit about dependency direction. Serializable is intentionally foundational: other libraries opt into it; Serializable does not depend back on them.
+
+## License
+
+Apache License 2.0. See [LICENSE](LICENSE).
+
+# Namespace
 
 ```cpp
-ESPressio::Serializable::BinaryArchive archive;
-ESPressio::Serializable::BinaryArchiveDecodeLimits limits;
+ESPressio::Serializable
+```
 
-limits.MaximumDepth = 16;
-limits.MaximumTotalNodes = 1024;
-limits.MaximumObjectMembers = 256;
-limits.MaximumArrayElements = 1024;
-limits.MaximumNameLength = 256;
-limits.MaximumStringLength = 16 * 1024;
+Important concepts include:
 
-if (!archive.Load(data, size, limits)) {
-    // Malformed, truncated, unsupported, or outside the configured limits.
+- `Serializable<T>` / `SerializableBase<T>`
+- declarative property/schema macros
+- `SerializationNode`
+- JSON, CBOR and Binary archives
+- direct Binary serialization/deserialization
+- streaming archive facilities
+- schema introspection/evolution
+- validation and diagnostics
+- enum mapping
+- redaction metadata
+- bounded BinaryArchive validation/traversal
+
+# Dependencies
+
+Required ESPressio dependencies: **none**.
+
+Other ESPressio libraries opt into Serializable where appropriate:
+
+```text
+Units
+    - - -> Serializable Unit variants
+
+Event
+    - - -> Serializable Events / Event Transport
+```
+
+See [ESPRESSIO_DEPENDENCY_CHART.md](ESPRESSIO_DEPENDENCY_CHART.md).
+
+# Installation
+
+Core:
+
+```ini
+lib_deps =
+    flowduino/ESPressio-Serializable@^0.10.2
+```
+
+Select the archive-specific headers/dependencies required by the application rather than assuming JSON is mandatory.
+
+# Declaring a Serializable type
+
+A type declares its serializable contract alongside its state:
+
+```cpp
+#include <ESPressio_Serializable.hpp>
+
+class DeviceConfiguration final :
+    public ESPressio::Serializable::
+        Serializable<DeviceConfiguration> {
+
+    ESPRESSIO_SERIALIZABLE_TYPE(DeviceConfiguration)
+    ESPRESSIO_SERIALIZABLE_SCHEMA_VERSION(1)
+
+private:
+    uint32_t _sampleRate = 1000;
+    float _threshold = 0.5f;
+    bool _loggingEnabled = true;
+
+public:
+    ESPRESSIO_SERIALIZABLE_PROPERTIES(
+        ESPRESSIO_PROPERTY("sampleRate", _sampleRate),
+        ESPRESSIO_PROPERTY("threshold", _threshold),
+        ESPRESSIO_PROPERTY("loggingEnabled", _loggingEnabled)
+    )
+};
+```
+
+The property declarations describe **what** belongs to the schema. They do not decide the representation.
+
+# Basic JSON example
+
+JSON is an adapter over the same schema:
+
+```cpp
+#include <Arduino.h>
+#include <ESPressio_Serializable_JSON.hpp>
+
+using namespace ESPressio;
+
+class Settings final :
+    public Serializable::Serializable<Settings> {
+
+    ESPRESSIO_SERIALIZABLE_TYPE(Settings)
+
+private:
+    uint32_t _sampleRate = 1000;
+    float _threshold = 0.5f;
+    bool _enabled = true;
+
+public:
+    ESPRESSIO_SERIALIZABLE_PROPERTIES(
+        ESPRESSIO_PROPERTY("sampleRate", _sampleRate),
+        ESPRESSIO_PROPERTY("threshold", _threshold),
+        ESPRESSIO_PROPERTY("enabled", _enabled)
+    )
+};
+
+void setup() {
+    Serial.begin(115200);
+
+    Settings settings;
+    Serializable::JsonArchive archive;
+
+    settings.Serialize(archive);
+    archive.SavePretty(Serial);
+    Serial.println();
 }
 ```
 
-The no-options overload remains source-compatible and uses the library defaults.
-The ESPB v2 wire format is unchanged.
+The complete current example is under:
 
-### Allocation-free BinaryArchive validation and traversal
-
-For diagnostics, protocol inspection, and other cases that do not require an
-owned `SerializationNode` tree, 0.10.1 also adds an allocation-free ESPB v2
-traversal API:
-
-```cpp
-ESPressio::Serializable::BinaryArchiveDecodeLimits limits;
-limits.MaximumDepth = 12;
-limits.MaximumTotalNodes = 1024;
-
-if (ESPressio::Serializable::ValidateBinaryArchive(
-        data,
-        size,
-        limits
-    )) {
-    // Structurally valid and within the configured limits.
-}
+```text
+examples/JsonArchive/
 ```
 
-`TraverseBinaryArchive()` accepts a `BinaryArchiveVisitor` and streams object,
-array, property, and scalar callbacks directly from the encoded bytes. The
-traversal uses `std::string_view` for borrowed names/string values and does not
-construct a second tree or copy payload strings merely to inspect them.
+The same `Settings` declaration can be consumed by another archive without adding JSON-specific methods to `Settings`.
 
-This is particularly useful on ESP32 for diagnostic paths where attempting to
-build another heap-backed tree during low-memory conditions would itself be
-undesirable.
+# Deserialization and diagnostics
 
-### 0.10.0 direct Binary fast path
+Deserialization uses the same declared schema in the opposite direction. Detailed deserialization can report issues such as:
 
-Version 0.10.0 adds a public direct Binary serialization/deserialization API
-for latency-sensitive integrations such as ESPressio Event Transport.
+- missing required properties;
+- invalid value types;
+- numeric constraint failures;
+- unknown enum mappings;
+- schema/migration problems; and
+- application-defined validation failures.
+
+Applications should surface those structured diagnostics rather than reducing every failure to a generic “parse failed” message.
+
+See:
+
+```text
+examples/DeserializeConfiguration/
+```
+
+# Representation-neutral `SerializationNode`
+
+`SerializationNode` is the tree representation used when a caller needs to inspect/manipulate structured serialized data without committing the model itself to JSON/CBOR/etc.
+
+This is especially useful at integration boundaries:
+
+```text
+JSON / CBOR / replay / CLI
+          |
+          v
+   SerializationNode
+          |
+          v
+Serializable object
+```
+
+ESPressio Event runtime Serializable Event construction uses this model so Event remains independent of ArduinoJson.
+
+# JSON, CBOR and Binary representations
+
+The library supports multiple representation families:
+
+- JSON for human-readable/interoperable configuration and operator interfaces;
+- CBOR for compact structured interchange;
+- ESPB Binary for compact ESPressio-native payloads and Event Transport;
+- NVS integration for embedded persistence; and
+- custom/streaming archives where the application has another representation.
+
+Current examples include:
+
+```text
+examples/JsonArchive/
+examples/CborArchive/
+examples/BinaryArchive/
+examples/NvsArchive/
+examples/CustomArchive/
+examples/SerialCborTransport/
+```
+
+# Nested objects and collections
+
+Nested Serializable objects and common collection forms are supported so a schema can reflect the natural shape of application state rather than flattening everything into primitive fields.
+
+Representative examples:
+
+```text
+examples/NestedCollections/
+examples/OptionalAndMaps/
+```
+
+The value layer includes arithmetic/scalar types, Arduino `String`, nested Serializable values, supported arrays/containers, `std::optional`, enum mappings and supported map/set forms.
+
+# Enum mapping
+
+Enums can be mapped deliberately between C++ values and stable serialized names rather than leaking underlying integer values into a public schema.
+
+See:
+
+```text
+examples/EnumMapping/
+```
+
+This makes wire/configuration values readable and provides a controlled failure mode for unknown enum names.
+
+# Validation
+
+Properties and whole objects can participate in validation.
+
+Use declarative constraints for schema-level rules (for example numeric ranges) and application-defined validation callbacks for invariants that require custom logic.
+
+The same validation rules apply regardless of whether the representation arrived through JSON, CBOR, Binary, Event Transport, or another compatible archive.
+
+# Schema evolution
+
+Persisted/transported data often outlives the firmware that produced it. Serializable therefore treats schema versioning/evolution as a first-class concern rather than assuming every stored payload matches today's C++ layout.
+
+Schema facilities include version declarations, aliases, defaults and migration helpers.
+
+Conceptually:
+
+```text
+old representation
+      |
+      v
+schema migration / aliases / defaults
+      |
+      v
+current object schema
+```
+
+See:
+
+```text
+examples/SchemaEvolution/
+```
+
+# Schema introspection
+
+Serializable metadata can be inspected without manually duplicating property descriptions in operator tooling.
+
+This enables consumers such as EventConsole to describe runtime Event payload schemas from the same declarations used for actual serialization/validation.
+
+See:
+
+```text
+examples/SchemaIntrospection/
+```
+
+# Redaction
+
+Schema metadata can mark fields that should not be emitted plainly in diagnostic/log-oriented representations.
+
+Redaction is a documentation/diagnostics safety facility; it should not be confused with encryption or secure storage. Secrets still require an appropriate Security/storage design.
+
+# Direct Binary fast path
+
+Latency-sensitive integrations can serialize directly into the ESPB v2 wire representation without constructing a complete intermediate `SerializationNode` tree:
 
 ```cpp
 std::vector<uint8_t> bytes;
@@ -95,142 +327,138 @@ ESPressio::Serializable::DeserializeDirectBinary(
 );
 ```
 
-`AppendDirectBinary()` is also available when a caller has already reserved or
-written a protocol/header prefix and wants the Serializable payload appended to
-the same final buffer.
+`AppendDirectBinary()` is useful when a caller has already written/reserved a protocol prefix and wants the Serializable payload appended to the same final buffer.
 
-The direct path preserves the existing BinaryArchive **ESPB v2 wire format**.
-It writes schema/property values directly to bytes and reads same-schema values
-directly from the input buffer, avoiding the full intermediate
-`SerializationNode` object tree. If a consumer requires structural schema
-migration it can continue to use the existing BinaryArchive/TreeArchive path;
-ESPressio Event Transport uses that path as a compatibility fallback.
+The fast path preserves the existing ESPB v2 wire format. Consumers that require structural schema migration can continue to use the tree/archive path; Event Transport can fall back accordingly.
 
-## ESPressio Development Platform
+# Bounded Binary decoding
 
-ESPressio is a collection of discrete, composable component libraries
-built around a common development ethos:
+Untrusted Binary input must not be allowed to request unbounded recursive allocation. `BinaryArchiveDecodeLimits` controls embedded-friendly bounds for:
 
--   **Light-weight** --- minimise memory consumption and runtime
-    overhead without sacrificing correctness.
--   **Ease of use** --- provide strongly typed, developer-friendly
-    abstractions over lower-level facilities.
--   **Object-oriented** --- a type for everything, and everything in a
-    type.
--   **SOLID** --- favour focused responsibilities, extensibility,
-    substitutable abstractions, narrow interfaces, and dependency
-    inversion wherever practical on embedded C++ platforms.
+- nesting depth;
+- aggregate node count;
+- object members;
+- array elements;
+- property-name length; and
+- string length.
 
-## License
+```cpp
+ESPressio::Serializable::BinaryArchive archive;
+ESPressio::Serializable::BinaryArchiveDecodeLimits limits;
 
-Licensed under the **Apache License 2.0**. See [LICENSE](LICENSE).
+limits.MaximumDepth = 16;
+limits.MaximumTotalNodes = 1024;
+limits.MaximumObjectMembers = 256;
+limits.MaximumArrayElements = 1024;
+limits.MaximumNameLength = 256;
+limits.MaximumStringLength = 16 * 1024;
 
-## ESPressio Library Dependencies
-
-ESPressio is designed as a modular ecosystem of independently useful
-libraries, with required dependencies kept explicit and optional
-integrations introduced only when the corresponding functionality is
-selected.
-
-For a complete overview of required dependencies, opt-in dependencies,
-and the overall hierarchy, see:
-
-**[ESPressio Library Dependency Chart](ESPRESSIO_DEPENDENCY_CHART.md)**
-
--   **Solid relationships** represent required ESPressio dependencies.
--   **Dashed relationships** represent opt-in dependencies introduced
-    only by the corresponding feature, integration, type, or header.
-
-### Required ESPressio dependencies
-
-None.
-
-## Declarative schema model
-
-Serializable types declare their schema alongside the type itself:
-
-``` cpp
-class Example :
-    public ESPressio::Serializable::
-        SerializableBase<Example> {
-
-public:
-    uint32_t Id = 0;
-    String Name;
-
-    ESPRESSIO_SERIALIZABLE_TYPE(Example)
-    ESPRESSIO_SERIALIZABLE_SCHEMA_VERSION(1)
-
-    ESPRESSIO_SERIALIZABLE_PROPERTIES(
-        ESPRESSIO_PROPERTY("id", Id),
-        ESPRESSIO_PROPERTY("name", Name)
-    )
-};
+if (!archive.Load(data, size, limits)) {
+    // malformed, truncated, unsupported, or outside configured limits
+}
 ```
 
-The same declaration can be consumed by multiple archive
-representations.
+The no-options overload remains source-compatible and applies library defaults.
 
-## Representations
+# Allocation-free Binary validation and traversal
 
-The framework supports JSON, CBOR and Binary representations, including
-direct CBOR/Binary paths rather than requiring JSON as an intermediate
-representation.
+Diagnostics and protocol inspection often need to validate/display a Binary payload without building another heap-backed object tree.
 
-Streaming readers/writers are available where supported by the selected
-archive.
+```cpp
+ESPressio::Serializable::BinaryArchiveDecodeLimits limits;
+limits.MaximumDepth = 12;
+limits.MaximumTotalNodes = 1024;
 
-## Value support
-
-The framework supports common scalar and compound values including
-arithmetic types, nested Serializable objects, arrays/containers,
-Arduino `String`, `std::optional`, enum mapping, and supported map/set
-forms.
-
-## Validation
-
-Properties and objects can participate in validation, including numeric
-constraints and application-defined validation callbacks.
-
-## Schema evolution
-
-Serializable types declare schema versions. Migration helpers, aliases
-and defaults allow older persisted or transported representations to
-evolve deliberately.
-
-## Redaction
-
-Schema metadata can identify fields that should be redacted in
-diagnostic/log-oriented representations.
-
-## Compile-time diagnostics
-
-Where an invalid or unsupported schema declaration can be detected
-statically, the library is designed to fail at compile time rather than
-defer the problem to runtime.
-
-## ESPressio integrations
-
-Serializable remains independent. Other libraries opt into it:
-
-``` text
-Units
-    -> optional Serializable Unit variants
-
-Event
-    -> optional Serializable Events
-    -> Event Transport payloads
+if (ESPressio::Serializable::ValidateBinaryArchive(
+        data,
+        size,
+        limits
+    )) {
+    // structurally valid and within configured limits
+}
 ```
 
-Ordinary usage of those libraries remains serialization-free.
+`TraverseBinaryArchive()` streams object/array/property/scalar callbacks through a `BinaryArchiveVisitor`, borrowing names/strings via `std::string_view` instead of copying them into a second tree.
 
-## Design goals
+This is the facility used by ESPressio Serial's hardened EventMonitor diagnostics so low-memory diagnostics do not create another avoidable allocation spike.
 
--   One declarative schema per type.
--   Representation-neutral metadata.
--   Embedded-friendly archives.
--   Direct CBOR/Binary support.
--   Bounded and allocation-free BinaryArchive inspection where appropriate.
--   Validation and schema evolution.
--   Compile-time diagnostics where possible.
--   Optional rather than ecosystem-wide dependency.
+# Streaming
+
+Streaming readers/writers exist where supported by an archive so large payloads do not always need to be materialized as one complete in-memory representation.
+
+See:
+
+```text
+examples/LargeJsonStream/
+examples/SerialCborTransport/
+```
+
+for application-shaped usage.
+
+# Nameless/compact Binary use
+
+Binary representations can take advantage of schema-known ordering/name elimination when the selected mode permits it, reducing overhead for tightly controlled embedded protocols.
+
+See:
+
+```text
+examples/NamelessBinary/
+```
+
+# Compile-time diagnostics
+
+Where an invalid/unsupported schema declaration can be diagnosed statically, Serializable aims to fail at compile time instead of allowing an unsupported member to fail only after deployment.
+
+This is particularly valuable in a declarative schema system: the compiler becomes part of schema validation.
+
+# Custom archives
+
+The archive abstraction remains an extension point. Applications can define representation-specific behavior without changing each Serializable model class.
+
+The repository maintains:
+
+```text
+examples/CustomArchive/
+```
+
+as the current reference for implementing that extension against the current archive contract.
+
+# Examples
+
+The repository includes a broad executable example set, including:
+
+```text
+BasicSerialization
+DeserializeConfiguration
+JsonArchive
+CborArchive
+BinaryArchive
+NvsArchive
+CustomArchive
+NestedCollections
+OptionalAndMaps
+EnumMapping
+SchemaEvolution
+SchemaIntrospection
+LargeJsonStream
+NamelessBinary
+SerialCborTransport
+ESPNowSerializableMesh
+```
+
+Use these current examples rather than old 0.1-era snippets when an archive's API has evolved.
+
+# Design principles
+
+- One authoritative declarative schema per type.
+- Representation-neutral model metadata.
+- Archives own representation; model classes own state.
+- Embedded-friendly bounded decoding.
+- Direct/streaming paths where intermediate trees are unnecessary.
+- Validation and schema evolution are part of the schema contract.
+- Compile-time diagnostics where possible.
+- Serializable remains foundational and independent of downstream ESPressio libraries.
+
+# Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for release history and notable changes.
