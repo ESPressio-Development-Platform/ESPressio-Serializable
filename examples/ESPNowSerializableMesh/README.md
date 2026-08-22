@@ -26,7 +26,7 @@ For a project that consumes the published library, the application would normall
 
 ```ini
 lib_deps =
-    flowduino/ESPressio-Serializable
+    espressio-development-platform/ESPressio-Serializable
 ```
 
 ESP-NOW itself is supplied by the ESP32 Arduino core.
