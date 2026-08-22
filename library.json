@@ -1,7 +1,7 @@
 {
     "name": "ESPressio-Serializable",
     "version": "0.10.2",
-    "description": "Compile-time declarative serialization components for the Flowduino ESPressio Development Platform.",
+    "description": "Compile-time declarative serialization components for the ESPressio Development Platform.",
     "keywords": [
         "serialization",
         "deserialization",
@@ -11,13 +11,15 @@
         "arduino",
         "espressio"
     ],
+    "homepage": "https://espressio.org",
     "repository": {
         "type": "git",
-        "url": "https://github.com/Flowduino/ESPressio-Serializable.git"
+        "url": "https://github.com/ESPressio-Development-Platform/ESPressio-Serializable.git"
     },
     "authors": [
         {
-            "name": "Flowduino",
+            "name": "Simon J. Stuart",
+            "url": "https://espressio.org",
             "maintainer": true
         }
     ],
