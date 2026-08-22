@@ -6,9 +6,9 @@ ESPressio Serializable lets a C++ type answer one question—**which members con
 
 ## Latest Stable Version
 
-**0.10.2**
+**0.10.3**
 
-The 0.10.x line adds the direct ESPB Binary fast path and bounded/allocation-free BinaryArchive validation/traversal used by latency- and memory-sensitive integrations. 0.10.2 itself is warning-clean maintenance and does not change the wire format.
+The 0.10.x line adds the direct ESPB Binary fast path and bounded/allocation-free BinaryArchive validation/traversal used by latency- and memory-sensitive integrations. 0.10.3 is the repository-relocation patch release for the ESPressio-Development-Platform organization and does not change the API, runtime behaviour, or ESPB wire format.
 
 # Why not just write `ToJson()` / `FromJson()`?
 
@@ -94,7 +94,7 @@ Core:
 
 ```ini
 lib_deps =
-    espressio-development-platform/ESPressio-Serializable@^0.10.2
+    espressio-development-platform/ESPressio-Serializable@^0.10.3
 ```
 
 Select the archive-specific headers/dependencies required by the application rather than assuming JSON is mandatory.

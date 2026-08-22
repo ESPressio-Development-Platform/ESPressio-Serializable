@@ -12,6 +12,23 @@ Versioning](https://semver.org/).
 > had little or no release-note detail, the entry is intentionally terse
 > rather than inferring unsupported intent.
 
+## [0.10.3] - 2026-08-22
+
+### Changed
+
+-   Published the post-migration package generation from the dedicated
+    `ESPressio-Development-Platform` GitHub organization.
+-   Updated package identity and documentation to use `https://espressio.org`
+    and the relocated repository coordinates directly rather than relying on
+    legacy organization redirects.
+
+### Compatibility
+
+-   No public API, wire-format, or runtime behaviour changes.
+-   ESPB v2 compatibility is unchanged.
+-   This patch establishes the migrated Serializable baseline for the
+    downstream ESPressio dependency-release cascade.
+
 ## [0.10.2] - 2026-08-21
 
 ### Fixed

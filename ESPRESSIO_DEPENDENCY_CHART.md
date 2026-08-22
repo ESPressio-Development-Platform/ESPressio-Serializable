@@ -11,7 +11,7 @@ This document is the canonical snapshot of the current released ESPressio depend
 
 ```text
 Observable    3.0.1
-Serializable  0.10.2
+Serializable  0.10.3
 Units         0.2.3
 Timing        2.2.4
 Threads       3.1.4
@@ -29,7 +29,7 @@ Serial        0.7.2
 Observable 3.0.1
     -> none
 
-Serializable 0.10.2
+Serializable 0.10.3
     -> none
 
 Units 0.2.3
