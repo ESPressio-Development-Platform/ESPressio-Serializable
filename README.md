@@ -1,6 +1,6 @@
 # ESPressio Serializable
 
-Declarative, representation-neutral serialization components for the Flowduino ESPressio Development Platform.
+Declarative, representation-neutral serialization components for the ESPressio Development Platform.
 
 ESPressio Serializable lets a C++ type answer one question—**which members constitute my serializable state?**—without hard-coding whether that state will become JSON, CBOR, ESPB binary, NVS, a stream, or another representation.
 
@@ -45,6 +45,8 @@ Representation-specific adapters may introduce their own dependencies (for examp
 # ESPressio Development Platform
 
 ESPressio libraries are designed to be light-weight, composable, strongly typed, object-oriented, and explicit about dependency direction. Serializable is intentionally foundational: other libraries opt into it; Serializable does not depend back on them.
+
+Project website: [espressio.org](https://espressio.org).
 
 ## License
 
@@ -92,7 +94,7 @@ Core:
 
 ```ini
 lib_deps =
-    flowduino/ESPressio-Serializable@^0.10.2
+    espressio-development-platform/ESPressio-Serializable@^0.10.2
 ```
 
 Select the archive-specific headers/dependencies required by the application rather than assuming JSON is mandatory.
