@@ -1,0 +1,65 @@
+name: Prepare 0.10.3 release
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    if: github.head_ref == 'release/15-0.10.3-repository-relocation' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: release/15-0.10.3-repository-relocation
+      - name: Update release documentation
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          readme = Path('README.md')
+          text = readme.read_text()
+          text = text.replace('**0.10.2**', '**0.10.3**', 1)
+          text = text.replace('The 0.10.x line adds the direct ESPB Binary fast path and bounded/allocation-free BinaryArchive validation/traversal used by latency- and memory-sensitive integrations. 0.10.2 itself is warning-clean maintenance and does not change the wire format.', 'The 0.10.x line adds the direct ESPB Binary fast path and bounded/allocation-free BinaryArchive validation/traversal used by latency- and memory-sensitive integrations. 0.10.3 is the repository-relocation patch release for the ESPressio-Development-Platform organization and does not change the API, runtime behaviour, or ESPB wire format.')
+          text = text.replace('espressio-development-platform/ESPressio-Serializable@^0.10.2', 'espressio-development-platform/ESPressio-Serializable@^0.10.3')
+          readme.write_text(text)
+
+          changelog = Path('CHANGELOG.md')
+          text = changelog.read_text()
+          marker = '## [0.10.2] - 2026-08-21\n'
+          entry = '''## [0.10.3] - 2026-08-22\n\n### Changed\n\n-   Published the post-migration package generation from the dedicated\n    `ESPressio-Development-Platform` GitHub organization.\n-   Updated package identity and documentation to use `https://espressio.org`\n    and the relocated repository coordinates directly rather than relying on\n    legacy organization redirects.\n\n### Compatibility\n\n-   No public API, wire-format, or runtime behaviour changes.\n-   ESPB v2 compatibility is unchanged.\n-   This patch establishes the migrated Serializable baseline for the\n    downstream ESPressio dependency-release cascade.\n\n'''
+          if '## [0.10.3]' not in text:
+              text = text.replace(marker, entry + marker, 1)
+          changelog.write_text(text)
+
+          chart = Path('ESPRESSIO_DEPENDENCY_CHART.md')
+          text = chart.read_text()
+          text = text.replace('Serializable  0.10.2', 'Serializable  0.10.3', 1)
+          text = text.replace('Serializable 0.10.2\n    -> none', 'Serializable 0.10.3\n    -> none', 1)
+          chart.write_text(text)
+
+          svg = Path('ESPRESSIO_DEPENDENCY_CHART.svg')
+          text = svg.read_text()
+          text = text.replace('Serializable 0.10.2', 'Serializable 0.10.3', 1)
+          svg.write_text(text)
+          PY
+      - name: Validate metadata and residual release references
+        shell: bash
+        run: |
+          grep -q '"version": "0.10.3"' library.json
+          grep -q '^version=0.10.3$' library.properties
+          grep -q '^## \[0.10.3\] - 2026-08-22$' CHANGELOG.md
+          grep -q 'ESPressio-Serializable@^0.10.3' README.md
+      - name: Commit release preparation
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add README.md CHANGELOG.md ESPRESSIO_DEPENDENCY_CHART.md ESPRESSIO_DEPENDENCY_CHART.svg
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Prepare Serializable 0.10.3 release documentation (#15)'
+          git push
