@@ -1,6 +1,6 @@
 {
     "name": "ESPressio-Serializable",
-    "version": "0.10.2",
+    "version": "0.10.3",
     "description": "Compile-time declarative serialization components for the ESPressio Development Platform.",
     "keywords": [
         "serialization",
