@@ -38,7 +38,7 @@ jobs:
           build_unflags = -std=gnu++11
           lib_ldf_mode = deep+
           lib_deps =
-              ..
+              file://..
           EOF
           cat > project/src/main.cpp <<'EOF'
           #include <Arduino.h>
