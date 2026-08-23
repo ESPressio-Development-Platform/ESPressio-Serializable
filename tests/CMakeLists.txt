@@ -3,6 +3,20 @@ project(ESPressioSerializableTests LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
+include(FetchContent)
+FetchContent_Declare(
+    ESPressioSecurity
+    GIT_REPOSITORY https://github.com/ESPressio-Development-Platform/ESPressio-Security.git
+    GIT_TAG 0.4.0
+    GIT_SHALLOW TRUE
+)
+FetchContent_GetProperties(ESPressioSecurity)
+if(NOT espressiosecurity_POPULATED)
+    FetchContent_Populate(ESPressioSecurity)
+endif()
+set(ESPRESSIO_SECURITY_INCLUDE ${espressiosecurity_SOURCE_DIR}/src)
+
 add_executable(espressio_serializable_tests test_serializable.cpp)
 target_include_directories(espressio_serializable_tests PRIVATE ../src)
 add_executable(espressio_serializable_v06_tests test_v06.cpp)
@@ -42,3 +56,7 @@ add_test(NAME espressio_serializable_headers COMMAND espressio_serializable_head
 add_executable(espressio_serializable_direct_binary test_direct_binary.cpp)
 target_include_directories(espressio_serializable_direct_binary PRIVATE ../src)
 add_test(NAME espressio_serializable_direct_binary COMMAND espressio_serializable_direct_binary)
+
+add_executable(espressio_serializable_security test_security_integration.cpp)
+target_include_directories(espressio_serializable_security PRIVATE ../src ${ESPRESSIO_SECURITY_INCLUDE})
+add_test(NAME espressio_serializable_security COMMAND espressio_serializable_security)
