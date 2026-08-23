@@ -8,7 +8,7 @@ include(FetchContent)
 FetchContent_Declare(
     ESPressioSecurity
     GIT_REPOSITORY https://github.com/ESPressio-Development-Platform/ESPressio-Security.git
-    GIT_TAG 0.4.0
+    GIT_TAG 0.4.1
     GIT_SHALLOW TRUE
 )
 FetchContent_GetProperties(ESPressioSecurity)
