@@ -1,5 +1,6 @@
 #include <cassert>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include <ESPressio_Serializable.hpp>
@@ -25,9 +26,31 @@ struct Parent final : Serializable<Parent> {
     )
 };
 
+struct OrdinaryAggregate {
+    Child Nested{};
+    std::vector<Child> Children;
+};
+
 int main() {
-    static_assert(std::is_destructible<Child>::value, "Serializable values must be publicly destructible");
-    static_assert(std::is_destructible<Parent>::value, "Composed Serializable values must be publicly destructible");
+    static_assert(std::is_default_constructible<Child>::value,
+                  "Serializable values must remain default constructible");
+    static_assert(std::is_destructible<Child>::value,
+                  "Serializable values must be publicly destructible");
+    static_assert(std::is_copy_constructible<Child>::value,
+                  "Serializable values must remain copy constructible");
+    static_assert(std::is_move_constructible<Child>::value,
+                  "Serializable values must remain move constructible");
+    static_assert(std::is_destructible<Parent>::value,
+                  "Composed Serializable values must be publicly destructible");
+    static_assert(std::is_destructible<OrdinaryAggregate>::value,
+                  "Serializable values must be usable in ordinary aggregates");
+
+    OrdinaryAggregate aggregate;
+    aggregate.Nested.Value = 3;
+    aggregate.Children.emplace_back();
+    aggregate.Children.back().Value = 5;
+    assert(aggregate.Nested.Value == 3);
+    assert(aggregate.Children.front().Value == 5);
 
     Parent source;
     source.Nested.Value = 7;

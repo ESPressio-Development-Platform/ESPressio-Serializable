@@ -15,3 +15,78 @@ jobs:
         run: cmake --build build --parallel
       - name: Test
         run: ctest --test-dir build --output-on-failure
+
+  esp32-value-composition:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Install PlatformIO
+        run: pip install platformio
+      - name: Create ESP32 value-composition consumer
+        shell: bash
+        run: |
+          mkdir -p project/src
+          cat > project/platformio.ini <<'EOF'
+          [env:esp32]
+          platform = https://github.com/pioarduino/platform-espressif32/releases/download/55.03.311/platform-espressif32.zip
+          board = esp32dev
+          framework = arduino
+          build_flags = -std=gnu++17
+          build_unflags = -std=gnu++11
+          lib_ldf_mode = deep+
+          lib_deps =
+              file://..
+          EOF
+          cat > project/src/main.cpp <<'EOF'
+          #include <Arduino.h>
+          #include <vector>
+          #include <ESPressio_Serializable.hpp>
+          #include <ESPressio_Serializable_Binary.hpp>
+
+          using namespace ESPressio::Serializable;
+
+          struct Child final : Serializable<Child> {
+              ESPRESSIO_SERIALIZABLE_TYPE(Child)
+              ESPRESSIO_SERIALIZABLE_SCHEMA_VERSION(1)
+              int Value = 0;
+              ESPRESSIO_SERIALIZABLE_PROPERTIES(ESPRESSIO_PROPERTY("value", Value))
+          };
+
+          struct Parent final : Serializable<Parent> {
+              ESPRESSIO_SERIALIZABLE_TYPE(Parent)
+              ESPRESSIO_SERIALIZABLE_SCHEMA_VERSION(1)
+              Child Nested{};
+              std::vector<Child> Children;
+              ESPRESSIO_SERIALIZABLE_PROPERTIES(
+                  ESPRESSIO_PROPERTY("nested", Nested),
+                  ESPRESSIO_PROPERTY("children", Children)
+              )
+          };
+
+          struct OrdinaryAggregate {
+              Child Nested{};
+              std::vector<Child> Children;
+          };
+
+          Parent parent{};
+          OrdinaryAggregate aggregate{};
+
+          void setup() {
+              parent.Children.emplace_back();
+              aggregate.Children.emplace_back();
+              BinaryArchive archive;
+              parent.Serialize(archive);
+              BinaryArchive input;
+              const auto data = archive.GetData();
+              if (!data.empty() && input.Load(data.data(), data.size())) {
+                  Parent restored{};
+                  (void)restored.DeserializeDetailed(input);
+              }
+          }
+          void loop() {}
+          EOF
+      - name: Compile with ESP32 GCC 14.2
+        run: pio run -d project
