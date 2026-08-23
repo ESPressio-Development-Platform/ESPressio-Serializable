@@ -57,6 +57,10 @@ add_executable(espressio_serializable_direct_binary test_direct_binary.cpp)
 target_include_directories(espressio_serializable_direct_binary PRIVATE ../src)
 add_test(NAME espressio_serializable_direct_binary COMMAND espressio_serializable_direct_binary)
 
+add_executable(espressio_serializable_value_composition test_value_composition.cpp)
+target_include_directories(espressio_serializable_value_composition PRIVATE ../src)
+add_test(NAME espressio_serializable_value_composition COMMAND espressio_serializable_value_composition)
+
 add_executable(espressio_serializable_security test_security_integration.cpp)
 target_include_directories(espressio_serializable_security PRIVATE ../src ${ESPRESSIO_SECURITY_INCLUDE})
 add_test(NAME espressio_serializable_security COMMAND espressio_serializable_security)
