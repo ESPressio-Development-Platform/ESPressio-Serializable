@@ -6,7 +6,7 @@ ESPressio Serializable lets a C++ type describe **which members constitute its s
 
 ## Latest Stable Version
 
-**0.11.0**
+**0.11.2**
 
 The 0.11.x line adds an optional ESPressio Security integration for protecting complete serialized representations with authenticated encryption. Core Serializable remains Security-independent.
 
@@ -40,14 +40,14 @@ Core only:
 
 ```ini
 lib_deps =
-    espressio-development-platform/ESPressio-Serializable@^0.11.0
+    espressio-development-platform/ESPressio-Serializable@^0.11.2
 ```
 
 Protected serialization additionally requires ESPressio Security 0.4.x:
 
 ```ini
 lib_deps =
-    espressio-development-platform/ESPressio-Serializable@^0.11.0
+    espressio-development-platform/ESPressio-Serializable@^0.11.2
     espressio-development-platform/ESPressio-Security@^0.4.0
     espressio-development-platform/ESPressio-Observable@^3.0.2
 ```
@@ -268,7 +268,7 @@ protected bytes
   -> object
 ```
 
-The ESPB v2 representation itself is unchanged by 0.11.0; protection wraps it externally.
+The ESPB v2 representation itself is unchanged by 0.11.2; protection wraps it externally.
 
 # JSON, CBOR and other representations
 
@@ -351,7 +351,7 @@ The direct path preserves ESPB v2 byte compatibility but is not the default prot
 
 # Dependencies
 
-Core Serializable 0.11.0 still has **no required ESPressio dependency**.
+Core Serializable 0.11.2 still has **no required ESPressio dependency**.
 
 ```text
 Serializable core
