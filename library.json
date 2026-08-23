@@ -1,37 +1,17 @@
 {
     "name": "ESPressio-Serializable",
-    "version": "0.10.3",
+    "version": "0.11.0",
     "description": "Compile-time declarative serialization components for the ESPressio Development Platform.",
-    "keywords": [
-        "serialization",
-        "deserialization",
-        "reflection",
-        "properties",
-        "esp32",
-        "arduino",
-        "espressio"
-    ],
+    "keywords": ["serialization","deserialization","reflection","properties","protection","esp32","arduino","espressio"],
     "homepage": "https://espressio.org",
     "repository": {
         "type": "git",
         "url": "https://github.com/ESPressio-Development-Platform/ESPressio-Serializable.git"
     },
-    "authors": [
-        {
-            "name": "Simon J. Stuart",
-            "url": "https://espressio.org",
-            "maintainer": true
-        }
-    ],
+    "authors": [{"name":"Simon J. Stuart","url":"https://espressio.org","maintainer":true}],
     "license": "Apache-2.0",
-    "frameworks": [
-        "arduino"
-    ],
+    "frameworks": ["arduino"],
     "platforms": "*",
-    "headers": [
-        "ESPressio_Serializable.hpp"
-    ],
-    "build": {
-        "includeDir": "src"
-    }
+    "headers": ["ESPressio_Serializable.hpp"],
+    "build": {"includeDir":"src"}
 }
