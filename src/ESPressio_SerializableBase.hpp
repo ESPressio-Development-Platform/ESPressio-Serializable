@@ -42,6 +42,8 @@ namespace ESPressio::Serializable {
     class SerializableBase {
         protected:
             constexpr SerializableBase() = default;
+
+        public:
             ~SerializableBase() = default;
 
         private:
