@@ -40,10 +40,8 @@ namespace ESPressio::Serializable {
 
     template<typename TDerived>
     class SerializableBase {
-        protected:
-            constexpr SerializableBase() = default;
-
         public:
+            constexpr SerializableBase() = default;
             ~SerializableBase() = default;
 
         private:
