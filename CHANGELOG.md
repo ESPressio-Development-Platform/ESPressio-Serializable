@@ -4,6 +4,23 @@ All notable changes to this project are documented in this file.
 
 The structure follows the principles of Keep a Changelog and Semantic Versioning.
 
+## [0.11.2] - 2026-08-23
+
+### Fixed
+
+- Corrected package version metadata so PlatformIO and Arduino package tooling identify the release as `0.11.2` rather than the stale `0.11.0` value inherited by the 0.11.1 tag.
+- Aligned `library.json`, `library.properties`, README installation guidance and release documentation with the actual patch version.
+
+### Compatibility
+
+- No public API, serialization format, schema, runtime behaviour or dependency changes.
+- Includes the public `SerializableBase<TDerived>` destructor correction introduced in 0.11.1.
+- Existing 0.11.x consumers remain source- and wire-compatible.
+
+### Tracking
+
+- Fixes #21.
+
 ## [0.11.0] - 2026-08-23
 
 ### Added
