@@ -1,14 +1,20 @@
 {
-    "name": "ESPressio-Serializable",
-    "version": "1.0.0",
-    "description": "Compile-time declarative serialization components for the ESPressio Development Platform.",
-    "keywords": ["serialization","deserialization","reflection","properties","protection","esp32","arduino","espressio"],
-    "homepage": "https://espressio.org",
-    "repository": {"type":"git","url":"https://github.com/ESPressio-Development-Platform/ESPressio-Serializable.git"},
-    "authors": [{"name":"Simon J. Stuart","url":"https://espressio.org","maintainer":true}],
-    "license": "Apache-2.0",
-    "frameworks": ["arduino"],
-    "platforms": "*",
-    "headers": ["ESPressio_Serializable.hpp"],
-    "build": {"includeDir":"src"}
+  "name": "ESPressio-Serializable",
+  "version": "1.0.0",
+  "description": "Compile-time declarative serialization components for the ESPressio Development Platform.",
+  "keywords": ["serialization", "deserialization", "reflection", "properties", "protection", "esp32", "arduino", "espressio"],
+  "homepage": "https://espressio.org",
+  "repository": {"type": "git", "url": "https://github.com/ESPressio-Development-Platform/ESPressio-Serializable.git"},
+  "authors": [{"name": "Simon J. Stuart", "url": "https://espressio.org", "maintainer": true}],
+  "license": "Apache-2.0",
+  "frameworks": ["arduino"],
+  "platforms": "*",
+  "headers": ["ESPressio_Serializable.hpp"],
+  "build": {"includeDir": "src"},
+  "dependencies": [
+    {
+      "name": "ESPressio-System",
+      "version": "https://github.com/ESPressio-Development-Platform/ESPressio-System.git#feature/1-system-memory-policy"
+    }
+  ]
 }
