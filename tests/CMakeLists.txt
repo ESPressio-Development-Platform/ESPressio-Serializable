@@ -6,9 +6,18 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 include(FetchContent)
 FetchContent_Declare(
+    ESPressioSystem
+    GIT_REPOSITORY https://github.com/ESPressio-Development-Platform/ESPressio-System.git
+    GIT_TAG feature/1-system-memory-policy
+    GIT_SHALLOW TRUE
+)
+FetchContent_MakeAvailable(ESPressioSystem)
+set(ESPRESSIO_SYSTEM_INCLUDE ${espressiosystem_SOURCE_DIR}/src)
+
+FetchContent_Declare(
     ESPressioSecurity
     GIT_REPOSITORY https://github.com/ESPressio-Development-Platform/ESPressio-Security.git
-    GIT_TAG 0.4.1
+    GIT_TAG optimisation/23-memory-policy-transient-buffers_optimisation03
     GIT_SHALLOW TRUE
 )
 FetchContent_GetProperties(ESPressioSecurity)
@@ -17,50 +26,52 @@ if(NOT espressiosecurity_POPULATED)
 endif()
 set(ESPRESSIO_SECURITY_INCLUDE ${espressiosecurity_SOURCE_DIR}/src)
 
+set(SERIALIZABLE_INCLUDES ../src ${ESPRESSIO_SYSTEM_INCLUDE})
+
 add_executable(espressio_serializable_tests test_serializable.cpp)
-target_include_directories(espressio_serializable_tests PRIVATE ../src)
+target_include_directories(espressio_serializable_tests PRIVATE ${SERIALIZABLE_INCLUDES})
 add_executable(espressio_serializable_v06_tests test_v06.cpp)
-target_include_directories(espressio_serializable_v06_tests PRIVATE ../src)
+target_include_directories(espressio_serializable_v06_tests PRIVATE ${SERIALIZABLE_INCLUDES})
 enable_testing()
 add_test(NAME ESPressioSerializableTests COMMAND espressio_serializable_tests)
 add_test(NAME ESPressioSerializableV06Tests COMMAND espressio_serializable_v06_tests)
 
 add_executable(espressio_serializable_malformed test_malformed.cpp)
-target_include_directories(espressio_serializable_malformed PRIVATE ../src)
+target_include_directories(espressio_serializable_malformed PRIVATE ${SERIALIZABLE_INCLUDES})
 add_test(NAME espressio_serializable_malformed COMMAND espressio_serializable_malformed)
 
 add_executable(espressio_serializable_diagnostics test_diagnostics.cpp)
-target_include_directories(espressio_serializable_diagnostics PRIVATE ../src)
+target_include_directories(espressio_serializable_diagnostics PRIVATE ${SERIALIZABLE_INCLUDES})
 add_test(NAME espressio_serializable_diagnostics COMMAND espressio_serializable_diagnostics)
 
 add_executable(espressio_serializable_migrations test_migration_regression.cpp)
-target_include_directories(espressio_serializable_migrations PRIVATE ../src)
+target_include_directories(espressio_serializable_migrations PRIVATE ${SERIALIZABLE_INCLUDES})
 add_test(NAME espressio_serializable_migrations COMMAND espressio_serializable_migrations)
 
 add_executable(espressio_serializable_compatibility test_compatibility.cpp)
-target_include_directories(espressio_serializable_compatibility PRIVATE ../src)
+target_include_directories(espressio_serializable_compatibility PRIVATE ${SERIALIZABLE_INCLUDES})
 add_test(NAME espressio_serializable_compatibility COMMAND espressio_serializable_compatibility)
 
 add_executable(espressio_serializable_pool test_pool_allocator.cpp)
-target_include_directories(espressio_serializable_pool PRIVATE ../src)
+target_include_directories(espressio_serializable_pool PRIVATE ${SERIALIZABLE_INCLUDES})
 add_test(NAME espressio_serializable_pool COMMAND espressio_serializable_pool)
 
 add_executable(espressio_serializable_schema_formats test_schema_formats.cpp)
-target_include_directories(espressio_serializable_schema_formats PRIVATE ../src)
+target_include_directories(espressio_serializable_schema_formats PRIVATE ${SERIALIZABLE_INCLUDES})
 add_test(NAME espressio_serializable_schema_formats COMMAND espressio_serializable_schema_formats)
 
 add_executable(espressio_serializable_headers test_headers.cpp)
-target_include_directories(espressio_serializable_headers PRIVATE ../src)
+target_include_directories(espressio_serializable_headers PRIVATE ${SERIALIZABLE_INCLUDES})
 add_test(NAME espressio_serializable_headers COMMAND espressio_serializable_headers)
 
 add_executable(espressio_serializable_direct_binary test_direct_binary.cpp)
-target_include_directories(espressio_serializable_direct_binary PRIVATE ../src)
+target_include_directories(espressio_serializable_direct_binary PRIVATE ${SERIALIZABLE_INCLUDES})
 add_test(NAME espressio_serializable_direct_binary COMMAND espressio_serializable_direct_binary)
 
 add_executable(espressio_serializable_value_composition test_value_composition.cpp)
-target_include_directories(espressio_serializable_value_composition PRIVATE ../src)
+target_include_directories(espressio_serializable_value_composition PRIVATE ${SERIALIZABLE_INCLUDES})
 add_test(NAME espressio_serializable_value_composition COMMAND espressio_serializable_value_composition)
 
 add_executable(espressio_serializable_security test_security_integration.cpp)
-target_include_directories(espressio_serializable_security PRIVATE ../src ${ESPRESSIO_SECURITY_INCLUDE})
+target_include_directories(espressio_serializable_security PRIVATE ${SERIALIZABLE_INCLUDES} ${ESPRESSIO_SECURITY_INCLUDE})
 add_test(NAME espressio_serializable_security COMMAND espressio_serializable_security)
