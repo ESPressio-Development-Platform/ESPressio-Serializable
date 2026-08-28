@@ -20,6 +20,8 @@ namespace ESPressio::Serializable {
 
     }
 
+    /// <summary>Indicates whether a type exposes the ESPressio serializable-property contract.</summary>
+    /// <remarks>References and cv-qualifiers are removed before detecting <c>GetSerializableProperties()</c>.</remarks>
     template<typename T>
     inline constexpr bool IsSerializable =
         Detail::HasSerializableProperties<
