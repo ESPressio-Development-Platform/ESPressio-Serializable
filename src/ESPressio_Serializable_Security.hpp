@@ -3,7 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <string>
-#include <vector>
+#include <utility>
 
 #include "ESPressio_Serializable_Binary.hpp"
 #include <ESPressio_IDataProtector.hpp>
@@ -68,7 +68,7 @@ struct ProtectedSerializationResult {
 template<typename TObject>
 ProtectedSerializationResult SerializeProtectedBinary(
     const TObject& object,
-    std::vector<uint8_t>& output,
+    SerializationBuffer<uint8_t>& output,
     const SerializationProtectionConfig& protection
 ) {
     ProtectedSerializationResult result;
@@ -78,7 +78,7 @@ ProtectedSerializationResult SerializeProtectedBinary(
         return result;
     }
 
-    std::vector<uint8_t> archiveBytes;
+    SerializationBuffer<uint8_t> archiveBytes;
     try {
         BinaryArchive archive;
         object.Serialize(archive);
@@ -114,12 +114,13 @@ ProtectedSerializationResult DeserializeProtectedBinary(
 ) {
     ProtectedSerializationResult result;
     result.ProtectedBytes = protectedDataSize;
-    if (protection.Protector == nullptr || protectedData == nullptr || protectedDataSize == 0 || protection.MaximumArchiveBytes == 0) {
+    if (protection.Protector == nullptr || protectedData == nullptr ||
+        protectedDataSize == 0 || protection.MaximumArchiveBytes == 0) {
         result.Status = ProtectedSerializationStatus::InvalidArgument;
         return result;
     }
 
-    std::vector<uint8_t> archiveBytes;
+    SerializationBuffer<uint8_t> archiveBytes;
     result.SecurityResult = protection.Protector->Unprotect(
         protectedData, protectedDataSize, archiveBytes, protection.GetContext()
     );
@@ -153,19 +154,21 @@ ProtectedSerializationResult DeserializeProtectedBinary(
     return result;
 }
 
-// Configuration-driven helpers: a null protection pointer means ordinary ESPB.
 template<typename TObject>
 ProtectedSerializationResult SerializeBinary(
     const TObject& object,
-    std::vector<uint8_t>& output,
+    SerializationBuffer<uint8_t>& output,
     const SerializationProtectionConfig* protection
 ) {
     if (protection != nullptr) return SerializeProtectedBinary(object, output, *protection);
 
     ProtectedSerializationResult result;
     try {
-        BinaryArchive archive; object.Serialize(archive); output = archive.GetData();
-        result.ArchiveBytes = output.size(); result.ProtectedBytes = output.size();
+        BinaryArchive archive;
+        object.Serialize(archive);
+        output = archive.GetData();
+        result.ArchiveBytes = output.size();
+        result.ProtectedBytes = output.size();
         result.SecurityResult = Security::SecurityResult::Ok(false);
     } catch (...) {
         result.Status = ProtectedSerializationStatus::SerializationFailed;
@@ -183,12 +186,22 @@ ProtectedSerializationResult DeserializeBinary(
     if (protection != nullptr) return DeserializeProtectedBinary(data, size, object, *protection);
 
     ProtectedSerializationResult result;
-    result.ArchiveBytes = size; result.ProtectedBytes = size; result.SecurityResult = Security::SecurityResult::Ok(false);
-    if (data == nullptr || size == 0) { result.Status = ProtectedSerializationStatus::InvalidArgument; return result; }
+    result.ArchiveBytes = size;
+    result.ProtectedBytes = size;
+    result.SecurityResult = Security::SecurityResult::Ok(false);
+    if (data == nullptr || size == 0) {
+        result.Status = ProtectedSerializationStatus::InvalidArgument;
+        return result;
+    }
     BinaryArchive archive;
-    if (!archive.Load(data, size)) { result.Status = ProtectedSerializationStatus::MalformedArchive; return result; }
+    if (!archive.Load(data, size)) {
+        result.Status = ProtectedSerializationStatus::MalformedArchive;
+        return result;
+    }
     result.Deserialization = object.DeserializeDetailed(archive);
-    if (!result.Deserialization.Success()) result.Status = ProtectedSerializationStatus::DeserializationFailed;
+    if (!result.Deserialization.Success()) {
+        result.Status = ProtectedSerializationStatus::DeserializationFailed;
+    }
     return result;
 }
 
