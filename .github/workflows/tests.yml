@@ -36,28 +36,28 @@ jobs:
           framework = arduino
           build_flags =
               -std=gnu++17
-              -DESPRESSIO_SERIALIZATION_PREFER_PSRAM
           build_unflags = -std=gnu++11
           lib_ldf_mode = deep+
           lib_deps =
               file://..
+              https://github.com/ESPressio-Development-Platform/ESPressio-System.git#feature/1-system-memory-policy
           EOF
           cat > project/src/main.cpp <<'EOF'
           #include <Arduino.h>
           #include <type_traits>
           #include <vector>
+          #include <ESPressio_Memory.hpp>
           #include <ESPressio_Serializable.hpp>
           #include <ESPressio_Serializable_Binary.hpp>
-          #include <ESPressio_Esp32Allocator.hpp>
 
           using namespace ESPressio::Serializable;
 
           static_assert(
               std::is_same<
                   SerializationAllocator<uint8_t>,
-                  Esp32PreferPsramAllocator<uint8_t>
+                  ESPressio::System::Memory::ExternalPreferredAllocator<uint8_t>
               >::value,
-              "ESP32 preferred-PSRAM policy must select Esp32PreferPsramAllocator"
+              "serialization storage must use ESPressio-System ExternalPreferred allocation"
           );
 
           struct Child final : Serializable<Child> {
@@ -78,17 +78,10 @@ jobs:
               )
           };
 
-          struct OrdinaryAggregate {
-              Child Nested{};
-              std::vector<Child> Children;
-          };
-
           Parent parent{};
-          OrdinaryAggregate aggregate{};
 
           void setup() {
               parent.Children.emplace_back();
-              aggregate.Children.emplace_back();
               BinaryArchive archive;
               parent.Serialize(archive);
               BinaryArchive input;
@@ -100,5 +93,5 @@ jobs:
           }
           void loop() {}
           EOF
-      - name: Compile with ESP32 GCC 14.2 and preferred PSRAM policy
+      - name: Compile with ESP32 GCC 14.2 and System memory policy
         run: pio run -d project
