@@ -10,10 +10,12 @@
 #include "ESPressio_SerializationNode.hpp"
 
 namespace ESPressio::Serializable {
+    /// <summary>Serialization adapter mapping Arduino <c>String</c> values to the common string node representation.</summary>
     template<>
     struct SerializationAdapter<String> {
         static constexpr bool Supported = true;
 
+        /// <summary>Converts an Arduino <c>String</c> to a string serialization node.</summary>
         static SerializationNode ToNode(const String& value) {
             SerializationNode node(SerializationNodeType::String);
             node.StringValue() =
@@ -21,6 +23,7 @@ namespace ESPressio::Serializable {
             return node;
         }
 
+        /// <summary>Attempts to populate an Arduino <c>String</c> from a string serialization node.</summary>
         static bool FromNode(
             const SerializationNode& node,
             String& value
