@@ -18,9 +18,11 @@
 
 namespace ESPressio::Serializable {
 
+/// <summary>Allocator selected for transient serialization storage by the active platform configuration.</summary>
 template<typename T>
 using SerializationAllocator = ESPRESSIO_SERIALIZATION_ALLOCATOR<T>;
 
+/// <summary>Vector-like transient serialization buffer using the configured serialization allocator.</summary>
 template<typename T>
 using SerializationBuffer = std::vector<T, SerializationAllocator<T>>;
 
