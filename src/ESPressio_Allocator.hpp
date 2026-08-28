@@ -1,28 +1,21 @@
 #pragma once
 
 #include <cstddef>
-#include <memory>
 #include <vector>
 
-#if defined(ESP32) && defined(ESPRESSIO_SERIALIZATION_PREFER_PSRAM)
-    #include "ESPressio_Esp32Allocator.hpp"
-#endif
-
-#ifndef ESPRESSIO_SERIALIZATION_ALLOCATOR
-    #if defined(ESP32) && defined(ESPRESSIO_SERIALIZATION_PREFER_PSRAM)
-        #define ESPRESSIO_SERIALIZATION_ALLOCATOR ESPressio::Serializable::Esp32PreferPsramAllocator
-    #else
-        #define ESPRESSIO_SERIALIZATION_ALLOCATOR std::allocator
-    #endif
-#endif
+#include <ESPressio_Memory.hpp>
 
 namespace ESPressio::Serializable {
 
-/// <summary>Allocator selected for transient serialization storage by the active platform configuration.</summary>
+/// <summary>Allocator used for transient serialization storage.</summary>
+/// <remarks>Serialization storage is routed through ESPressio-System so platform memory policy, PSRAM preference, fallback behavior, and allocation accounting have one authority.</remarks>
 template<typename T>
-using SerializationAllocator = ESPRESSIO_SERIALIZATION_ALLOCATOR<T>;
+using SerializationAllocator = System::Memory::Allocator<
+    T,
+    System::Memory::MemoryPolicy::ExternalPreferred
+>;
 
-/// <summary>Vector-like transient serialization buffer using the configured serialization allocator.</summary>
+/// <summary>Vector-like transient serialization buffer using ESPressio-System external-preferred storage.</summary>
 template<typename T>
 using SerializationBuffer = std::vector<T, SerializationAllocator<T>>;
 
