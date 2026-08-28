@@ -6,6 +6,7 @@
 #include <cstring>
 #include "ESPressio_Serializable.hpp"
 namespace ESPressio::Serializable {
+/// <summary>Deserializes CBOR values directly from an Arduino <c>Stream</c> into ESPressio serializable objects.</summary>
 class CborStreamDeserializer {
     Stream& _in;
     size_t _maxDepth;
@@ -23,7 +24,10 @@ class CborStreamDeserializer {
         return false;
     }
 public:
+    /// <summary>Creates a CBOR deserializer using the supplied input stream and maximum nesting depth.</summary>
     explicit CborStreamDeserializer(Stream& input,size_t maximumDepth=64):_in(input),_maxDepth(maximumDepth){}
+    /// <summary>Reads one CBOR object and deserializes it into an ESPressio-serializable object.</summary>
+    /// <returns>A detailed result containing malformed-input or object-validation issues.</returns>
     template<class T> DeserializationResult Deserialize(T& object){ SerializationNode root; DeserializationResult r; if(!node(root,0)||root.GetType()!=SerializationNodeType::Object){r.Add(SerializationErrorCode::MalformedInput,"","Malformed or truncated CBOR stream");return r;} TreeArchive archive; archive.GetNode()=std::move(root); return object.DeserializeDetailed(archive); }
 };
 }
