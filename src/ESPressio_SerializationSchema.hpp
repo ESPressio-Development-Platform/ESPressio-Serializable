@@ -15,6 +15,7 @@ namespace ESPressio::Serializable::Detail {
         std::void_t<decltype(T::GetSerializableSchemaVersion())>
     > : std::true_type {};
 
+    /// <summary>Returns a serializable type's declared schema version, defaulting to version 1.</summary>
     template<typename T>
     constexpr uint32_t SchemaVersion() {
         if constexpr (HasSchemaVersion<T>::value) {
@@ -43,6 +44,9 @@ namespace ESPressio::Serializable::Detail {
         >
     > : std::true_type {};
 
+    /// <summary>Applies sequential schema migrations to a serialization tree until the target version is reached.</summary>
+    /// <typeparam name="T">Serializable type providing an optional static <c>Migrate</c> function.</typeparam>
+    /// <returns><c>true</c> when the source already matches the target or every required migration succeeds.</returns>
     template<typename T>
     bool ApplyMigrations(
         SerializationNode& node,
