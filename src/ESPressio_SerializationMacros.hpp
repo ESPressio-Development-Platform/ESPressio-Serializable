@@ -24,10 +24,10 @@
 #define ESPRESSIO_PROPERTY_SENSITIVE(Name, Member) \
     ESPRESSIO_PROPERTY(Name, Member).Sensitive()
 
+/// <summary>Declares the stable serializable property metadata for a type.</summary>
+/// <remarks>The generated accessor stores the immutable descriptor tuple once in ESPressio System ExternalPreferred memory and returns only a lightweight tuple of references on each call.</remarks>
 #define ESPRESSIO_SERIALIZABLE_PROPERTIES(...) \
     public: \
-        /// <summary>Returns stable references to the serializable property metadata declared for this type.</summary> \
-        /// <remarks>The immutable descriptor tuple is created once in ESPressio System ExternalPreferred memory; each call returns only a lightweight tuple of references.</remarks> \
         static auto GetSerializableProperties() { \
             using ESPressioSerializablePropertiesStorage = \
                 decltype(std::make_tuple(__VA_ARGS__)); \
