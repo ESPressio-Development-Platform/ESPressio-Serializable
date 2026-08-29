@@ -5,6 +5,7 @@
 #include <cassert>
 #include <cstddef>
 #include <new>
+#include <tuple>
 
 using namespace ESPressio;
 
@@ -48,8 +49,28 @@ public:
 };
 
 int main() {
-    TrackingProvider provider;
+    static TrackingProvider provider;
     auto* previous = System::Memory::SetProvider(&provider);
+
+    static_assert(
+        std::tuple_size<decltype(P::GetSerializableProperties())>::value == 1,
+        "serializable property metadata must remain tuple-compatible"
+    );
+
+    const std::size_t beforeProperties =
+        provider.ExternalPreferredAllocations;
+    const auto firstProperties = P::GetSerializableProperties();
+    const std::size_t afterFirstProperties =
+        provider.ExternalPreferredAllocations;
+
+    assert(afterFirstProperties > beforeProperties);
+
+    const auto secondProperties = P::GetSerializableProperties();
+    assert(provider.ExternalPreferredAllocations == afterFirstProperties);
+    assert(
+        &std::get<0>(firstProperties) ==
+        &std::get<0>(secondProperties)
+    );
 
     {
         P p;

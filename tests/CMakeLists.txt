@@ -17,7 +17,7 @@ set(ESPRESSIO_SYSTEM_INCLUDE ${espressiosystem_SOURCE_DIR}/src)
 FetchContent_Declare(
     ESPressioSecurity
     GIT_REPOSITORY https://github.com/ESPressio-Development-Platform/ESPressio-Security.git
-    GIT_TAG optimisation/23-memory-policy-transient-buffers_optimisation03
+    GIT_TAG optimisation/23-memory-policy-transient-buffers
     GIT_SHALLOW TRUE
 )
 FetchContent_GetProperties(ESPressioSecurity)

@@ -1,6 +1,8 @@
 #pragma once
 #include <cstdint>
 #include <tuple>
+#include <utility>
+#include <ESPressio_Memory.hpp>
 #include "ESPressio_SerializationProperty.hpp"
 
 #define ESPRESSIO_SERIALIZABLE_TYPE(Type) \
@@ -24,8 +26,22 @@
 
 #define ESPRESSIO_SERIALIZABLE_PROPERTIES(...) \
     public: \
+        /// <summary>Returns stable references to the serializable property metadata declared for this type.</summary> \
+        /// <remarks>The immutable descriptor tuple is created once in ESPressio System ExternalPreferred memory; each call returns only a lightweight tuple of references.</remarks> \
         static auto GetSerializableProperties() { \
-            return std::make_tuple(__VA_ARGS__); \
+            using ESPressioSerializablePropertiesStorage = \
+                decltype(std::make_tuple(__VA_ARGS__)); \
+            static const auto storage = \
+                ::ESPressio::System::Memory::MakeShared< \
+                    ESPressioSerializablePropertiesStorage, \
+                    ::ESPressio::System::Memory::MemoryPolicy::ExternalPreferred \
+                >(__VA_ARGS__); \
+            return std::apply( \
+                [](const auto&... property) { \
+                    return std::forward_as_tuple(property...); \
+                }, \
+                *storage \
+            ); \
         }
 
 #define ESPRESSIO_SERIALIZABLE_SCHEMA_VERSION(Version) \
