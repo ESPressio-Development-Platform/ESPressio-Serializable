@@ -1,11 +1,12 @@
 #pragma once
 
+#include <algorithm>
 #include <cstdint>
-#include <string>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 #include <vector>
-#include <algorithm>
+
 #include "ESPressio_Allocator.hpp"
 
 namespace ESPressio::Serializable {
@@ -24,11 +25,12 @@ namespace ESPressio::Serializable {
     };
 
     /// <summary>Transport-neutral tree node used as the common in-memory representation for serialized values.</summary>
+    /// <remarks>Dynamic text and child storage use the serialization external-preferred memory policy so tree archives do not compete unnecessarily with internal/DMA-capable RAM.</remarks>
     class SerializationNode {
         public:
-            /// <summary>Named child entry stored by object nodes.</summary>
+            /// <summary>Named child entry stored by object nodes, with property-name storage routed through the serialization allocator.</summary>
             using NamedChild =
-                std::pair<std::string, SerializationNode>;
+                std::pair<SerializationString, SerializationNode>;
 
         private:
             SerializationNodeType _type =
@@ -39,10 +41,17 @@ namespace ESPressio::Serializable {
             uint64_t _unsignedIntegerValue = 0;
             float _float32Value = 0.0f;
             double _float64Value = 0.0;
-            std::string _stringValue;
+            SerializationString _stringValue;
 
             std::vector<NamedChild, SerializationAllocator<NamedChild>> _objectChildren;
             std::vector<SerializationNode, SerializationAllocator<SerializationNode>> _arrayChildren;
+
+            static bool NameEquals(
+                const SerializationString& stored,
+                std::string_view candidate
+            ) noexcept {
+                return std::string_view(stored.data(), stored.size()) == candidate;
+            }
 
         public:
             /// <summary>Creates a null serialization node.</summary>
@@ -123,13 +132,13 @@ namespace ESPressio::Serializable {
                 return _float64Value;
             }
 
-            /// <summary>Returns mutable access to the node's string storage.</summary>
-            std::string& StringValue() {
+            /// <summary>Returns mutable access to the externally-preferred node string storage.</summary>
+            SerializationString& StringValue() {
                 return _stringValue;
             }
 
-            /// <summary>Returns the node's string storage value.</summary>
-            const std::string& StringValue() const {
+            /// <summary>Returns the node's externally-preferred string storage value.</summary>
+            const SerializationString& StringValue() const {
                 return _stringValue;
             }
 
@@ -153,18 +162,15 @@ namespace ESPressio::Serializable {
                 return _arrayChildren;
             }
 
-            /// <summary>Finds a named child of an object node.</summary>
+            /// <summary>Finds a named child of an object node without allocating a temporary name.</summary>
             /// <returns>The child node, or <c>nullptr</c> when not found or when this is not an object node.</returns>
-            SerializationNode* Find(const char* name) {
-                if (
-                    name == nullptr ||
-                    _type != SerializationNodeType::Object
-                ) {
+            SerializationNode* Find(std::string_view name) {
+                if (_type != SerializationNodeType::Object) {
                     return nullptr;
                 }
 
                 for (auto& child : _objectChildren) {
-                    if (child.first == name) {
+                    if (NameEquals(child.first, name)) {
                         return &child.second;
                     }
                 }
@@ -172,20 +178,15 @@ namespace ESPressio::Serializable {
                 return nullptr;
             }
 
-            /// <summary>Finds a named child of an object node.</summary>
+            /// <summary>Finds a named child of an object node without allocating a temporary name.</summary>
             /// <returns>The child node, or <c>nullptr</c> when not found or when this is not an object node.</returns>
-            const SerializationNode* Find(
-                const char* name
-            ) const {
-                if (
-                    name == nullptr ||
-                    _type != SerializationNodeType::Object
-                ) {
+            const SerializationNode* Find(std::string_view name) const {
+                if (_type != SerializationNodeType::Object) {
                     return nullptr;
                 }
 
                 for (const auto& child : _objectChildren) {
-                    if (child.first == name) {
+                    if (NameEquals(child.first, name)) {
                         return &child.second;
                     }
                 }
@@ -195,20 +196,22 @@ namespace ESPressio::Serializable {
 
             /// <summary>Sets or replaces a named child and converts this node to an object node.</summary>
             SerializationNode& Set(
-                const char* name,
+                std::string_view name,
                 SerializationNode node
             ) {
                 SetType(SerializationNodeType::Object);
 
                 for (auto& child : _objectChildren) {
-                    if (child.first == name) {
+                    if (NameEquals(child.first, name)) {
                         child.second = std::move(node);
                         return child.second;
                     }
                 }
 
+                SerializationString retainedName;
+                retainedName.assign(name.data(), name.size());
                 _objectChildren.emplace_back(
-                    name,
+                    std::move(retainedName),
                     std::move(node)
                 );
 
@@ -240,10 +243,10 @@ namespace ESPressio::Serializable {
                 _arrayChildren.reserve(count);
             }
 
-            /// <summary>Removes a named child from an object node.</summary>
+            /// <summary>Removes a named child from an object node without allocating a temporary name.</summary>
             /// <returns><c>true</c> when a matching child was removed.</returns>
-            bool Remove(const char* name) {
-                if (name == nullptr || _type != SerializationNodeType::Object) {
+            bool Remove(std::string_view name) {
+                if (_type != SerializationNodeType::Object) {
                     return false;
                 }
 
@@ -251,7 +254,7 @@ namespace ESPressio::Serializable {
                     _objectChildren.begin(),
                     _objectChildren.end(),
                     [&](const NamedChild& child) {
-                        return child.first == name;
+                        return NameEquals(child.first, name);
                     }
                 );
 
@@ -263,10 +266,10 @@ namespace ESPressio::Serializable {
                 return true;
             }
 
-            /// <summary>Moves a named child into an output node and removes it from this object node.</summary>
+            /// <summary>Moves a named child into an output node and removes it from this object node without copying the child.</summary>
             /// <returns><c>true</c> when a matching child was found and moved.</returns>
-            bool Take(const char* name, SerializationNode& output) {
-                if (name == nullptr || _type != SerializationNodeType::Object) {
+            bool Take(std::string_view name, SerializationNode& output) {
+                if (_type != SerializationNodeType::Object) {
                     return false;
                 }
 
@@ -274,7 +277,7 @@ namespace ESPressio::Serializable {
                     _objectChildren.begin(),
                     _objectChildren.end(),
                     [&](const NamedChild& child) {
-                        return child.first == name;
+                        return NameEquals(child.first, name);
                     }
                 );
 
