@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include <ESPressio_Allocator.hpp>
 #include <ESPressio_BinaryArchive.hpp>
 #include <ESPressio_DirectBinaryArchive.hpp>
 #include <ESPressio_Serializable.hpp>
@@ -73,9 +74,14 @@ int main() {
     assert(directBytes.size() == archiveBytes.size());
     assert(std::equal(directBytes.begin(), directBytes.end(), archiveBytes.begin()));
 
+    Serializable::SerializationBuffer<uint8_t> policyBytes;
+    assert(Serializable::SerializeDirectBinary(original, policyBytes));
+    assert(policyBytes.size() == directBytes.size());
+    assert(std::equal(policyBytes.begin(), policyBytes.end(), directBytes.begin()));
+
     DirectPayload restored;
     const auto directResult = Serializable::DeserializeDirectBinary(
-        directBytes.data(), directBytes.size(), restored
+        policyBytes.data(), policyBytes.size(), restored
     );
 
     assert(directResult.Success());
@@ -95,6 +101,15 @@ int main() {
     assert(prefixed[0] == 0xAA);
     assert(prefixed[1] == 0x55);
     assert(std::equal(directBytes.begin(), directBytes.end(), prefixed.begin() + 2));
+
+    Serializable::SerializationBuffer<uint8_t> policyPrefixed {0xAA, 0x55};
+    assert(Serializable::AppendDirectBinary(original, policyPrefixed));
+    assert(policyPrefixed.size() == directBytes.size() + 2);
+    assert(std::equal(
+        policyPrefixed.begin(),
+        policyPrefixed.end(),
+        prefixed.begin()
+    ));
 
     auto malformed = directBytes;
     malformed.pop_back();
