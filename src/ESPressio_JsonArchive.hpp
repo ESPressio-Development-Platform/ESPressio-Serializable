@@ -99,7 +99,7 @@ namespace ESPressio::Serializable {
 
                     case SerializationNodeType::String:
                         output.set(
-                            node.StringValue()
+                            node.StringValue().c_str()
                         );
                         break;
                 }
@@ -122,14 +122,14 @@ namespace ESPressio::Serializable {
                         ArduinoJson::JsonObjectConst
                     >()
                 ) {
-                    node.SetType(
-                        SerializationNodeType::Object
-                    );
-
                     const auto object =
                         input.as<
                             ArduinoJson::JsonObjectConst
                         >();
+
+                    node.ReserveObject(
+                        object.size()
+                    );
 
                     for (
                         ArduinoJson::JsonPairConst pair :
@@ -160,14 +160,14 @@ namespace ESPressio::Serializable {
                         ArduinoJson::JsonArrayConst
                     >()
                 ) {
-                    node.SetType(
-                        SerializationNodeType::Array
-                    );
-
                     const auto array =
                         input.as<
                             ArduinoJson::JsonArrayConst
                         >();
+
+                    node.ReserveArray(
+                        array.size()
+                    );
 
                     for (
                         ArduinoJson::JsonVariantConst value :
@@ -244,10 +244,11 @@ namespace ESPressio::Serializable {
                     const char* text =
                         input.as<const char*>();
 
-                    node.StringValue() =
-                        text == nullptr
-                            ? std::string{}
-                            : std::string(text);
+                    if (text == nullptr) {
+                        node.StringValue().clear();
+                    } else {
+                        node.StringValue().assign(text);
+                    }
 
                     return true;
                 }
