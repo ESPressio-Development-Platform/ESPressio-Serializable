@@ -11,7 +11,6 @@
 
 namespace ESPressio::Serializable {
 
-    /// <summary>Identifies the value category stored by a <c>SerializationNode</c>.</summary>
     enum class SerializationNodeType : uint8_t {
         Null,
         Object,
@@ -24,25 +23,18 @@ namespace ESPressio::Serializable {
         String
     };
 
-    /// <summary>Transport-neutral tree node used as the common in-memory representation for serialized values.</summary>
-    /// <remarks>Dynamic text and child storage use the serialization external-preferred memory policy so tree archives do not compete unnecessarily with internal/DMA-capable RAM.</remarks>
     class SerializationNode {
         public:
-            /// <summary>Named child entry stored by object nodes, with property-name storage routed through the serialization allocator.</summary>
-            using NamedChild =
-                std::pair<SerializationString, SerializationNode>;
+            using NamedChild = std::pair<SerializationString, SerializationNode>;
 
         private:
-            SerializationNodeType _type =
-                SerializationNodeType::Null;
-
+            SerializationNodeType _type = SerializationNodeType::Null;
             bool _booleanValue = false;
             int64_t _signedIntegerValue = 0;
             uint64_t _unsignedIntegerValue = 0;
             float _float32Value = 0.0f;
             double _float64Value = 0.0;
             SerializationString _stringValue;
-
             std::vector<NamedChild, SerializationAllocator<NamedChild>> _objectChildren;
             std::vector<SerializationNode, SerializationAllocator<SerializationNode>> _arrayChildren;
 
@@ -54,153 +46,76 @@ namespace ESPressio::Serializable {
             }
 
         public:
-            /// <summary>Creates a null serialization node.</summary>
             SerializationNode() = default;
 
-            /// <summary>Creates a serialization node with the specified value category.</summary>
-            explicit SerializationNode(
-                SerializationNodeType type
-            )
+            explicit SerializationNode(SerializationNodeType type)
                 : _type(type) {
             }
 
-            /// <summary>Returns the node's current value category.</summary>
             SerializationNodeType GetType() const {
                 return _type;
             }
 
-            /// <summary>Changes the node value category and clears incompatible object or array children.</summary>
             void SetType(SerializationNodeType type) {
                 _type = type;
-
                 if (type != SerializationNodeType::Object) {
                     _objectChildren.clear();
                 }
-
                 if (type != SerializationNodeType::Array) {
                     _arrayChildren.clear();
                 }
             }
 
-            /// <summary>Returns mutable access to the node's Boolean storage.</summary>
-            bool& BooleanValue() {
-                return _booleanValue;
-            }
+            bool& BooleanValue() { return _booleanValue; }
+            bool BooleanValue() const { return _booleanValue; }
+            int64_t& SignedIntegerValue() { return _signedIntegerValue; }
+            int64_t SignedIntegerValue() const { return _signedIntegerValue; }
+            uint64_t& UnsignedIntegerValue() { return _unsignedIntegerValue; }
+            uint64_t UnsignedIntegerValue() const { return _unsignedIntegerValue; }
+            float& Float32Value() { return _float32Value; }
+            float Float32Value() const { return _float32Value; }
+            double& Float64Value() { return _float64Value; }
+            double Float64Value() const { return _float64Value; }
+            SerializationString& StringValue() { return _stringValue; }
+            const SerializationString& StringValue() const { return _stringValue; }
 
-            /// <summary>Returns the node's Boolean storage value.</summary>
-            bool BooleanValue() const {
-                return _booleanValue;
-            }
-
-            /// <summary>Returns mutable access to the node's signed-integer storage.</summary>
-            int64_t& SignedIntegerValue() {
-                return _signedIntegerValue;
-            }
-
-            /// <summary>Returns the node's signed-integer storage value.</summary>
-            int64_t SignedIntegerValue() const {
-                return _signedIntegerValue;
-            }
-
-            /// <summary>Returns mutable access to the node's unsigned-integer storage.</summary>
-            uint64_t& UnsignedIntegerValue() {
-                return _unsignedIntegerValue;
-            }
-
-            /// <summary>Returns the node's unsigned-integer storage value.</summary>
-            uint64_t UnsignedIntegerValue() const {
-                return _unsignedIntegerValue;
-            }
-
-            /// <summary>Returns mutable access to the node's single-precision storage.</summary>
-            float& Float32Value() {
-                return _float32Value;
-            }
-
-            /// <summary>Returns the node's single-precision storage value.</summary>
-            float Float32Value() const {
-                return _float32Value;
-            }
-
-            /// <summary>Returns mutable access to the node's double-precision storage.</summary>
-            double& Float64Value() {
-                return _float64Value;
-            }
-
-            /// <summary>Returns the node's double-precision storage value.</summary>
-            double Float64Value() const {
-                return _float64Value;
-            }
-
-            /// <summary>Returns mutable access to the externally-preferred node string storage.</summary>
-            SerializationString& StringValue() {
-                return _stringValue;
-            }
-
-            /// <summary>Returns the node's externally-preferred string storage value.</summary>
-            const SerializationString& StringValue() const {
-                return _stringValue;
-            }
-
-            /// <summary>Returns mutable access to the named children of an object node.</summary>
             std::vector<NamedChild, SerializationAllocator<NamedChild>>& ObjectChildren() {
                 return _objectChildren;
             }
 
-            /// <summary>Returns the named children of an object node.</summary>
             const std::vector<NamedChild, SerializationAllocator<NamedChild>>& ObjectChildren() const {
                 return _objectChildren;
             }
 
-            /// <summary>Returns mutable access to the ordered children of an array node.</summary>
             std::vector<SerializationNode, SerializationAllocator<SerializationNode>>& ArrayChildren() {
                 return _arrayChildren;
             }
 
-            /// <summary>Returns the ordered children of an array node.</summary>
             const std::vector<SerializationNode, SerializationAllocator<SerializationNode>>& ArrayChildren() const {
                 return _arrayChildren;
             }
 
-            /// <summary>Finds a named child of an object node without allocating a temporary name.</summary>
-            /// <returns>The child node, or <c>nullptr</c> when not found or when this is not an object node.</returns>
             SerializationNode* Find(std::string_view name) {
-                if (_type != SerializationNodeType::Object) {
-                    return nullptr;
-                }
-
+                if (_type != SerializationNodeType::Object) return nullptr;
                 for (auto& child : _objectChildren) {
-                    if (NameEquals(child.first, name)) {
-                        return &child.second;
-                    }
+                    if (NameEquals(child.first, name)) return &child.second;
                 }
-
                 return nullptr;
             }
 
-            /// <summary>Finds a named child of an object node without allocating a temporary name.</summary>
-            /// <returns>The child node, or <c>nullptr</c> when not found or when this is not an object node.</returns>
             const SerializationNode* Find(std::string_view name) const {
-                if (_type != SerializationNodeType::Object) {
-                    return nullptr;
-                }
-
+                if (_type != SerializationNodeType::Object) return nullptr;
                 for (const auto& child : _objectChildren) {
-                    if (NameEquals(child.first, name)) {
-                        return &child.second;
-                    }
+                    if (NameEquals(child.first, name)) return &child.second;
                 }
-
                 return nullptr;
             }
 
-            /// <summary>Sets or replaces a named child and converts this node to an object node.</summary>
             SerializationNode& Set(
                 std::string_view name,
                 SerializationNode node
             ) {
                 SetType(SerializationNodeType::Object);
-
                 for (auto& child : _objectChildren) {
                     if (NameEquals(child.first, name)) {
                         child.second = std::move(node);
@@ -214,18 +129,14 @@ namespace ESPressio::Serializable {
                     std::move(retainedName),
                     std::move(node)
                 );
-
                 return _objectChildren.back().second;
             }
 
-            /// <summary>Sets or replaces a named child while transferring ownership of an already-retained property name.</summary>
-            /// <remarks>This explicit ownership-transfer path avoids copying property-name storage when a decoder already owns a <c>SerializationString</c>, without introducing overload ambiguity for ordinary string literals.</remarks>
             SerializationNode& SetOwned(
                 SerializationString&& name,
                 SerializationNode node
             ) {
                 SetType(SerializationNodeType::Object);
-
                 const std::string_view nameView(name.data(), name.size());
                 for (auto& child : _objectChildren) {
                     if (NameEquals(child.first, nameView)) {
@@ -238,42 +149,27 @@ namespace ESPressio::Serializable {
                     std::move(name),
                     std::move(node)
                 );
-
                 return _objectChildren.back().second;
             }
 
-            /// <summary>Appends a child and converts this node to an array node.</summary>
-            SerializationNode& Append(
-                SerializationNode node
-            ) {
+            SerializationNode& Append(SerializationNode node) {
                 SetType(SerializationNodeType::Array);
-
-                _arrayChildren.emplace_back(
-                    std::move(node)
-                );
-
+                _arrayChildren.emplace_back(std::move(node));
                 return _arrayChildren.back();
             }
 
-            /// <summary>Reserves capacity for named object children and converts this node to an object node.</summary>
-            void ReserveObject(size_t count) {
+            // A/B regression control: retain the decoder API/type transition while
+            // deliberately restoring pre-eager-reserve incremental vector growth.
+            void ReserveObject(size_t) {
                 SetType(SerializationNodeType::Object);
-                _objectChildren.reserve(count);
             }
 
-            /// <summary>Reserves capacity for array children and converts this node to an array node.</summary>
-            void ReserveArray(size_t count) {
+            void ReserveArray(size_t) {
                 SetType(SerializationNodeType::Array);
-                _arrayChildren.reserve(count);
             }
 
-            /// <summary>Removes a named child from an object node without allocating a temporary name.</summary>
-            /// <returns><c>true</c> when a matching child was removed.</returns>
             bool Remove(std::string_view name) {
-                if (_type != SerializationNodeType::Object) {
-                    return false;
-                }
-
+                if (_type != SerializationNodeType::Object) return false;
                 const auto iterator = std::find_if(
                     _objectChildren.begin(),
                     _objectChildren.end(),
@@ -281,22 +177,13 @@ namespace ESPressio::Serializable {
                         return NameEquals(child.first, name);
                     }
                 );
-
-                if (iterator == _objectChildren.end()) {
-                    return false;
-                }
-
+                if (iterator == _objectChildren.end()) return false;
                 _objectChildren.erase(iterator);
                 return true;
             }
 
-            /// <summary>Moves a named child into an output node and removes it from this object node without copying the child.</summary>
-            /// <returns><c>true</c> when a matching child was found and moved.</returns>
             bool Take(std::string_view name, SerializationNode& output) {
-                if (_type != SerializationNodeType::Object) {
-                    return false;
-                }
-
+                if (_type != SerializationNodeType::Object) return false;
                 const auto iterator = std::find_if(
                     _objectChildren.begin(),
                     _objectChildren.end(),
@@ -304,11 +191,7 @@ namespace ESPressio::Serializable {
                         return NameEquals(child.first, name);
                     }
                 );
-
-                if (iterator == _objectChildren.end()) {
-                    return false;
-                }
-
+                if (iterator == _objectChildren.end()) return false;
                 output = std::move(iterator->second);
                 _objectChildren.erase(iterator);
                 return true;
