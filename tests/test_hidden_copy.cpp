@@ -19,7 +19,7 @@ int main() {
 
         SerializationNode value(SerializationNodeType::UnsignedInteger);
         value.UnsignedIntegerValue() = 42;
-        root.Set(std::move(retainedName), std::move(value));
+        root.SetOwned(std::move(retainedName), std::move(value));
 
         assert(root.ObjectChildren().size() == 1);
         assert(root.ObjectChildren().front().first.data() == originalStorage);
