@@ -2,7 +2,7 @@
 
 #include <cstdint>
 #include <cstring>
-#include <string>
+#include <string_view>
 #include <vector>
 
 #include "ESPressio_TreeArchive.hpp"
@@ -94,7 +94,7 @@ namespace ESPressio::Serializable {
 
             static void EncodeText(
                 std::vector<uint8_t>& output,
-                const std::string& value
+                std::string_view value
             ) {
                 EncodeArgument(
                     output,
@@ -131,7 +131,10 @@ namespace ESPressio::Serializable {
                         ) {
                             EncodeText(
                                 output,
-                                child.first
+                                std::string_view(
+                                    child.first.data(),
+                                    child.first.size()
+                                )
                             );
 
                             EncodeNode(
@@ -257,7 +260,10 @@ namespace ESPressio::Serializable {
                     case SerializationNodeType::String:
                         EncodeText(
                             output,
-                            node.StringValue()
+                            std::string_view(
+                                node.StringValue().data(),
+                                node.StringValue().size()
+                            )
                         );
                         break;
                 }
@@ -496,8 +502,8 @@ namespace ESPressio::Serializable {
                         return true;
 
                     case 4u:
-                        node.SetType(
-                            SerializationNodeType::Array
+                        node.ReserveArray(
+                            static_cast<size_t>(argument)
                         );
 
                         for (
@@ -525,8 +531,8 @@ namespace ESPressio::Serializable {
                         return true;
 
                     case 5u:
-                        node.SetType(
-                            SerializationNodeType::Object
+                        node.ReserveObject(
+                            static_cast<size_t>(argument)
                         );
 
                         for (
@@ -560,8 +566,8 @@ namespace ESPressio::Serializable {
                                 return false;
                             }
 
-                            node.Set(
-                                keyNode.StringValue().c_str(),
+                            node.SetOwned(
+                                std::move(keyNode.StringValue()),
                                 std::move(valueNode)
                             );
                         }
