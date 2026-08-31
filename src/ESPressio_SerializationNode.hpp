@@ -218,6 +218,30 @@ namespace ESPressio::Serializable {
                 return _objectChildren.back().second;
             }
 
+            /// <summary>Sets or replaces a named child while transferring ownership of an already-retained property name.</summary>
+            /// <remarks>This overload avoids copying property-name storage when a decoder already owns a <c>SerializationString</c>.</remarks>
+            SerializationNode& Set(
+                SerializationString&& name,
+                SerializationNode node
+            ) {
+                SetType(SerializationNodeType::Object);
+
+                const std::string_view nameView(name.data(), name.size());
+                for (auto& child : _objectChildren) {
+                    if (NameEquals(child.first, nameView)) {
+                        child.second = std::move(node);
+                        return child.second;
+                    }
+                }
+
+                _objectChildren.emplace_back(
+                    std::move(name),
+                    std::move(node)
+                );
+
+                return _objectChildren.back().second;
+            }
+
             /// <summary>Appends a child and converts this node to an array node.</summary>
             SerializationNode& Append(
                 SerializationNode node
