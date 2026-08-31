@@ -501,7 +501,16 @@ namespace ESPressio::Serializable {
                         cursor += argument;
                         return true;
 
-                    case 4u:
+                    case 4u: {
+                        const uint64_t remaining =
+                            static_cast<uint64_t>(
+                                end - cursor
+                            );
+
+                        if (argument > remaining) {
+                            return false;
+                        }
+
                         node.ReserveArray(
                             static_cast<size_t>(argument)
                         );
@@ -529,8 +538,18 @@ namespace ESPressio::Serializable {
                         }
 
                         return true;
+                    }
 
-                    case 5u:
+                    case 5u: {
+                        const uint64_t remaining =
+                            static_cast<uint64_t>(
+                                end - cursor
+                            );
+
+                        if (argument > remaining / 2u) {
+                            return false;
+                        }
+
                         node.ReserveObject(
                             static_cast<size_t>(argument)
                         );
@@ -573,6 +592,7 @@ namespace ESPressio::Serializable {
                         }
 
                         return true;
+                    }
                 }
 
                 return false;
