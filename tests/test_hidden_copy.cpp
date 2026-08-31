@@ -32,7 +32,7 @@ int main() {
         BinaryArchive source;
         SerializationNode child(SerializationNodeType::String);
         child.StringValue().assign("payload", 7);
-        source.Root().Set("alpha", std::move(child));
+        source.GetRootNode().Set("alpha", std::move(child));
 
         SerializationNode array(SerializationNodeType::Array);
         for (uint64_t index = 0; index < 8; ++index) {
@@ -40,17 +40,17 @@ int main() {
             item.UnsignedIntegerValue() = index;
             array.Append(std::move(item));
         }
-        source.Root().Set("items", std::move(array));
+        source.GetRootNode().Set("items", std::move(array));
 
         const auto bytes = source.GetData();
         BinaryArchive decoded(bytes);
         assert(decoded.IsValid());
 
-        const auto* alpha = decoded.Root().Find(std::string_view("alpha"));
+        const auto* alpha = decoded.GetRootNode().Find(std::string_view("alpha"));
         assert(alpha != nullptr);
         assert(alpha->StringValue() == "payload");
 
-        const auto* items = decoded.Root().Find(std::string_view("items"));
+        const auto* items = decoded.GetRootNode().Find(std::string_view("items"));
         assert(items != nullptr);
         assert(items->ArrayChildren().size() == 8);
         for (uint64_t index = 0; index < 8; ++index) {
