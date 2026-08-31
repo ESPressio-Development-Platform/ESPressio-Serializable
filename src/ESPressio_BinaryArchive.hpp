@@ -3,7 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <string>
+#include <string_view>
 #include <utility>
 
 #include "ESPressio_Allocator.hpp"
@@ -166,6 +166,7 @@ private:
                 if (!ReadU16(cursor, end, count) || count > state.Limits.MaximumObjectMembers) {
                     return false;
                 }
+                node.ReserveObject(count);
                 for (uint16_t index = 0; index < count; ++index) {
                     uint16_t nameLength = 0;
                     if (!ReadU16(cursor, end, nameLength) ||
@@ -173,11 +174,14 @@ private:
                         Remaining(cursor, end) < nameLength) {
                         return false;
                     }
-                    std::string name(reinterpret_cast<const char*>(cursor), nameLength);
+                    const std::string_view name(
+                        reinterpret_cast<const char*>(cursor),
+                        nameLength
+                    );
                     cursor += nameLength;
                     SerializationNode child;
                     if (!DecodeNode(cursor, end, child, state, depth + 1)) return false;
-                    node.Set(name.c_str(), std::move(child));
+                    node.Set(name, std::move(child));
                 }
                 return true;
             }
@@ -187,6 +191,7 @@ private:
                 if (!ReadU32(cursor, end, count) || count > state.Limits.MaximumArrayElements) {
                     return false;
                 }
+                node.ReserveArray(count);
                 for (uint32_t index = 0; index < count; ++index) {
                     SerializationNode child;
                     if (!DecodeNode(cursor, end, child, state, depth + 1)) return false;
