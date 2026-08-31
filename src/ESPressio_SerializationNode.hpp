@@ -219,8 +219,8 @@ namespace ESPressio::Serializable {
             }
 
             /// <summary>Sets or replaces a named child while transferring ownership of an already-retained property name.</summary>
-            /// <remarks>This overload avoids copying property-name storage when a decoder already owns a <c>SerializationString</c>.</remarks>
-            SerializationNode& Set(
+            /// <remarks>This explicit ownership-transfer path avoids copying property-name storage when a decoder already owns a <c>SerializationString</c>, without introducing overload ambiguity for ordinary string literals.</remarks>
+            SerializationNode& SetOwned(
                 SerializationString&& name,
                 SerializationNode node
             ) {
