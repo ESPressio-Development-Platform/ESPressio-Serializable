@@ -11,7 +11,7 @@ Serializable 0.11.0 core
     -> none
 
 Serializable Security integration
-    - - -> Security >= 0.4.0 < 1.0.0
+    - - -> Security main
             authenticated protected serialization
 ```
 
