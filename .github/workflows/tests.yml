@@ -40,7 +40,7 @@ jobs:
           lib_ldf_mode = deep+
           lib_deps =
               file://..
-              https://github.com/ESPressio-Development-Platform/ESPressio-System.git#main
+              https://github.com/ESPressio-Development-Platform/ESPressio-System.git#structural_realignment
           EOF
           cat > project/src/main.cpp <<'EOF'
           #include <Arduino.h>
