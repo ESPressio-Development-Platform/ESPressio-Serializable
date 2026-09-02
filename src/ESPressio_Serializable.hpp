@@ -3,6 +3,7 @@
 #include "ESPressio_SerializationProperty.hpp"
 #include "ESPressio_SerializationTraits.hpp"
 #include "ESPressio_SerializationNode.hpp"
+#include "ESPressio_SystemMemorySerialization.hpp"
 #include "ESPressio_SerializationSchema.hpp"
 #include "ESPressio_SerializationTraversal.hpp"
 #include "ESPressio_SerializableBase.hpp"

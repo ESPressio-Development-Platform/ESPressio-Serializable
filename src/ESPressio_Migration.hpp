@@ -5,6 +5,8 @@
 
 namespace ESPressio::Serializable::Migration {
 
+    /// <summary>Renames a property within an object node by moving its value to a new name.</summary>
+    /// <returns><c>true</c> when the source exists and the destination is available or overwrite is enabled.</returns>
     inline bool Rename(
         SerializationNode& object,
         const char* oldName,
@@ -23,6 +25,7 @@ namespace ESPressio::Serializable::Migration {
         return true;
     }
 
+    /// <summary>Removes a named property from an object node.</summary>
     inline bool Remove(
         SerializationNode& object,
         const char* name
@@ -30,6 +33,8 @@ namespace ESPressio::Serializable::Migration {
         return object.Remove(name);
     }
 
+    /// <summary>Moves a named property between object nodes.</summary>
+    /// <returns><c>true</c> when the source exists and the destination accepts the value.</returns>
     inline bool Move(
         SerializationNode& source,
         const char* sourceName,
@@ -49,6 +54,8 @@ namespace ESPressio::Serializable::Migration {
         return true;
     }
 
+    /// <summary>Resolves a dot-delimited object path, optionally creating missing object nodes.</summary>
+    /// <returns>The resolved object node, or <c>nullptr</c> when the path cannot be followed.</returns>
     inline SerializationNode* ResolveObjectPath(
         SerializationNode& root,
         const char* path,
@@ -93,6 +100,7 @@ namespace ESPressio::Serializable::Migration {
         return current;
     }
 
+    /// <summary>Resolves a property/array path such as <c>object.items[0]</c>, optionally creating missing object segments.</summary>
     inline SerializationNode* ResolvePath(SerializationNode& root, const char* path, bool create=false) {
         if(path==nullptr || *path=='\0') return &root;
         SerializationNode* current=&root; const char* p=path;
@@ -116,6 +124,7 @@ namespace ESPressio::Serializable::Migration {
         return current;
     }
 
+    /// <summary>Removes the value addressed by a property/array path.</summary>
     inline bool RemoveAt(SerializationNode& root,const char* path) {
         if(path==nullptr) return false; std::string p(path); auto dot=p.find_last_of('.'); auto bracket=p.find_last_of('[');
         if(bracket!=std::string::npos && (dot==std::string::npos || bracket>dot)){
@@ -129,6 +138,7 @@ namespace ESPressio::Serializable::Migration {
         auto* node=ResolvePath(root,parent.c_str()); return node&&node->Remove(name.c_str());
     }
 
+    /// <summary>Moves a value from an arbitrary source path into a destination object under a new name.</summary>
     inline bool MovePath(SerializationNode& root,const char* sourcePath,const char* destinationObjectPath,const char* destinationName,bool overwrite=false){
         auto* source=ResolvePath(root,sourcePath); if(!source) return false; SerializationNode copy=*source;
         auto* dest=ResolvePath(root,destinationObjectPath,true); if(!dest||dest->GetType()!=SerializationNodeType::Object) return false;

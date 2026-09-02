@@ -19,6 +19,7 @@
 #include <utility>
 #include <vector>
 
+#include "ESPressio_Allocator.hpp"
 #include "ESPressio_EnumSerialization.hpp"
 #include "ESPressio_SerializationAdapter.hpp"
 #include "ESPressio_SerializationNode.hpp"
@@ -30,8 +31,9 @@ namespace ESPressio::Serializable {
 
 namespace DirectBinaryDetail {
 
+    template<typename TOutput>
     inline void AppendU16(
-        std::vector<uint8_t>& output,
+        TOutput& output,
         uint16_t value
     ) {
         output.push_back(
@@ -47,8 +49,9 @@ namespace DirectBinaryDetail {
     }
 
 
+    template<typename TOutput>
     inline void AppendU32(
-        std::vector<uint8_t>& output,
+        TOutput& output,
         uint32_t value
     ) {
         for (
@@ -65,8 +68,9 @@ namespace DirectBinaryDetail {
     }
 
 
+    template<typename TOutput>
     inline void AppendU64(
-        std::vector<uint8_t>& output,
+        TOutput& output,
         uint64_t value
     ) {
         for (
@@ -168,8 +172,9 @@ namespace DirectBinaryDetail {
     }
 
 
+    template<typename TOutput>
     inline void AppendName(
-        std::vector<uint8_t>& output,
+        TOutput& output,
         const char* name
     ) {
         const std::size_t length =
@@ -194,8 +199,9 @@ namespace DirectBinaryDetail {
     }
 
 
+    template<typename TOutput>
     inline void EncodeNode(
-        std::vector<uint8_t>& output,
+        TOutput& output,
         const SerializationNode& node
     ) {
         output.push_back(
@@ -330,16 +336,16 @@ namespace DirectBinaryDetail {
     }
 
 
-    template<typename TValue>
+    template<typename TOutput, typename TValue>
     void EncodeValue(
-        std::vector<uint8_t>& output,
+        TOutput& output,
         const TValue& value
     );
 
 
-    template<typename TObject>
+    template<typename TOutput, typename TObject>
     void EncodeObject(
-        std::vector<uint8_t>& output,
+        TOutput& output,
         const TObject& object
     ) {
         output.push_back(
@@ -398,9 +404,9 @@ namespace DirectBinaryDetail {
     }
 
 
-    template<typename TValue>
+    template<typename TOutput, typename TValue>
     void EncodeValue(
-        std::vector<uint8_t>& output,
+        TOutput& output,
         const TValue& value
     ) {
         using T =
@@ -825,7 +831,7 @@ namespace DirectBinaryDetail {
                         return false;
                     }
 
-                    std::string name(
+                    SerializationString name(
                         reinterpret_cast<const char*>(
                             cursor
                         ),
@@ -978,7 +984,7 @@ namespace DirectBinaryDetail {
                 const uint8_t* End = nullptr;
             };
 
-            std::vector<PropertySlice>
+            SerializationBuffer<PropertySlice>
                 _properties;
 
             bool _valid = false;
@@ -1683,10 +1689,10 @@ namespace DirectBinaryDetail {
  * Existing bytes in output are preserved, allowing callers such as Event
  * transport to reserve/write an envelope and serialize directly after it.
  */
-template<typename TObject>
+template<typename TObject, typename TAllocator>
 bool AppendDirectBinary(
     const TObject& object,
-    std::vector<uint8_t>& output
+    std::vector<uint8_t, TAllocator>& output
 ) {
     static_assert(
         IsSerializable<TObject>,
@@ -1711,10 +1717,10 @@ bool AppendDirectBinary(
 }
 
 
-template<typename TObject>
+template<typename TObject, typename TAllocator>
 bool SerializeDirectBinary(
     const TObject& object,
-    std::vector<uint8_t>& output
+    std::vector<uint8_t, TAllocator>& output
 ) {
     output.clear();
     return

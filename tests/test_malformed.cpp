@@ -10,11 +10,11 @@
 
 using namespace ESPressio;
 
-template<class A>
-void Mutate(const std::vector<uint8_t>& seed) {
+template<class A, typename TAllocator>
+void Mutate(const std::vector<uint8_t, TAllocator>& seed) {
     std::mt19937 rng(0x45535052);
     for (int n = 0; n < 2000; ++n) {
-        auto d = seed;
+        std::vector<uint8_t> d(seed.begin(), seed.end());
         if (d.empty()) d.push_back(0);
         const int edits = 1 + (rng() % 4);
         for (int e = 0; e < edits; ++e) {

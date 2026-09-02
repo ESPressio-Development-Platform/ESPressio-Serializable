@@ -9,16 +9,11 @@
 
 namespace ESPressio::Serializable {
 
-    /*
-     * Tiny reference archive used by the examples and host tests.
-     *
-     * This is deliberately NOT a JSON implementation. The Serializable core
-     * must not depend on ArduinoJson (or any other wire/storage format).
-     * A production JSON/CBOR/NVS archive can implement the same Read/Write
-     * surface independently.
-     */
+    /// <summary>Minimal string-backed reference archive used by examples and host tests.</summary>
+    /// <remarks>This archive demonstrates the generic Serializable Read/Write contract and is intentionally independent of JSON, CBOR, NVS, or other production wire/storage formats.</remarks>
     class KeyValueArchive {
         public:
+            /// <summary>One stored name/value pair.</summary>
             struct Entry {
                 std::string Name;
                 std::string Value;
@@ -59,26 +54,32 @@ namespace ESPressio::Serializable {
             }
 
         public:
+            /// <summary>Returns all currently stored entries.</summary>
             const std::vector<Entry>& GetEntries() const {
                 return _entries;
             }
 
+            /// <summary>Removes all entries from the archive.</summary>
             void Clear() {
                 _entries.clear();
             }
 
+            /// <summary>Writes a string value under a name.</summary>
             void Write(const char* name, const std::string& value) {
                 Set(name, value);
             }
 
+            /// <summary>Writes a C-string value under a name; a null pointer is stored as an empty string.</summary>
             void Write(const char* name, const char* value) {
                 Set(name, value == nullptr ? "" : value);
             }
 
+            /// <summary>Writes a Boolean value using its textual representation.</summary>
             void Write(const char* name, bool value) {
                 Set(name, value ? "true" : "false");
             }
 
+            /// <summary>Writes a non-Boolean integral value using decimal text.</summary>
             template<
                 typename TValue,
                 std::enable_if_t<
@@ -99,6 +100,7 @@ namespace ESPressio::Serializable {
                 }
             }
 
+            /// <summary>Writes a floating-point value using textual conversion.</summary>
             template<
                 typename TValue,
                 std::enable_if_t<std::is_floating_point_v<TValue>, int> = 0
@@ -109,6 +111,7 @@ namespace ESPressio::Serializable {
                 ));
             }
 
+            /// <summary>Reads a stored string value.</summary>
             bool Read(const char* name, std::string& value) const {
                 const Entry* entry = Find(name);
 
@@ -120,6 +123,7 @@ namespace ESPressio::Serializable {
                 return true;
             }
 
+            /// <summary>Reads a stored Boolean value from <c>true</c> or <c>1</c> textual representations.</summary>
             bool Read(const char* name, bool& value) const {
                 const Entry* entry = Find(name);
 
@@ -134,6 +138,7 @@ namespace ESPressio::Serializable {
                 return true;
             }
 
+            /// <summary>Reads a signed integral value from decimal text.</summary>
             template<
                 typename TValue,
                 std::enable_if_t<
@@ -157,6 +162,7 @@ namespace ESPressio::Serializable {
                 return true;
             }
 
+            /// <summary>Reads an unsigned integral value from decimal text.</summary>
             template<
                 typename TValue,
                 std::enable_if_t<
@@ -180,6 +186,7 @@ namespace ESPressio::Serializable {
                 return true;
             }
 
+            /// <summary>Reads a floating-point value from text.</summary>
             template<
                 typename TValue,
                 std::enable_if_t<std::is_floating_point_v<TValue>, int> = 0

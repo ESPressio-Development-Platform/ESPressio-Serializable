@@ -38,6 +38,9 @@ namespace ESPressio::Serializable::Detail {
 
 namespace ESPressio::Serializable {
 
+    /// <summary>CRTP base implementing the standard ESPressio object serialization and deserialization workflow.</summary>
+    /// <typeparam name="TDerived">Serializable object type exposing <c>GetSerializableProperties()</c> and optional schema metadata.</typeparam>
+    /// <remarks>The archive contract is detected at compile time, allowing archives to opt into detailed reads, presence checks, property-aware writes, and structural migrations.</remarks>
     template<typename TDerived>
     class SerializableBase {
         public:
@@ -103,10 +106,13 @@ namespace ESPressio::Serializable {
             }
 
         public:
+            /// <summary>Returns the schema version declared for the derived serializable type.</summary>
             static constexpr uint32_t GetSchemaVersion() {
                 return Detail::SchemaVersion<TDerived>();
             }
 
+            /// <summary>Writes the schema version and declared serializable properties to an archive.</summary>
+            /// <typeparam name="TArchive">Archive type implementing the required write contract.</typeparam>
             template<typename TArchive>
             void Serialize(TArchive& archive) const {
                 const TDerived& object =
@@ -134,6 +140,11 @@ namespace ESPressio::Serializable {
                 );
             }
 
+            /// <summary>Deserializes declared properties with validation, aliases, defaults, schema checks, and migrations where supported.</summary>
+            /// <typeparam name="TArchive">Archive type implementing the required read contract.</typeparam>
+            /// <param name="archive">Archive containing the serialized object.</param>
+            /// <param name="options">Validation and issue-collection options.</param>
+            /// <returns>A detailed result containing every collected deserialization issue.</returns>
             template<typename TArchive>
             DeserializationResult DeserializeDetailed(
                 TArchive& archive,
@@ -183,11 +194,14 @@ namespace ESPressio::Serializable {
                 (void)success;
                 return result;
             }
+
+            /// <summary>Deserializes the object and returns whether no validation or decoding issues were recorded.</summary>
             template<typename TArchive>
             bool Deserialize(TArchive& archive) { return DeserializeDetailed(archive).Success(); }
 
     };
 
+    /// <summary>Convenience alias for the CRTP serializable base implementation.</summary>
     template<typename TDerived>
     using Serializable = SerializableBase<TDerived>;
 
