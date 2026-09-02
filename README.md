@@ -40,16 +40,16 @@ Core only:
 
 ```ini
 lib_deps =
-    espressio-development-platform/ESPressio-Serializable@^0.11.2
+    https://github.com/ESPressio-Development-Platform/ESPressio-Serializable.git#main
 ```
 
-Protected serialization additionally requires ESPressio Security 0.4.x:
+Protected serialization additionally requires ESPressio Security from `main`:
 
 ```ini
 lib_deps =
-    espressio-development-platform/ESPressio-Serializable@^0.11.2
-    espressio-development-platform/ESPressio-Security@^0.4.0
-    espressio-development-platform/ESPressio-Observable@^3.0.2
+    https://github.com/ESPressio-Development-Platform/ESPressio-Serializable.git#main
+    https://github.com/ESPressio-Development-Platform/ESPressio-Security.git#main
+    https://github.com/ESPressio-Development-Platform/ESPressio-Observable.git#main
 ```
 
 Use the core umbrella normally:
@@ -358,7 +358,7 @@ Serializable core
     -> none
 
 Serializable Security integration
-    - - -> Security >= 0.4.0 < 1.0.0
+    - - -> Security main
 ```
 
 Downstream libraries such as Persistence, Event and Units may opt into Serializable independently.
