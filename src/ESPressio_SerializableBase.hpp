@@ -19,14 +19,14 @@ namespace ESPressio::Serializable::Detail {
 template<typename TArchive, typename TValue, typename = void>
     struct HasReadDetailed : std::false_type {};
 
-        /**
-     * ESPressio Memory Audit
-     * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
-     * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
-     * Total Memory: 1 bytes [0 bytes dynamic allocation]
-     * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
-     * End ESPressio Memory Audit
-     */
+/**
+ * ESPressio Memory Audit
+ * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
+ * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
+ * Total Memory: 1 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
+ * End ESPressio Memory Audit
+ */
 template<typename TArchive, typename TValue>
     struct HasReadDetailed<TArchive,TValue,std::void_t<decltype(std::declval<TArchive&>().ReadDetailed(std::declval<const char*>(),std::declval<TValue&>(),std::declval<const DeserializationOptions&>()))>> : std::true_type {};
 
@@ -52,14 +52,14 @@ template<typename TArchive, typename = void>
 template<typename TArchive, typename = void>
     struct HasContains : std::false_type {};
 
-        /**
-     * ESPressio Memory Audit
-     * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
-     * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
-     * Total Memory: 1 bytes [0 bytes dynamic allocation]
-     * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
-     * End ESPressio Memory Audit
-     */
+/**
+ * ESPressio Memory Audit
+ * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
+ * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
+ * Total Memory: 1 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
+ * End ESPressio Memory Audit
+ */
 template<typename TArchive>
     struct HasContains<TArchive,std::void_t<decltype(std::declval<const TArchive&>().Contains(std::declval<const char*>()))>> : std::true_type {};
 
@@ -74,25 +74,25 @@ template<typename TArchive>
 template<typename TArchive, typename TProperty, typename TValue, typename = void>
     struct HasWriteProperty : std::false_type {};
 
-        /**
-     * ESPressio Memory Audit
-     * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
-     * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
-     * Total Memory: 1 bytes [0 bytes dynamic allocation]
-     * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
-     * End ESPressio Memory Audit
-     */
+/**
+ * ESPressio Memory Audit
+ * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
+ * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
+ * Total Memory: 1 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
+ * End ESPressio Memory Audit
+ */
 template<typename TArchive, typename TProperty, typename TValue>
     struct HasWriteProperty<TArchive,TProperty,TValue,std::void_t<decltype(std::declval<TArchive&>().WriteProperty(std::declval<const TProperty&>(),std::declval<const TValue&>()))>> : std::true_type {};
 
-        /**
-     * ESPressio Memory Audit
-     * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
-     * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
-     * Total Memory: 1 bytes [0 bytes dynamic allocation]
-     * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
-     * End ESPressio Memory Audit
-     */
+/**
+ * ESPressio Memory Audit
+ * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
+ * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
+ * Total Memory: 1 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
+ * End ESPressio Memory Audit
+ */
 template<typename TArchive>
     struct HasGetNode<
         TArchive,
