@@ -4,6 +4,16 @@
 
 using namespace ESPressio;
 
+/**
+ * ESPressio Memory Audit
+ * Inherited Memory Total: sizeof(Serializable::Serializable<Packet>) [0 bytes dynamic allocation]
+ * Members:
+ * - _active (bool): 1 bytes [0 bytes dynamic allocation]
+ * Total Memory: sizeof(Serializable::Serializable<Packet>) + 1 bytes known members [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
+ * End ESPressio Memory Audit
+ */
 class Packet final
     : public Serializable::Serializable<Packet> {
 

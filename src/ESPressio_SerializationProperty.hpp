@@ -8,7 +8,23 @@
 namespace ESPressio::Serializable {
 
     /// <summary>Flags controlling how a serializable property participates in serialization and deserialization.</summary>
-    enum class SerializationPropertyFlags : uint8_t {
+/**
+ * ESPressio Memory Audit
+ * Underlying storage: 1 bytes
+ * Total Memory: 1 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * End ESPressio Memory Audit
+ */
+enum
+/**
+ * ESPressio Memory Audit
+ * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
+ * Members: none (empty object still occupies at least 1 byte unless empty-base optimisation applies).
+ * Total Memory: 1 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * End ESPressio Memory Audit
+ */
+class SerializationPropertyFlags : uint8_t {
         None=0, Required=1u<<0u, ReadOnly=1u<<1u, Sensitive=1u<<2u
     };
 
@@ -27,7 +43,23 @@ namespace ESPressio::Serializable {
     /// <typeparam name="TObject">Object type owning the member.</typeparam>
     /// <typeparam name="TValue">Member value type.</typeparam>
     /// <typeparam name="TMaximumAliases">Maximum number of alternate serialized names retained by the property.</typeparam>
-    template<typename TObject, typename TValue, size_t TMaximumAliases=4>
+/**
+ * ESPressio Memory Audit
+ * Members:
+ * - _name (char*): 4 bytes [0 bytes dynamic allocation]
+ * - _member (TValue TObject::*): 4 bytes [0 bytes dynamic allocation]
+ * - _flags (SerializationPropertyFlags): 1 bytes [0 bytes dynamic allocation]
+ * - _aliasCount (size_t): 4 bytes [0 bytes dynamic allocation]
+ * - _defaultValue (std::optional<TValue>): align(sizeof(TValue) + 1 engaged flag) [0 bytes dynamic allocation]
+ * - _validator (function pointer): 4 bytes [0 bytes dynamic allocation]
+ * - _minimum (std::optional<TValue>): align(sizeof(TValue) + 1 engaged flag) [0 bytes dynamic allocation]
+ * - _maximum (std::optional<TValue>): align(sizeof(TValue) + 1 engaged flag) [0 bytes dynamic allocation]
+ * Total Memory: 17 bytes known members + align(sizeof(TValue) + 1 engaged flag) + align(sizeof(TValue) + 1 engaged flag) + align(sizeof(TValue) + 1 engaged flag) [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
+ * End ESPressio Memory Audit
+ */
+template<typename TObject, typename TValue, size_t TMaximumAliases=4>
     class SerializationProperty {
         private:
             const char* _name;

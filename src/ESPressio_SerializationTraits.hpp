@@ -7,7 +7,16 @@ namespace ESPressio::Serializable {
 
     namespace Detail {
 
-        template<typename T, typename = void>
+/**
+ * ESPressio Memory Audit
+ * Inherited Memory Total: sizeof(std::false_type) [0 bytes dynamic allocation]
+ * Members: none (empty object still occupies at least 1 byte unless empty-base optimisation applies).
+ * Total Memory: sizeof(std::false_type) [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
+ * End ESPressio Memory Audit
+ */
+template<typename T, typename = void>
         struct HasSerializableProperties : std::false_type {
         };
 

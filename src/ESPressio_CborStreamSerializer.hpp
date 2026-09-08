@@ -7,6 +7,15 @@
 #include "ESPressio_Serializable.hpp"
 namespace ESPressio::Serializable {
 /// <summary>Serializes ESPressio values directly to an Arduino <c>Print</c> stream using CBOR encoding.</summary>
+/**
+ * ESPressio Memory Audit
+ * Members:
+ * - _o (Print&): 4 bytes [0 bytes dynamic allocation]
+ * - _policy (SerializationPolicy): 8 bytes [0 bytes dynamic allocation]
+ * Total Memory: 12 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * End ESPressio Memory Audit
+ */
 class CborStreamSerializer {
  Print&_o; SerializationPolicy _policy;
  void arg(uint8_t m,uint64_t v){uint8_t p=m<<5;if(v<24){_o.write(p|v);}else if(v<=255){_o.write(p|24);_o.write((uint8_t)v);}else if(v<=65535){_o.write(p|25);_o.write((uint8_t)(v>>8));_o.write((uint8_t)v);}else{_o.write(p|27);for(int s=56;s>=0;s-=8)_o.write((uint8_t)(v>>s));}}

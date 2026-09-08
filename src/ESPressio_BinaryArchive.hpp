@@ -11,6 +11,19 @@
 
 namespace ESPressio::Serializable {
 
+/**
+ * ESPressio Memory Audit
+ * Members:
+ * - MaximumDepth (std::size_t): 4 bytes [0 bytes dynamic allocation]
+ * - MaximumTotalNodes (std::size_t): 4 bytes [0 bytes dynamic allocation]
+ * - MaximumObjectMembers (uint32_t): 4 bytes [0 bytes dynamic allocation]
+ * - MaximumArrayElements (uint32_t): 4 bytes [0 bytes dynamic allocation]
+ * - MaximumNameLength (std::size_t): 4 bytes [0 bytes dynamic allocation]
+ * - MaximumStringLength (std::size_t): 4 bytes [0 bytes dynamic allocation]
+ * Total Memory: 24 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * End ESPressio Memory Audit
+ */
 struct BinaryArchiveDecodeLimits {
     std::size_t MaximumDepth = 32;
     std::size_t MaximumTotalNodes = 4096;
@@ -20,9 +33,28 @@ struct BinaryArchiveDecodeLimits {
     std::size_t MaximumStringLength = 64u * 1024u;
 };
 
+/**
+ * ESPressio Memory Audit
+ * Inherited Memory Total: 4 bytes known members + sizeof(SerializationNode) [0 bytes dynamic allocation]
+ * Members:
+ * - _valid (bool): 1 bytes [0 bytes dynamic allocation]
+ * Total Memory: 4 bytes known members + sizeof(SerializationNode) + 1 bytes known members [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
+ * End ESPressio Memory Audit
+ */
 class BinaryArchive : public TreeArchive {
 private:
-    struct DecodeState {
+/**
+ * ESPressio Memory Audit
+ * Members:
+ * - Limits (BinaryArchiveDecodeLimits&): 4 bytes [0 bytes dynamic allocation]
+ * - TotalNodes (std::size_t): 4 bytes [0 bytes dynamic allocation]
+ * Total Memory: 8 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * End ESPressio Memory Audit
+ */
+struct DecodeState {
         const BinaryArchiveDecodeLimits& Limits;
         std::size_t TotalNodes = 0;
     };

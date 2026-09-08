@@ -6,6 +6,18 @@
 #include "ESPressio_Serializable.hpp"
 namespace ESPressio::Serializable {
 /// <summary>Describes one serializable property for schema-inspection output.</summary>
+/**
+ * ESPressio Memory Audit
+ * Members:
+ * - Name (std::string): 24 bytes [Capacity + 1 bytes when capacity exceeds 15-byte SSO]
+ * - Required (bool): 1 bytes [0 bytes dynamic allocation]
+ * - Aliases (std::vector<std::string>): 12 bytes [Capacity * 24 bytes; N elements each may add: Capacity + 1 bytes when capacity exceeds 15-byte SSO]
+ * - Type (std::string): 24 bytes [Capacity + 1 bytes when capacity exceeds 15-byte SSO]
+ * Total Memory: 64 bytes [Name: Capacity + 1 bytes when capacity exceeds 15-byte SSO; Aliases: Capacity * 24 bytes; Aliases: N elements each may add: Capacity + 1 bytes when capacity exceeds 15-byte SSO; Type: Capacity + 1 bytes when capacity exceeds 15-byte SSO]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * Confidence: medium; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
+ * End ESPressio Memory Audit
+ */
 struct PropertySchemaInfo { std::string Name; bool Required=false, ReadOnly=false, Sensitive=false, HasDefault=false; std::vector<std::string> Aliases; std::string Type; };
 namespace Detail {
 template<typename T> std::string SchemaTypeName(){ using U=std::remove_cv_t<std::remove_reference_t<T>>; if constexpr(IsSerializable<U>) return "object"; else if constexpr(IsStdOptional<U>::value) return "optional"; else if constexpr(IsSequence<U>) return "array"; else if constexpr(IsMapLike<U>) return "map"; else if constexpr(std::is_enum_v<U>) return "enum"; else if constexpr(std::is_same_v<U,bool>) return "boolean"; else if constexpr(std::is_integral_v<U>) return "integer"; else if constexpr(std::is_floating_point_v<U>) return "number"; else if constexpr(IsStdString<U>) return "string"; else return "custom"; }
@@ -14,6 +26,13 @@ inline std::string CsvEscape(const std::string&s){std::string o="\"";for(char c:
 }
 /// <summary>Produces runtime schema metadata and common textual schema representations for a serializable type.</summary>
 /// <typeparam name="T">Serializable type whose declared properties are inspected.</typeparam>
+/**
+ * ESPressio Memory Audit
+ * Members: none (empty object still occupies at least 1 byte unless empty-base optimisation applies).
+ * Total Memory: 0 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * End ESPressio Memory Audit
+ */
 template<typename T> class SchemaInspector { public:
  /// <summary>Returns structured metadata for the type's declared serializable properties.</summary>
  static std::vector<PropertySchemaInfo> Properties(){ std::vector<PropertySchemaInfo> out; std::apply([&](const auto&... p){(( [&](){ PropertySchemaInfo i; i.Name=p.GetName()?p.GetName():""; i.Required=p.IsRequired(); i.ReadOnly=p.IsReadOnly(); i.Sensitive=p.IsSensitive(); i.HasDefault=p.HasDefault(); for(size_t x=0;x<p.GetAliasCount();++x) if(p.GetAlias(x)) i.Aliases.emplace_back(p.GetAlias(x)); i.Type=Detail::SchemaTypeName<typename std::decay_t<decltype(p)>::ValueType>(); out.push_back(std::move(i)); }() ),...);},T::GetSerializableProperties()); return out; }

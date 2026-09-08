@@ -9,6 +9,16 @@
 
 using namespace ESPressio;
 
+/**
+ * ESPressio Memory Audit
+ * Inherited Memory Total: sizeof(System::Memory::IMemoryProvider) [0 bytes dynamic allocation]
+ * Members:
+ * - ExternalPreferredAllocations (std::size_t): 4 bytes [0 bytes dynamic allocation]
+ * Total Memory: sizeof(System::Memory::IMemoryProvider) + 4 bytes known members [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
+ * End ESPressio Memory Audit
+ */
 class TrackingProvider final : public System::Memory::IMemoryProvider {
 public:
     std::size_t ExternalPreferredAllocations = 0;
@@ -38,6 +48,15 @@ public:
     }
 };
 
+/**
+ * ESPressio Memory Audit
+ * Inherited Memory Total: sizeof(Serializable::Serializable<P>) [0 bytes dynamic allocation]
+ * Members: none (empty object still occupies at least 1 byte unless empty-base optimisation applies).
+ * Total Memory: sizeof(Serializable::Serializable<P>) [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
+ * End ESPressio Memory Audit
+ */
 class P : public Serializable::Serializable<P> {
     ESPRESSIO_SERIALIZABLE_TYPE(P)
 private:

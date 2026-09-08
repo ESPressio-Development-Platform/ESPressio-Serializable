@@ -976,9 +976,30 @@ namespace DirectBinaryDetail {
     );
 
 
-    class ObjectReaderArchive {
+/**
+ * ESPressio Memory Audit
+ * Members:
+ * - _properties (SerializationBuffer<PropertySlice>): sizeof(SerializationBuffer<PropertySlice>) [0 bytes dynamic allocation]
+ * - _valid (bool): 1 bytes [0 bytes dynamic allocation]
+ * Total Memory: 1 bytes known members + sizeof(SerializationBuffer<PropertySlice>) [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
+ * End ESPressio Memory Audit
+ */
+class ObjectReaderArchive {
         private:
-            struct PropertySlice {
+/**
+ * ESPressio Memory Audit
+ * Members:
+ * - Name (std::string_view): sizeof(std::string_view) [0 bytes dynamic allocation]
+ * - Begin (uint8_t*): 4 bytes [0 bytes dynamic allocation]
+ * - End (uint8_t*): 4 bytes [0 bytes dynamic allocation]
+ * Total Memory: 8 bytes known members + sizeof(std::string_view) [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
+ * End ESPressio Memory Audit
+ */
+struct PropertySlice {
                 std::string_view Name;
                 const uint8_t* Begin = nullptr;
                 const uint8_t* End = nullptr;

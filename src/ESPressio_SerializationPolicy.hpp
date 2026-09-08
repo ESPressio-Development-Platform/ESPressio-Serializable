@@ -3,14 +3,39 @@
 
 namespace ESPressio::Serializable {
     /// <summary>Controls how properties marked as sensitive are represented during serialization.</summary>
-    enum class SensitivePropertyPolicy : uint8_t {
+/**
+ * ESPressio Memory Audit
+ * Underlying storage: 1 bytes
+ * Total Memory: 1 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * End ESPressio Memory Audit
+ */
+enum
+/**
+ * ESPressio Memory Audit
+ * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
+ * Members: none (empty object still occupies at least 1 byte unless empty-base optimisation applies).
+ * Total Memory: 1 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * End ESPressio Memory Audit
+ */
+class SensitivePropertyPolicy : uint8_t {
         Include,
         Redact,
         Omit
     };
 
     /// <summary>Configures serialization-time handling of sensitive properties.</summary>
-    class SerializationPolicy {
+/**
+ * ESPressio Memory Audit
+ * Members:
+ * - _sensitive (SensitivePropertyPolicy): 1 bytes [0 bytes dynamic allocation]
+ * - _redactionText (char*): 4 bytes [0 bytes dynamic allocation]
+ * Total Memory: 8 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * End ESPressio Memory Audit
+ */
+class SerializationPolicy {
         private:
             SensitivePropertyPolicy _sensitive =
                 SensitivePropertyPolicy::Include;

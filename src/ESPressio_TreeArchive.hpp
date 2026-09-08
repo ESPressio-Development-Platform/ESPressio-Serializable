@@ -7,7 +7,17 @@ namespace ESPressio::Serializable {
 
     /// <summary>In-memory object archive backed by a <c>SerializationNode</c> tree.</summary>
     /// <remarks>Provides generic typed reads/writes through the shared traversal layer and applies sensitive-property policy during property-aware writes.</remarks>
-    class TreeArchive {
+/**
+ * ESPressio Memory Audit
+ * Members:
+ * - _root (SerializationNode): 54 bytes known members + sizeof(SerializationString) [_objectChildren: Capacity * sizeof(NamedChild); _arrayChildren: Capacity * sizeof(SerializationNode)]
+ * - _policy (SerializationPolicy): 8 bytes [0 bytes dynamic allocation]
+ * Total Memory: 8 bytes known members + 54 bytes known members + sizeof(SerializationString) [_root: _objectChildren: Capacity * sizeof(NamedChild); _root: _arrayChildren: Capacity * sizeof(SerializationNode)]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
+ * End ESPressio Memory Audit
+ */
+class TreeArchive {
         protected:
             SerializationNode _root;
             SerializationPolicy _policy;

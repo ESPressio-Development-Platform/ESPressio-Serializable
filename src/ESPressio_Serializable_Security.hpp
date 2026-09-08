@@ -10,7 +10,23 @@
 
 namespace ESPressio::Serializable {
 
-enum class ProtectedSerializationStatus : uint8_t {
+/**
+ * ESPressio Memory Audit
+ * Underlying storage: 1 bytes
+ * Total Memory: 1 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * End ESPressio Memory Audit
+ */
+enum
+/**
+ * ESPressio Memory Audit
+ * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
+ * Members: none (empty object still occupies at least 1 byte unless empty-base optimisation applies).
+ * Total Memory: 1 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * End ESPressio Memory Audit
+ */
+class ProtectedSerializationStatus : uint8_t {
     Success = 0,
     InvalidArgument,
     SerializationFailed,
@@ -35,6 +51,17 @@ inline const char* ProtectedSerializationStatusName(ProtectedSerializationStatus
     }
 }
 
+/**
+ * ESPressio Memory Audit
+ * Members:
+ * - Protector (Security::IDataProtector*): 4 bytes [0 bytes dynamic allocation]
+ * - Context (std::string): 24 bytes [Capacity + 1 bytes when capacity exceeds 15-byte SSO]
+ * - MaximumArchiveBytes (std::size_t): 4 bytes [0 bytes dynamic allocation]
+ * Total Memory: 32 bytes [Context: Capacity + 1 bytes when capacity exceeds 15-byte SSO]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * Confidence: medium; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
+ * End ESPressio Memory Audit
+ */
 struct SerializationProtectionConfig {
     Security::IDataProtector* Protector = nullptr;
     std::string Context;
@@ -54,6 +81,16 @@ struct SerializationProtectionConfig {
     }
 };
 
+/**
+ * ESPressio Memory Audit
+ * Members:
+ * - Status (ProtectedSerializationStatus): 1 bytes [0 bytes dynamic allocation]
+ * - ArchiveBytes (std::size_t): 4 bytes [0 bytes dynamic allocation]
+ * - ProtectedBytes (std::size_t): 4 bytes [0 bytes dynamic allocation]
+ * Total Memory: 12 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * End ESPressio Memory Audit
+ */
 struct ProtectedSerializationResult {
     ProtectedSerializationStatus Status = ProtectedSerializationStatus::Success;
     std::size_t ArchiveBytes = 0;

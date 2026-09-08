@@ -3,6 +3,17 @@
 
 using namespace ESPressio;
 
+/**
+ * ESPressio Memory Audit
+ * Inherited Memory Total: sizeof(Serializable::Serializable<DeviceConfiguration>) [0 bytes dynamic allocation]
+ * Members:
+ * - _threshold (float): 4 bytes [0 bytes dynamic allocation]
+ * - _loggingEnabled (bool): 1 bytes [0 bytes dynamic allocation]
+ * Total Memory: sizeof(Serializable::Serializable<DeviceConfiguration>) + 5 bytes known members [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
+ * End ESPressio Memory Audit
+ */
 class DeviceConfiguration final
     : public Serializable::Serializable<DeviceConfiguration> {
 

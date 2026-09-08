@@ -4,6 +4,16 @@
 
 using namespace ESPressio;
 
+/**
+ * ESPressio Memory Audit
+ * Inherited Memory Total: sizeof(Serializable::Serializable<Settings>) [0 bytes dynamic allocation]
+ * Members:
+ * - _deviceName (String): 12 bytes [Capacity + 1 bytes (Arduino String backing buffer when allocated)]
+ * Total Memory: sizeof(Serializable::Serializable<Settings>) + 12 bytes known members [_deviceName: Capacity + 1 bytes (Arduino String backing buffer when allocated)]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
+ * End ESPressio Memory Audit
+ */
 class Settings final
     : public Serializable::Serializable<Settings> {
     ESPRESSIO_SERIALIZABLE_TYPE(Settings)

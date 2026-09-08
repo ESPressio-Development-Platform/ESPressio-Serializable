@@ -18,7 +18,23 @@
 
 using namespace ESPressio;
 
-enum class TestMode : uint8_t { Off = 0, On = 1 };
+/**
+ * ESPressio Memory Audit
+ * Underlying storage: 1 bytes
+ * Total Memory: 1 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * End ESPressio Memory Audit
+ */
+enum
+/**
+ * ESPressio Memory Audit
+ * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
+ * Members: none (empty object still occupies at least 1 byte unless empty-base optimisation applies).
+ * Total Memory: 1 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * End ESPressio Memory Audit
+ */
+class TestMode : uint8_t { Off = 0, On = 1 };
 
 ESPRESSIO_ENUM_MAPPING(
     TestMode,
@@ -26,6 +42,16 @@ ESPRESSIO_ENUM_MAPPING(
     ESPRESSIO_ENUM_VALUE(TestMode::On, "on")
 )
 
+/**
+ * ESPressio Memory Audit
+ * Inherited Memory Total: sizeof(Serializable::Serializable<Position>) [0 bytes dynamic allocation]
+ * Members:
+ * - _y (float): 4 bytes [0 bytes dynamic allocation]
+ * Total Memory: sizeof(Serializable::Serializable<Position>) + 4 bytes known members [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
+ * End ESPressio Memory Audit
+ */
 class Position final
     : public Serializable::Serializable<Position> {
     ESPRESSIO_SERIALIZABLE_TYPE(Position)
@@ -42,6 +68,16 @@ class Position final
         float GetY() const { return _y; }
 };
 
+/**
+ * ESPressio Memory Audit
+ * Inherited Memory Total: sizeof(Serializable::Serializable<Sensor>) [0 bytes dynamic allocation]
+ * Members:
+ * - _mode (TestMode): 1 bytes [0 bytes dynamic allocation]
+ * Total Memory: sizeof(Serializable::Serializable<Sensor>) + 1 bytes known members [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
+ * End ESPressio Memory Audit
+ */
 class Sensor final
     : public Serializable::Serializable<Sensor> {
     ESPRESSIO_SERIALIZABLE_TYPE(Sensor)
@@ -59,6 +95,21 @@ class Sensor final
         TestMode GetMode() const { return _mode; }
 };
 
+/**
+ * ESPressio Memory Audit
+ * Inherited Memory Total: sizeof(Serializable::Serializable<TestConfiguration>) [0 bytes dynamic allocation]
+ * Members:
+ * - _enabled (bool): 1 bytes [0 bytes dynamic allocation]
+ * - _name (std::string): 24 bytes [Capacity + 1 bytes when capacity exceeds 15-byte SSO]
+ * - _position (Position): sizeof(Serializable::Serializable<Position>) + 4 bytes known members [0 bytes dynamic allocation]
+ * - _optionalValue (std::optional<int32_t>): 8 bytes [0 bytes dynamic allocation]
+ * - _emptyOptional (std::optional<int32_t>): 8 bytes [0 bytes dynamic allocation]
+ * - _readOnlyId (uint32_t): 4 bytes [0 bytes dynamic allocation]
+ * Total Memory: sizeof(Serializable::Serializable<TestConfiguration>) + 45 bytes known members + sizeof(Serializable::Serializable<Position>) + 4 bytes known members [_name: Capacity + 1 bytes when capacity exceeds 15-byte SSO]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
+ * End ESPressio Memory Audit
+ */
 class TestConfiguration final
     : public Serializable::Serializable<TestConfiguration> {
     ESPRESSIO_SERIALIZABLE_TYPE(TestConfiguration)
@@ -184,6 +235,16 @@ bool ValidateEven(const int32_t& value) {
     return (value % 2) == 0;
 }
 
+/**
+ * ESPressio Memory Audit
+ * Inherited Memory Total: sizeof(Serializable::Serializable<ValidationConfiguration>) [0 bytes dynamic allocation]
+ * Members:
+ * - _even (int32_t): 4 bytes [0 bytes dynamic allocation]
+ * Total Memory: sizeof(Serializable::Serializable<ValidationConfiguration>) + 4 bytes known members [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
+ * End ESPressio Memory Audit
+ */
 class ValidationConfiguration final
     : public Serializable::Serializable<ValidationConfiguration> {
     ESPRESSIO_SERIALIZABLE_TYPE(ValidationConfiguration)
@@ -199,6 +260,15 @@ class ValidationConfiguration final
         int32_t GetEven() const { return _even; }
 };
 
+/**
+ * ESPressio Memory Audit
+ * Inherited Memory Total: sizeof(Serializable::Serializable<CollectionConfiguration>) [0 bytes dynamic allocation]
+ * Members: none (empty object still occupies at least 1 byte unless empty-base optimisation applies).
+ * Total Memory: sizeof(Serializable::Serializable<CollectionConfiguration>) [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
+ * End ESPressio Memory Audit
+ */
 class CollectionConfiguration final
     : public Serializable::Serializable<CollectionConfiguration> {
     ESPRESSIO_SERIALIZABLE_TYPE(CollectionConfiguration)
@@ -220,6 +290,16 @@ class CollectionConfiguration final
         const auto& GetDeque() const { return _deque; }
 };
 
+/**
+ * ESPressio Memory Audit
+ * Inherited Memory Total: sizeof(Serializable::Serializable<SensitiveConfiguration>) [0 bytes dynamic allocation]
+ * Members:
+ * - _secret (std::string): 24 bytes [Capacity + 1 bytes when capacity exceeds 15-byte SSO]
+ * Total Memory: sizeof(Serializable::Serializable<SensitiveConfiguration>) + 24 bytes known members [_secret: Capacity + 1 bytes when capacity exceeds 15-byte SSO]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
+ * End ESPressio Memory Audit
+ */
 class SensitiveConfiguration final
     : public Serializable::Serializable<SensitiveConfiguration> {
     ESPRESSIO_SERIALIZABLE_TYPE(SensitiveConfiguration)
@@ -233,6 +313,15 @@ class SensitiveConfiguration final
         )
 };
 
+/**
+ * ESPressio Memory Audit
+ * Inherited Memory Total: sizeof(Serializable::Serializable<NarrowConfiguration>) [0 bytes dynamic allocation]
+ * Members: none (empty object still occupies at least 1 byte unless empty-base optimisation applies).
+ * Total Memory: sizeof(Serializable::Serializable<NarrowConfiguration>) [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
+ * End ESPressio Memory Audit
+ */
 class NarrowConfiguration final
     : public Serializable::Serializable<NarrowConfiguration> {
     ESPRESSIO_SERIALIZABLE_TYPE(NarrowConfiguration)

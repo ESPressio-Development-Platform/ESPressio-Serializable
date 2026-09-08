@@ -7,6 +7,14 @@
 #include "ESPressio_JsonArchive.hpp"
 #include "ESPressio_SchemaIntrospection.hpp"
 namespace ESPressio::Serializable {
+/**
+ * ESPressio Memory Audit
+ * Members:
+ * - _in (Stream&): 4 bytes [0 bytes dynamic allocation]
+ * Total Memory: 4 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * End ESPressio Memory Audit
+ */
 class JsonStreamDeserializer { Stream&_in; public: explicit JsonStreamDeserializer(Stream&i):_in(i){}
  template<class T> DeserializationResult Deserialize(T&object){ ArduinoJson::JsonDocument d; auto e=ArduinoJson::deserializeJson(d,_in); if(e){DeserializationResult r;r.Add(SerializationErrorCode::MalformedInput,"",e.c_str());return r;} JsonArchive a; if(!a.LoadDocument(d)){DeserializationResult r;r.Add(SerializationErrorCode::MalformedInput,"","Unable to map JSON document");return r;} return object.DeserializeDetailed(a); }
  template<class T,class TFilter> DeserializationResult Deserialize(T&object,const TFilter&filter){ ArduinoJson::JsonDocument d; auto e=ArduinoJson::deserializeJson(d,_in,ArduinoJson::DeserializationOption::Filter(filter)); if(e){DeserializationResult r;r.Add(SerializationErrorCode::MalformedInput,"",e.c_str());return r;} JsonArchive a;if(!a.LoadDocument(d)){DeserializationResult r;r.Add(SerializationErrorCode::MalformedInput,"","Unable to map filtered JSON");return r;}return object.DeserializeDetailed(a); }

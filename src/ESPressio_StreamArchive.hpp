@@ -19,7 +19,14 @@ namespace ESPressio::Serializable {
      *
      * It is directly usable with BinaryArchive and CborArchive.
      */
-    class StreamArchive {
+/**
+ * ESPressio Memory Audit
+ * Members: none (empty object still occupies at least 1 byte unless empty-base optimisation applies).
+ * Total Memory: 0 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * End ESPressio Memory Audit
+ */
+class StreamArchive {
         private:
             static bool ReadExact(
                 Stream& stream,

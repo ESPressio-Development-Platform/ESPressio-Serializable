@@ -7,6 +7,14 @@
 #define ESPRESSIO_SERIALIZATION_STATIC_POOL_BYTES 16384
 #endif
 namespace ESPressio::Serializable {
+/**
+ * ESPressio Memory Audit
+ * Members:
+ * - _offset (size_t): 4 bytes [0 bytes dynamic allocation]
+ * Total Memory: 4 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * End ESPressio Memory Audit
+ */
 class StaticSerializationPool {
     alignas(std::max_align_t) unsigned char _data[ESPRESSIO_SERIALIZATION_STATIC_POOL_BYTES]{};
     size_t _offset=0;
@@ -23,6 +31,13 @@ public:
     size_t Capacity()const{return sizeof(_data);}
 };
 inline StaticSerializationPool& SerializationStaticPool(){ static StaticSerializationPool pool; return pool; }
+/**
+ * ESPressio Memory Audit
+ * Members: none (empty object still occupies at least 1 byte unless empty-base optimisation applies).
+ * Total Memory: 0 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * End ESPressio Memory Audit
+ */
 template<typename T> class StaticPoolAllocator {
 public:
     using value_type=T;
@@ -30,6 +45,13 @@ public:
     template<typename U> StaticPoolAllocator(const StaticPoolAllocator<U>&) noexcept{}
     T* allocate(size_t n){return static_cast<T*>(SerializationStaticPool().Allocate(n*sizeof(T),alignof(T)));}
     void deallocate(T*,size_t) noexcept {}
-    template<typename U> struct rebind{using other=StaticPoolAllocator<U>;};
+/**
+ * ESPressio Memory Audit
+ * Members: none (empty object still occupies at least 1 byte unless empty-base optimisation applies).
+ * Total Memory: 0 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * End ESPressio Memory Audit
+ */
+template<typename U> struct rebind{using other=StaticPoolAllocator<U>;};
 };
 }

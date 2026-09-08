@@ -11,7 +11,23 @@
 
 namespace ESPressio::Serializable {
 
-    enum class SerializationNodeType : uint8_t {
+/**
+ * ESPressio Memory Audit
+ * Underlying storage: 1 bytes
+ * Total Memory: 1 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * End ESPressio Memory Audit
+ */
+enum
+/**
+ * ESPressio Memory Audit
+ * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
+ * Members: none (empty object still occupies at least 1 byte unless empty-base optimisation applies).
+ * Total Memory: 1 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * End ESPressio Memory Audit
+ */
+class SerializationNodeType : uint8_t {
         Null,
         Object,
         Array,
@@ -23,7 +39,24 @@ namespace ESPressio::Serializable {
         String
     };
 
-    class SerializationNode {
+/**
+ * ESPressio Memory Audit
+ * Members:
+ * - _type (SerializationNodeType): 1 bytes [0 bytes dynamic allocation]
+ * - _booleanValue (bool): 1 bytes [0 bytes dynamic allocation]
+ * - _signedIntegerValue (int64_t): 8 bytes [0 bytes dynamic allocation]
+ * - _unsignedIntegerValue (uint64_t): 8 bytes [0 bytes dynamic allocation]
+ * - _float32Value (float): 4 bytes [0 bytes dynamic allocation]
+ * - _float64Value (double): 8 bytes [0 bytes dynamic allocation]
+ * - _stringValue (SerializationString): sizeof(SerializationString) [0 bytes dynamic allocation]
+ * - _objectChildren (std::vector<NamedChild, SerializationAllocator<NamedChild>>): 12 bytes [Capacity * sizeof(NamedChild)]
+ * - _arrayChildren (std::vector<SerializationNode, SerializationAllocator<SerializationNode>>): 12 bytes [Capacity * 54 bytes known members + sizeof(SerializationString); N elements each may add: _objectChildren: Capacity * sizeof(NamedChild) + _arrayChildren: Capacity * sizeof(SerializationNode)]
+ * Total Memory: 54 bytes known members + sizeof(SerializationString) [_objectChildren: Capacity * sizeof(NamedChild); _arrayChildren: Capacity * 54 bytes known members + sizeof(SerializationString); _arrayChildren: N elements each may add: _objectChildren: Capacity * sizeof(NamedChild) + _arrayChildren: Capacity * sizeof(SerializationNode)]
+ * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
+ * End ESPressio Memory Audit
+ */
+class SerializationNode {
         public:
             using NamedChild = std::pair<SerializationString, SerializationNode>;
 
