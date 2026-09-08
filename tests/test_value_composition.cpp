@@ -10,11 +10,10 @@ using namespace ESPressio::Serializable;
 
 /**
  * ESPressio Memory Audit
- * Inherited Memory Total: sizeof(Serializable<Child>) [0 bytes dynamic allocation]
- * Members: none (empty object still occupies at least 1 byte unless empty-base optimisation applies).
- * Total Memory: sizeof(Serializable<Child>) [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
- * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
+ * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
+ * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
+ * Total Memory: 1 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
  * End ESPressio Memory Audit
  */
 struct Child final : Serializable<Child> {
@@ -26,12 +25,12 @@ struct Child final : Serializable<Child> {
 
 /**
  * ESPressio Memory Audit
- * Inherited Memory Total: sizeof(Serializable<Parent>) [0 bytes dynamic allocation]
+ * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
  * Members:
- * - Children (std::vector<Child>): 12 bytes [Capacity * sizeof(Serializable<Child>)]
- * Total Memory: sizeof(Serializable<Parent>) + 12 bytes known members [Children: Capacity * sizeof(Serializable<Child>)]
- * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
- * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
+ * - Children (std::vector<Child>): 12 bytes [Capacity * (1 bytes) element storage]
+ * Total Memory: 16 bytes [Children: Capacity * (1 bytes) element storage]
+ * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
+ * Confidence: medium; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
  * End ESPressio Memory Audit
  */
 struct Parent final : Serializable<Parent> {
@@ -48,9 +47,10 @@ struct Parent final : Serializable<Parent> {
 /**
  * ESPressio Memory Audit
  * Members:
- * - Children (std::vector<Child>): 12 bytes [Capacity * sizeof(Serializable<Child>)]
- * Total Memory: 12 bytes [Children: Capacity * sizeof(Serializable<Child>)]
- * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * - Nested (Child): 1 bytes [0 bytes dynamic allocation]
+ * - Children (std::vector<Child>): 12 bytes [Capacity * (1 bytes) element storage]
+ * Total Memory: 16 bytes [Children: Capacity * (1 bytes) element storage]
+ * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
  * Confidence: medium; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
  * End ESPressio Memory Audit
  */

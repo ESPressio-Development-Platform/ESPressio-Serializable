@@ -11,10 +11,10 @@ namespace ESPressio::Serializable {
  * Members:
  * - Name (std::string): 24 bytes [Capacity + 1 bytes when capacity exceeds 15-byte SSO]
  * - Required (bool): 1 bytes [0 bytes dynamic allocation]
- * - Aliases (std::vector<std::string>): 12 bytes [Capacity * 24 bytes; N elements each may add: Capacity + 1 bytes when capacity exceeds 15-byte SSO]
+ * - Aliases (std::vector<std::string>): 12 bytes [Capacity * (24 bytes) element storage; N live elements each: Capacity + 1 bytes when capacity exceeds 15-byte SSO]
  * - Type (std::string): 24 bytes [Capacity + 1 bytes when capacity exceeds 15-byte SSO]
- * Total Memory: 64 bytes [Name: Capacity + 1 bytes when capacity exceeds 15-byte SSO; Aliases: Capacity * 24 bytes; Aliases: N elements each may add: Capacity + 1 bytes when capacity exceeds 15-byte SSO; Type: Capacity + 1 bytes when capacity exceeds 15-byte SSO]
- * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * Total Memory: 64 bytes [Name: Capacity + 1 bytes when capacity exceeds 15-byte SSO; Aliases: Capacity * (24 bytes) element storage; Aliases: N live elements each: Capacity + 1 bytes when capacity exceeds 15-byte SSO; Type: Capacity + 1 bytes when capacity exceeds 15-byte SSO]
+ * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
  * Confidence: medium; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
  * End ESPressio Memory Audit
  */
@@ -28,9 +28,9 @@ inline std::string CsvEscape(const std::string&s){std::string o="\"";for(char c:
 /// <typeparam name="T">Serializable type whose declared properties are inspected.</typeparam>
 /**
  * ESPressio Memory Audit
- * Members: none (empty object still occupies at least 1 byte unless empty-base optimisation applies).
- * Total Memory: 0 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
+ * Total Memory: 1 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
  * End ESPressio Memory Audit
  */
 template<typename T> class SchemaInspector { public:

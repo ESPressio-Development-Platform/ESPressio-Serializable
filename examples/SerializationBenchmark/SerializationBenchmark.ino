@@ -8,22 +8,20 @@
 using namespace ESPressio;
 /**
  * ESPressio Memory Audit
- * Inherited Memory Total: sizeof(Serializable::Serializable<BenchmarkItem>) [0 bytes dynamic allocation]
+ * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
  * Members:
  * - _value (float): 4 bytes [0 bytes dynamic allocation]
- * Total Memory: sizeof(Serializable::Serializable<BenchmarkItem>) + 4 bytes known members [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
- * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
+ * Total Memory: 8 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
  * End ESPressio Memory Audit
  */
 class BenchmarkItem:public Serializable::Serializable<BenchmarkItem>{ESPRESSIO_SERIALIZABLE_TYPE(BenchmarkItem) private:uint32_t _id=0;float _value=0; public: BenchmarkItem()=default;BenchmarkItem(uint32_t i,float v):_id(i),_value(v){} ESPRESSIO_SERIALIZABLE_PROPERTIES(ESPRESSIO_PROPERTY("id",_id),ESPRESSIO_PROPERTY("value",_value))};
 /**
  * ESPressio Memory Audit
- * Inherited Memory Total: sizeof(Serializable::Serializable<BenchmarkPayload>) [0 bytes dynamic allocation]
- * Members: none (empty object still occupies at least 1 byte unless empty-base optimisation applies).
- * Total Memory: sizeof(Serializable::Serializable<BenchmarkPayload>) [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
- * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
+ * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
+ * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
+ * Total Memory: 1 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
  * End ESPressio Memory Audit
  */
 class BenchmarkPayload:public Serializable::Serializable<BenchmarkPayload>{ESPRESSIO_SERIALIZABLE_TYPE(BenchmarkPayload) private:std::vector<BenchmarkItem> _items; public:void Resize(size_t n){_items.clear();_items.reserve(n);for(size_t i=0;i<n;++i)_items.emplace_back(i,float(i)*0.25f);} ESPRESSIO_SERIALIZABLE_PROPERTIES(ESPRESSIO_PROPERTY("items",_items))};

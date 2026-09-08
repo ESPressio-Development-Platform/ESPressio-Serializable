@@ -11,9 +11,9 @@ using namespace ESPressio;
  */
 /**
  * ESPressio Memory Audit
- * Members: none (empty object still occupies at least 1 byte unless empty-base optimisation applies).
- * Total Memory: 0 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
+ * Total Memory: 1 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
  * End ESPressio Memory Audit
  */
 class DebugArchive {
@@ -28,12 +28,11 @@ class DebugArchive {
 
 /**
  * ESPressio Memory Audit
- * Inherited Memory Total: sizeof(Serializable::Serializable<Example>) [0 bytes dynamic allocation]
+ * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
  * Members:
  * - _ratio (float): 4 bytes [0 bytes dynamic allocation]
- * Total Memory: sizeof(Serializable::Serializable<Example>) + 4 bytes known members [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
- * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
+ * Total Memory: 8 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
  * End ESPressio Memory Audit
  */
 class Example final : public Serializable::Serializable<Example> {

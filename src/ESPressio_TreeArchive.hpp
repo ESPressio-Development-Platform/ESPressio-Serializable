@@ -10,11 +10,11 @@ namespace ESPressio::Serializable {
 /**
  * ESPressio Memory Audit
  * Members:
- * - _root (SerializationNode): 54 bytes known members + sizeof(SerializationString) [_objectChildren: Capacity * sizeof(NamedChild); _arrayChildren: Capacity * sizeof(SerializationNode)]
+ * - _root (SerializationNode): 88 bytes [_stringValue: _value: Capacity + 1 bytes when capacity exceeds 15-byte SSO; _objectChildren: Capacity * (aligned pair of (24 bytes) + (sizeof(SerializationNode) (target/toolchain dependent))) element storage; _objectChildren: N live elements each: _value: Capacity + 1 bytes when capacity exceeds 15-byte SSO; _arrayChildren: Capacity * (sizeof(SerializationNode) (target/toolchain dependent)) element storage]
  * - _policy (SerializationPolicy): 8 bytes [0 bytes dynamic allocation]
- * Total Memory: 8 bytes known members + 54 bytes known members + sizeof(SerializationString) [_root: _objectChildren: Capacity * sizeof(NamedChild); _root: _arrayChildren: Capacity * sizeof(SerializationNode)]
- * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
- * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
+ * Total Memory: 96 bytes [_root: _stringValue: _value: Capacity + 1 bytes when capacity exceeds 15-byte SSO; _root: _objectChildren: Capacity * (aligned pair of (24 bytes) + (sizeof(SerializationNode) (target/toolchain dependent))) element storage; _root: _objectChildren: N live elements each: _value: Capacity + 1 bytes when capacity exceeds 15-byte SSO; _root: _arrayChildren: Capacity * (sizeof(SerializationNode) (target/toolchain dependent)) element storage]
+ * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
+ * Confidence: medium; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
  * End ESPressio Memory Audit
  */
 class TreeArchive {

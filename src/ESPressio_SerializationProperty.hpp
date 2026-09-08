@@ -12,18 +12,10 @@ namespace ESPressio::Serializable {
  * ESPressio Memory Audit
  * Underlying storage: 1 bytes
  * Total Memory: 1 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
  * End ESPressio Memory Audit
  */
 enum
-/**
- * ESPressio Memory Audit
- * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
- * Members: none (empty object still occupies at least 1 byte unless empty-base optimisation applies).
- * Total Memory: 1 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
- * End ESPressio Memory Audit
- */
 class SerializationPropertyFlags : uint8_t {
         None=0, Required=1u<<0u, ReadOnly=1u<<1u, Sensitive=1u<<2u
     };
@@ -49,13 +41,14 @@ class SerializationPropertyFlags : uint8_t {
  * - _name (char*): 4 bytes [0 bytes dynamic allocation]
  * - _member (TValue TObject::*): 4 bytes [0 bytes dynamic allocation]
  * - _flags (SerializationPropertyFlags): 1 bytes [0 bytes dynamic allocation]
+ * - _aliases (std::array<char*, TMaximumAliases>): 4 bytes [0 bytes dynamic allocation]
  * - _aliasCount (size_t): 4 bytes [0 bytes dynamic allocation]
- * - _defaultValue (std::optional<TValue>): align(sizeof(TValue) + 1 engaged flag) [0 bytes dynamic allocation]
+ * - _defaultValue (std::optional<TValue>): align_up(sizeof(TValue) + 1-byte engaged flag, 4) [0 bytes dynamic allocation]
  * - _validator (function pointer): 4 bytes [0 bytes dynamic allocation]
- * - _minimum (std::optional<TValue>): align(sizeof(TValue) + 1 engaged flag) [0 bytes dynamic allocation]
- * - _maximum (std::optional<TValue>): align(sizeof(TValue) + 1 engaged flag) [0 bytes dynamic allocation]
- * Total Memory: 17 bytes known members + align(sizeof(TValue) + 1 engaged flag) + align(sizeof(TValue) + 1 engaged flag) + align(sizeof(TValue) + 1 engaged flag) [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * - _minimum (std::optional<TValue>): align_up(sizeof(TValue) + 1-byte engaged flag, 4) [0 bytes dynamic allocation]
+ * - _maximum (std::optional<TValue>): align_up(sizeof(TValue) + 1-byte engaged flag, 4) [0 bytes dynamic allocation]
+ * Total Memory: 24 bytes known/aligned storage + align_up(sizeof(TValue) + 1-byte engaged flag, 4) + align_up(sizeof(TValue) + 1-byte engaged flag, 4) + align_up(sizeof(TValue) + 1-byte engaged flag, 4) [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
  * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
  * End ESPressio Memory Audit
  */

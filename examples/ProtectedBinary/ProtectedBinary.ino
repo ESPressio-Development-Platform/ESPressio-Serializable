@@ -7,13 +7,13 @@ using namespace ESPressio;
 
 /**
  * ESPressio Memory Audit
- * Inherited Memory Total: sizeof(Serializable::Serializable<WiFiLikeConfiguration>) [0 bytes dynamic allocation]
+ * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
  * Members:
  * - _password (std::string): 24 bytes [Capacity + 1 bytes when capacity exceeds 15-byte SSO]
  * - _channel (uint8_t): 1 bytes [0 bytes dynamic allocation]
- * Total Memory: sizeof(Serializable::Serializable<WiFiLikeConfiguration>) + 25 bytes known members [_password: Capacity + 1 bytes when capacity exceeds 15-byte SSO]
- * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
- * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
+ * Total Memory: 32 bytes [_password: Capacity + 1 bytes when capacity exceeds 15-byte SSO]
+ * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
+ * Confidence: medium; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
  * End ESPressio Memory Audit
  */
 class WiFiLikeConfiguration final

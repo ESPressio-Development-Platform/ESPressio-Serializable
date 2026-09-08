@@ -10,26 +10,32 @@
 namespace ESPressio::Serializable::Detail {
 /**
  * ESPressio Memory Audit
- * Inherited Memory Total: sizeof(std::false_type) [0 bytes dynamic allocation]
- * Members: none (empty object still occupies at least 1 byte unless empty-base optimisation applies).
- * Total Memory: sizeof(std::false_type) [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
- * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
+ * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
+ * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
+ * Total Memory: 1 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
  * End ESPressio Memory Audit
  */
 template<typename TArchive, typename TValue, typename = void>
     struct HasReadDetailed : std::false_type {};
 
-    template<typename TArchive, typename TValue>
+        /**
+     * ESPressio Memory Audit
+     * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
+     * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
+     * Total Memory: 1 bytes [0 bytes dynamic allocation]
+     * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
+     * End ESPressio Memory Audit
+     */
+template<typename TArchive, typename TValue>
     struct HasReadDetailed<TArchive,TValue,std::void_t<decltype(std::declval<TArchive&>().ReadDetailed(std::declval<const char*>(),std::declval<TValue&>(),std::declval<const DeserializationOptions&>()))>> : std::true_type {};
 
 /**
  * ESPressio Memory Audit
- * Inherited Memory Total: sizeof(std::false_type) [0 bytes dynamic allocation]
- * Members: none (empty object still occupies at least 1 byte unless empty-base optimisation applies).
- * Total Memory: sizeof(std::false_type) [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
- * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
+ * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
+ * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
+ * Total Memory: 1 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
  * End ESPressio Memory Audit
  */
 template<typename TArchive, typename = void>
@@ -37,35 +43,57 @@ template<typename TArchive, typename = void>
 
 /**
  * ESPressio Memory Audit
- * Inherited Memory Total: sizeof(std::false_type) [0 bytes dynamic allocation]
- * Members: none (empty object still occupies at least 1 byte unless empty-base optimisation applies).
- * Total Memory: sizeof(std::false_type) [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
- * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
+ * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
+ * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
+ * Total Memory: 1 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
  * End ESPressio Memory Audit
  */
 template<typename TArchive, typename = void>
     struct HasContains : std::false_type {};
 
-    template<typename TArchive>
+        /**
+     * ESPressio Memory Audit
+     * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
+     * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
+     * Total Memory: 1 bytes [0 bytes dynamic allocation]
+     * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
+     * End ESPressio Memory Audit
+     */
+template<typename TArchive>
     struct HasContains<TArchive,std::void_t<decltype(std::declval<const TArchive&>().Contains(std::declval<const char*>()))>> : std::true_type {};
 
 /**
  * ESPressio Memory Audit
- * Inherited Memory Total: sizeof(std::false_type) [0 bytes dynamic allocation]
- * Members: none (empty object still occupies at least 1 byte unless empty-base optimisation applies).
- * Total Memory: sizeof(std::false_type) [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
- * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
+ * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
+ * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
+ * Total Memory: 1 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
  * End ESPressio Memory Audit
  */
 template<typename TArchive, typename TProperty, typename TValue, typename = void>
     struct HasWriteProperty : std::false_type {};
 
-    template<typename TArchive, typename TProperty, typename TValue>
+        /**
+     * ESPressio Memory Audit
+     * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
+     * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
+     * Total Memory: 1 bytes [0 bytes dynamic allocation]
+     * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
+     * End ESPressio Memory Audit
+     */
+template<typename TArchive, typename TProperty, typename TValue>
     struct HasWriteProperty<TArchive,TProperty,TValue,std::void_t<decltype(std::declval<TArchive&>().WriteProperty(std::declval<const TProperty&>(),std::declval<const TValue&>()))>> : std::true_type {};
 
-    template<typename TArchive>
+        /**
+     * ESPressio Memory Audit
+     * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
+     * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
+     * Total Memory: 1 bytes [0 bytes dynamic allocation]
+     * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
+     * End ESPressio Memory Audit
+     */
+template<typename TArchive>
     struct HasGetNode<
         TArchive,
         std::void_t<decltype(std::declval<TArchive&>().GetNode())>
@@ -79,9 +107,9 @@ namespace ESPressio::Serializable {
     /// <remarks>The archive contract is detected at compile time, allowing archives to opt into detailed reads, presence checks, property-aware writes, and structural migrations.</remarks>
 /**
  * ESPressio Memory Audit
- * Members: none (empty object still occupies at least 1 byte unless empty-base optimisation applies).
- * Total Memory: 0 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
+ * Total Memory: 1 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
  * End ESPressio Memory Audit
  */
 template<typename TDerived>

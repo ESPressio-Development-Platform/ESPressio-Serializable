@@ -21,7 +21,7 @@ namespace ESPressio::Serializable {
  * - MaximumNameLength (std::size_t): 4 bytes [0 bytes dynamic allocation]
  * - MaximumStringLength (std::size_t): 4 bytes [0 bytes dynamic allocation]
  * Total Memory: 24 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
  * End ESPressio Memory Audit
  */
 struct BinaryArchiveDecodeLimits {
@@ -35,12 +35,11 @@ struct BinaryArchiveDecodeLimits {
 
 /**
  * ESPressio Memory Audit
- * Inherited Memory Total: 4 bytes known members + sizeof(SerializationNode) [0 bytes dynamic allocation]
+ * Inherited Memory Total: 96 bytes [TreeArchive: _root: _stringValue: _value: Capacity + 1 bytes when capacity exceeds 15-byte SSO; TreeArchive: _root: _objectChildren: Capacity * (aligned pair of (24 bytes) + (sizeof(SerializationNode) (target/toolchain dependent))) element storage; TreeArchive: _root: _objectChildren: N live elements each: _value: Capacity + 1 bytes when capacity exceeds 15-byte SSO; TreeArchive: _root: _arrayChildren: Capacity * (sizeof(SerializationNode) (target/toolchain dependent)) element storage]
  * Members:
  * - _valid (bool): 1 bytes [0 bytes dynamic allocation]
- * Total Memory: 4 bytes known members + sizeof(SerializationNode) + 1 bytes known members [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
- * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
+ * Total Memory: 100 bytes [TreeArchive: _root: _stringValue: _value: Capacity + 1 bytes when capacity exceeds 15-byte SSO; TreeArchive: _root: _objectChildren: Capacity * (aligned pair of (24 bytes) + (sizeof(SerializationNode) (target/toolchain dependent))) element storage; TreeArchive: _root: _objectChildren: N live elements each: _value: Capacity + 1 bytes when capacity exceeds 15-byte SSO; TreeArchive: _root: _arrayChildren: Capacity * (sizeof(SerializationNode) (target/toolchain dependent)) element storage]
+ * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
  * End ESPressio Memory Audit
  */
 class BinaryArchive : public TreeArchive {
@@ -51,7 +50,7 @@ private:
  * - Limits (BinaryArchiveDecodeLimits&): 4 bytes [0 bytes dynamic allocation]
  * - TotalNodes (std::size_t): 4 bytes [0 bytes dynamic allocation]
  * Total Memory: 8 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
  * End ESPressio Memory Audit
  */
 struct DecodeState {

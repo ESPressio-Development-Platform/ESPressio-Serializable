@@ -17,18 +17,10 @@ using namespace ESPressio;
  * ESPressio Memory Audit
  * Underlying storage: 1 bytes
  * Total Memory: 1 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
  * End ESPressio Memory Audit
  */
 enum
-/**
- * ESPressio Memory Audit
- * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
- * Members: none (empty object still occupies at least 1 byte unless empty-base optimisation applies).
- * Total Memory: 1 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
- * End ESPressio Memory Audit
- */
 class DirectMode : uint8_t { Off = 0, On = 1 };
 
 ESPRESSIO_ENUM_MAPPING(
@@ -39,11 +31,10 @@ ESPRESSIO_ENUM_MAPPING(
 
 /**
  * ESPressio Memory Audit
- * Inherited Memory Total: sizeof(Serializable::Serializable<DirectChild>) [0 bytes dynamic allocation]
- * Members: none (empty object still occupies at least 1 byte unless empty-base optimisation applies).
- * Total Memory: sizeof(Serializable::Serializable<DirectChild>) [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
- * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
+ * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
+ * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
+ * Total Memory: 1 bytes [0 bytes dynamic allocation]
+ * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
  * End ESPressio Memory Audit
  */
 class DirectChild final : public Serializable::Serializable<DirectChild> {
@@ -58,15 +49,17 @@ public:
 
 /**
  * ESPressio Memory Audit
- * Inherited Memory Total: sizeof(Serializable::Serializable<DirectPayload>) [0 bytes dynamic allocation]
+ * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
  * Members:
  * - _name (std::string): 24 bytes [Capacity + 1 bytes when capacity exceeds 15-byte SSO]
  * - _mode (DirectMode): 1 bytes [0 bytes dynamic allocation]
- * - _child (DirectChild): sizeof(Serializable::Serializable<DirectChild>) [0 bytes dynamic allocation]
+ * - _child (DirectChild): 1 bytes [0 bytes dynamic allocation]
+ * - _values (std::vector<int32_t>): 12 bytes [Capacity * (4 bytes) element storage]
  * - _optional (std::optional<uint16_t>): 4 bytes [0 bytes dynamic allocation]
- * Total Memory: sizeof(Serializable::Serializable<DirectPayload>) + 29 bytes known members + sizeof(Serializable::Serializable<DirectChild>) [_name: Capacity + 1 bytes when capacity exceeds 15-byte SSO]
- * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
- * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
+ * - _mapping (std::map<std::string, int32_t>): 24 bytes [N * (16 bytes red-black-tree node linkage + 28 bytes value); key/value: Capacity + 1 bytes when capacity exceeds 15-byte SSO]
+ * Total Memory: 72 bytes [_name: Capacity + 1 bytes when capacity exceeds 15-byte SSO; _values: Capacity * (4 bytes) element storage; _mapping: N * (16 bytes red-black-tree node linkage + 28 bytes value); _mapping: key/value: Capacity + 1 bytes when capacity exceeds 15-byte SSO]
+ * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
+ * Confidence: medium; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
  * End ESPressio Memory Audit
  */
 class DirectPayload final : public Serializable::Serializable<DirectPayload> {

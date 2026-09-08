@@ -12,7 +12,7 @@ namespace ESPressio::Serializable {
  * Members:
  * - _in (Stream&): 4 bytes [0 bytes dynamic allocation]
  * Total Memory: 4 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI; GNU libstdc++ container control-block sizes are implementation-sensitive.
+ * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
  * End ESPressio Memory Audit
  */
 class JsonStreamDeserializer { Stream&_in; public: explicit JsonStreamDeserializer(Stream&i):_in(i){}
