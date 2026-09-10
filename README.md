@@ -8,7 +8,7 @@ ESPressio Serializable lets a C++ type describe **which members constitute its s
 
 **0.11.2**
 
-The 0.11.x line adds an optional ESPressio Security integration for protecting complete serialized representations with authenticated encryption. Core Serializable remains Security-independent.
+line adds an optional ESPressio Security integration for protecting complete serialized representations with authenticated encryption. Core Serializable remains Security-independent.
 
 # Why representation-neutral serialization?
 
@@ -70,7 +70,7 @@ Include Security integration only where required:
 #include <ESPressio_Serializable.hpp>
 
 class DeviceConfiguration final
-    : public ESPressio::Serializable::Serializable<DeviceConfiguration> {
+: public ESPressio::Serializable::Serializable<DeviceConfiguration> {
 
     ESPRESSIO_SERIALIZABLE_TYPE(DeviceConfiguration)
     ESPRESSIO_SERIALIZABLE_SCHEMA_VERSION(1)
@@ -351,7 +351,7 @@ The direct path preserves ESPB v2 byte compatibility but is not the default prot
 
 # Dependencies
 
-Core Serializable 0.11.2 still has **no required ESPressio dependency**.
+Core Serializable still has **no required ESPressio dependency**.
 
 ```text
 Serializable core
@@ -375,9 +375,7 @@ See [ESPRESSIO_DEPENDENCY_CHART.md](ESPRESSIO_DEPENDENCY_CHART.md).
 - Detailed errors rather than generic parse failures.
 - Optional integrations must not turn foundational dependencies into mandatory ones.
 
-# Changelog
 
-See [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 

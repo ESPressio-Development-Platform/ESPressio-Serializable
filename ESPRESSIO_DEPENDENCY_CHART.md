@@ -1,4 +1,4 @@
-# ESPressio Dependency Chart — Serializable 0.11.0
+# ESPressio Dependency Chart — Serializable
 
 ![ESPressio Library Dependency Chart](ESPRESSIO_DEPENDENCY_CHART.svg)
 
@@ -7,7 +7,7 @@ Arrows point from consuming library to dependency. Solid arrows are required; da
 ## Serializable dependency position
 
 ```text
-Serializable 0.11.0 core
+Serializable core
     -> none
 
 Serializable Security integration
@@ -20,10 +20,10 @@ The normal `ESPressio_Serializable.hpp` umbrella remains Security-free. Only cod
 ## Coordinated feature cascade
 
 ```text
-Security      0.4.0
-Serializable  0.11.0
-Persistence   0.3.0 (planned downstream in this tranche)
-WiFi          0.1.0 (planned downstream in this tranche)
+Security
+Serializable
+Persistence (planned downstream in this tranche)
+WiFi (planned downstream in this tranche)
 Serial        WiFi integration planned downstream
 ```
 
