@@ -62,13 +62,7 @@ static constexpr size_t RX_QUEUE_DEPTH = 24;
 /* Serializable application object                                            */
 /* -------------------------------------------------------------------------- */
 
-/**
- * ESPressio Memory Audit
- * Underlying storage: 1 bytes
- * Total Memory: 1 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 enum
 class DeviceMode : uint8_t {
     Idle,
@@ -83,19 +77,7 @@ ESPRESSIO_ENUM_MAPPING(
     ESPRESSIO_ENUM_VALUE(DeviceMode::Fault, "fault")
 )
 
-/**
- * ESPressio Memory Audit
- * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
- * Members:
- * - _uptimeMilliseconds (uint32_t): 4 bytes [0 bytes dynamic allocation]
- * - _temperatureCelsius (float): 4 bytes [0 bytes dynamic allocation]
- * - _mode (DeviceMode): 1 bytes [0 bytes dynamic allocation]
- * - _name (String): 12 bytes [Capacity + 1 bytes backing buffer when allocated]
- * Total Memory: 28 bytes [_name: Capacity + 1 bytes backing buffer when allocated]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * Confidence: medium; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
- * End ESPressio Memory Audit
- */
+
 class DeviceState final
     : public Serializable::Serializable<DeviceState> {
 
@@ -165,13 +147,7 @@ class DeviceState final
 /* ESP-NOW framing                                                            */
 /* -------------------------------------------------------------------------- */
 
-/**
- * ESPressio Memory Audit
- * Underlying storage: 1 bytes
- * Total Memory: 1 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 enum
 class FrameType : uint8_t {
     Start = 1,
@@ -180,20 +156,7 @@ class FrameType : uint8_t {
 };
 
 #pragma pack(push, 1)
-/**
- * ESPressio Memory Audit
- * Members:
- * - Magic (uint32_t): 4 bytes [0 bytes dynamic allocation]
- * - Version (uint8_t): 1 bytes [0 bytes dynamic allocation]
- * - Type (FrameType): 1 bytes [0 bytes dynamic allocation]
- * - OriginMac (uint8_t[6]): 6 bytes [0 bytes dynamic allocation]
- * - MessageId (uint32_t): 4 bytes [0 bytes dynamic allocation]
- * - FragmentIndex (uint16_t): 2 bytes [0 bytes dynamic allocation]
- * - PayloadLength (uint16_t): 2 bytes [0 bytes dynamic allocation]
- * Total Memory: 20 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 struct EspNowFrameHeader {
     uint32_t Magic;
     uint8_t Version;
@@ -220,16 +183,7 @@ static constexpr size_t FRAME_HEADER_SIZE =
 static constexpr size_t FRAME_PAYLOAD_SIZE =
     ESPNOW_FRAME_SIZE - FRAME_HEADER_SIZE;
 
-/**
- * ESPressio Memory Audit
- * Members:
- * - SourceMac (uint8_t[6]): 6 bytes [0 bytes dynamic allocation]
- * - Length (size_t): 4 bytes [0 bytes dynamic allocation]
- * - Data (uint8_t[ESPNOW_FRAME_SIZE]): 220 bytes [0 bytes dynamic allocation]
- * Total Memory: 232 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 struct ReceivedFrame {
     uint8_t SourceMac[6];
     size_t Length;
@@ -310,15 +264,7 @@ static void QueueReceivedFrame(
 /* ESP-NOW peers                                                              */
 /* -------------------------------------------------------------------------- */
 
-/**
- * ESPressio Memory Audit
- * Inherited Memory Total: sizeof(ESP_NOW_Peer) (target/toolchain dependent) [0 bytes dynamic allocation]
- * Members: none; polymorphic/virtual-base object metadata is included in the total.
- * Total Memory: 4 bytes known/aligned storage + sizeof(ESP_NOW_Peer) (target/toolchain dependent) [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
- * End ESPressio Memory Audit
- */
+
 class RemotePeer final : public ESP_NOW_Peer {
     public:
         explicit RemotePeer(const uint8_t* mac)
@@ -349,17 +295,7 @@ class RemotePeer final : public ESP_NOW_Peer {
         }
 };
 
-/**
- * ESPressio Memory Audit
- * Inherited Memory Total: sizeof(ESP_NOW_Peer) (target/toolchain dependent) [0 bytes dynamic allocation]
- * Members:
- * - _sendCompleted (bool): 1 bytes [0 bytes dynamic allocation]
- * - _sendSuccessful (bool): 1 bytes [0 bytes dynamic allocation]
- * Total Memory: 6 bytes known/aligned storage + sizeof(ESP_NOW_Peer) (target/toolchain dependent) [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
- * End ESPressio Memory Audit
- */
+
 class BroadcastPeer final : public ESP_NOW_Peer {
     private:
         volatile bool _sendCompleted = false;
@@ -501,21 +437,7 @@ static void OnNewPeer(
  * Espressif's guidance not to fire many ESP-NOW sends back-to-back without
  * allowing the previous send callback to complete.
  */
-/**
- * ESPressio Memory Audit
- * Inherited Memory Total: 4 bytes [0 bytes dynamic allocation]
- * Members:
- * - _peer (BroadcastPeer&): 4 bytes [0 bytes dynamic allocation]
- * - _payload (uint8_t[FRAME_PAYLOAD_SIZE]): FRAME_PAYLOAD_SIZE * (1 bytes) [0 bytes dynamic allocation]
- * - _payloadLength (size_t): 4 bytes [0 bytes dynamic allocation]
- * - _messageId (uint32_t): 4 bytes [0 bytes dynamic allocation]
- * - _fragmentIndex (uint16_t): 2 bytes [0 bytes dynamic allocation]
- * - _failed (bool): 1 bytes [0 bytes dynamic allocation]
- * Total Memory: 19 bytes known/aligned storage + FRAME_PAYLOAD_SIZE * (1 bytes) [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
- * End ESPressio Memory Audit
- */
+
 class EspNowMessageWriter final : public Print {
     private:
         BroadcastPeer& _peer;
@@ -704,20 +626,7 @@ class EspNowMessageWriter final : public Print {
 /* Reassembly                                                                 */
 /* -------------------------------------------------------------------------- */
 
-/**
- * ESPressio Memory Audit
- * Members:
- * - Active (bool): 1 bytes [0 bytes dynamic allocation]
- * - OriginMac (uint8_t[6]): 6 bytes [0 bytes dynamic allocation]
- * - MessageId (uint32_t): 4 bytes [0 bytes dynamic allocation]
- * - NextFragmentIndex (uint16_t): 2 bytes [0 bytes dynamic allocation]
- * - LastActivity (uint32_t): 4 bytes [0 bytes dynamic allocation]
- * - Payload (std::vector<uint8_t>): 12 bytes [Capacity * (1 bytes) element storage]
- * Total Memory: 32 bytes [Payload: Capacity * (1 bytes) element storage]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * Confidence: medium; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
- * End ESPressio Memory Audit
- */
+
 struct ReassemblySlot {
     bool Active = false;
     uint8_t OriginMac[6] {};
@@ -797,16 +706,7 @@ static ReassemblySlot& StartReassembly(
 /* Read-only Stream over a reassembled byte vector                            */
 /* -------------------------------------------------------------------------- */
 
-/**
- * ESPressio Memory Audit
- * Inherited Memory Total: 4 bytes [0 bytes dynamic allocation]
- * Members:
- * - _data (std::vector<uint8_t>&): 4 bytes [0 bytes dynamic allocation]
- * - _position (size_t): 4 bytes [0 bytes dynamic allocation]
- * Total Memory: 12 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 class VectorInputStream final : public Stream {
     private:
         const std::vector<uint8_t>& _data;

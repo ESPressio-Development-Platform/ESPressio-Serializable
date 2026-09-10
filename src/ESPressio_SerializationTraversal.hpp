@@ -25,204 +25,71 @@
 
 namespace ESPressio::Serializable::Detail {
 
-/**
- * ESPressio Memory Audit
- * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
- * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
- * Total Memory: 1 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 template<typename...>
     struct DependentFalse : std::false_type {};
 
-/**
- * ESPressio Memory Audit
- * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
- * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
- * Total Memory: 1 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 template<typename T>
     struct IsStdVector : std::false_type {};
-/**
- * ESPressio Memory Audit
- * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
- * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
- * Total Memory: 1 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 template<typename TValue, typename TAllocator>
     struct IsStdVector<std::vector<TValue, TAllocator>> : std::true_type {};
 
-/**
- * ESPressio Memory Audit
- * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
- * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
- * Total Memory: 1 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 template<typename T>
     struct IsStdArray : std::false_type {};
-/**
- * ESPressio Memory Audit
- * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
- * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
- * Total Memory: 1 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 template<typename TValue, size_t TSize>
     struct IsStdArray<std::array<TValue, TSize>> : std::true_type {};
 
-/**
- * ESPressio Memory Audit
- * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
- * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
- * Total Memory: 1 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 template<typename T>
     struct IsStdDeque : std::false_type {};
-/**
- * ESPressio Memory Audit
- * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
- * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
- * Total Memory: 1 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 template<typename V, typename A>
     struct IsStdDeque<std::deque<V,A>> : std::true_type {};
 
-/**
- * ESPressio Memory Audit
- * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
- * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
- * Total Memory: 1 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 template<typename T>
     struct IsStdList : std::false_type {};
-/**
- * ESPressio Memory Audit
- * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
- * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
- * Total Memory: 1 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 template<typename V, typename A>
     struct IsStdList<std::list<V,A>> : std::true_type {};
 
-/**
- * ESPressio Memory Audit
- * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
- * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
- * Total Memory: 1 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 template<typename T>
     struct IsStdSet : std::false_type {};
-/**
- * ESPressio Memory Audit
- * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
- * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
- * Total Memory: 1 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 template<typename V, typename C, typename A>
     struct IsStdSet<std::set<V,C,A>> : std::true_type {};
 
-/**
- * ESPressio Memory Audit
- * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
- * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
- * Total Memory: 1 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 template<typename T>
     struct IsStdUnorderedSet : std::false_type {};
-/**
- * ESPressio Memory Audit
- * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
- * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
- * Total Memory: 1 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 template<typename V, typename H, typename E, typename A>
     struct IsStdUnorderedSet<std::unordered_set<V,H,E,A>> : std::true_type {};
 
-/**
- * ESPressio Memory Audit
- * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
- * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
- * Total Memory: 1 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 template<typename T>
     struct IsStdOptional : std::false_type {};
-/**
- * ESPressio Memory Audit
- * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
- * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
- * Total Memory: 1 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 template<typename TValue>
     struct IsStdOptional<std::optional<TValue>> : std::true_type {};
 
-/**
- * ESPressio Memory Audit
- * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
- * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
- * Total Memory: 1 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 template<typename T>
     struct IsStdMap : std::false_type {};
-/**
- * ESPressio Memory Audit
- * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
- * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
- * Total Memory: 1 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 template<typename TKey, typename TValue, typename TCompare, typename TAllocator>
     struct IsStdMap<std::map<TKey, TValue, TCompare, TAllocator>>
         : std::true_type {};
 
-/**
- * ESPressio Memory Audit
- * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
- * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
- * Total Memory: 1 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 template<typename T>
     struct IsStdUnorderedMap : std::false_type {};
-/**
- * ESPressio Memory Audit
- * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
- * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
- * Total Memory: 1 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 template<typename TKey, typename TValue, typename THash, typename TEqual, typename TAllocator>
     struct IsStdUnorderedMap<
         std::unordered_map<TKey, TValue, THash, TEqual, TAllocator>
@@ -258,14 +125,7 @@ template<typename TKey, typename TValue, typename THash, typename TEqual, typena
     template<typename TValue>
     bool FromNode(const SerializationNode& node, TValue& value);
 
-/**
- * ESPressio Memory Audit
- * Members:
- * - _object (SerializationNode&): 4 bytes [0 bytes dynamic allocation]
- * Total Memory: 4 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 class NodeWriterArchive {
         private:
             SerializationNode& _object;
@@ -284,14 +144,7 @@ class NodeWriterArchive {
             }
     };
 
-/**
- * ESPressio Memory Audit
- * Members:
- * - _object (SerializationNode&): 4 bytes [0 bytes dynamic allocation]
- * Total Memory: 4 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 class NodeReaderArchive {
         private:
             SerializationNode& _object;

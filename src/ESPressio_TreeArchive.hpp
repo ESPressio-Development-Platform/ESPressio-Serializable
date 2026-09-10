@@ -7,16 +7,7 @@ namespace ESPressio::Serializable {
 
     /// <summary>In-memory object archive backed by a <c>SerializationNode</c> tree.</summary>
     /// <remarks>Provides generic typed reads/writes through the shared traversal layer and applies sensitive-property policy during property-aware writes.</remarks>
-/**
- * ESPressio Memory Audit
- * Members:
- * - _root (SerializationNode): 88 bytes [_stringValue: _value: Capacity + 1 bytes when capacity exceeds 15-byte SSO; _objectChildren: Capacity * (aligned pair of (24 bytes) + (sizeof(SerializationNode) (target/toolchain dependent))) element storage; _objectChildren: N live elements each: _value: Capacity + 1 bytes when capacity exceeds 15-byte SSO; _arrayChildren: Capacity * (sizeof(SerializationNode) (target/toolchain dependent)) element storage]
- * - _policy (SerializationPolicy): 8 bytes [0 bytes dynamic allocation]
- * Total Memory: 96 bytes [_root: _stringValue: _value: Capacity + 1 bytes when capacity exceeds 15-byte SSO; _root: _objectChildren: Capacity * (aligned pair of (24 bytes) + (sizeof(SerializationNode) (target/toolchain dependent))) element storage; _root: _objectChildren: N live elements each: _value: Capacity + 1 bytes when capacity exceeds 15-byte SSO; _root: _arrayChildren: Capacity * (sizeof(SerializationNode) (target/toolchain dependent)) element storage]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * Confidence: medium; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
- * End ESPressio Memory Audit
- */
+
 class TreeArchive {
         protected:
             SerializationNode _root;

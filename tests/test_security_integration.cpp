@@ -7,17 +7,7 @@
 
 using namespace ESPressio;
 
-/**
- * ESPressio Memory Audit
- * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
- * Members:
- * - _name (std::string): 24 bytes [Capacity + 1 bytes when capacity exceeds 15-byte SSO]
- * - _enabled (bool): 1 bytes [0 bytes dynamic allocation]
- * Total Memory: 32 bytes [_name: Capacity + 1 bytes when capacity exceeds 15-byte SSO]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * Confidence: medium; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
- * End ESPressio Memory Audit
- */
+
 class TestConfiguration final : public Serializable::Serializable<TestConfiguration> {
     ESPRESSIO_SERIALIZABLE_TYPE(TestConfiguration)
     ESPRESSIO_SERIALIZABLE_SCHEMA_VERSION(2)
@@ -39,14 +29,7 @@ public:
     )
 };
 
-/**
- * ESPressio Memory Audit
- * Inherited Memory Total: 4 bytes [0 bytes dynamic allocation]
- * Members: none; polymorphic/virtual-base object metadata is included in the total.
- * Total Memory: 4 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 class TestProtector final : public Security::IDataProtector {
 public:
     Security::SecurityResult Protect(

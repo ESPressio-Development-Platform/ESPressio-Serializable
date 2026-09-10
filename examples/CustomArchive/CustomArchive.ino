@@ -9,13 +9,7 @@ using namespace ESPressio;
  * A real JSON archive could forward these calls to ArduinoJson without
  * requiring ESPressio Serializable itself to depend on ArduinoJson.
  */
-/**
- * ESPressio Memory Audit
- * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
- * Total Memory: 1 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 class DebugArchive {
     public:
         template<typename TValue>
@@ -26,15 +20,7 @@ class DebugArchive {
         }
 };
 
-/**
- * ESPressio Memory Audit
- * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
- * Members:
- * - _ratio (float): 4 bytes [0 bytes dynamic allocation]
- * Total Memory: 8 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 class Example final : public Serializable::Serializable<Example> {
 
     ESPRESSIO_SERIALIZABLE_TYPE(Example)

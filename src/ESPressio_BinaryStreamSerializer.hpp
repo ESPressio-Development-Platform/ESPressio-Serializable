@@ -8,14 +8,7 @@
 namespace ESPressio::Serializable {
 /// <summary>Serializes ESPressio values directly to an Arduino <c>Print</c> binary stream.</summary>
 /// <typeparam name="IncludePropertyNames">When <c>true</c>, object property names are emitted; when <c>false</c>, the compact nameless object format is used.</typeparam>
-/**
- * ESPressio Memory Audit
- * Members:
- * - _o (Print&): 4 bytes [0 bytes dynamic allocation]
- * Total Memory: 4 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 template<bool IncludePropertyNames=true> class BinaryStreamSerializer {
  Print&_o; void u16(uint16_t v){_o.write((uint8_t)v);_o.write((uint8_t)(v>>8));} void u32(uint32_t v){for(int s=0;s<32;s+=8)_o.write((uint8_t)(v>>s));} void u64(uint64_t v){for(int s=0;s<64;s+=8)_o.write((uint8_t)(v>>s));}
  void name(const char*n){if constexpr(IncludePropertyNames){size_t z=n?strlen(n):0;u16((uint16_t)z);if(z)_o.write((const uint8_t*)n,z);}}

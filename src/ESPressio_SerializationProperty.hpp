@@ -8,13 +8,7 @@
 namespace ESPressio::Serializable {
 
     /// <summary>Flags controlling how a serializable property participates in serialization and deserialization.</summary>
-/**
- * ESPressio Memory Audit
- * Underlying storage: 1 bytes
- * Total Memory: 1 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 enum
 class SerializationPropertyFlags : uint8_t {
         None=0, Required=1u<<0u, ReadOnly=1u<<1u, Sensitive=1u<<2u
@@ -35,23 +29,7 @@ class SerializationPropertyFlags : uint8_t {
     /// <typeparam name="TObject">Object type owning the member.</typeparam>
     /// <typeparam name="TValue">Member value type.</typeparam>
     /// <typeparam name="TMaximumAliases">Maximum number of alternate serialized names retained by the property.</typeparam>
-/**
- * ESPressio Memory Audit
- * Members:
- * - _name (char*): 4 bytes [0 bytes dynamic allocation]
- * - _member (TValue TObject::*): 4 bytes [0 bytes dynamic allocation]
- * - _flags (SerializationPropertyFlags): 1 bytes [0 bytes dynamic allocation]
- * - _aliases (std::array<char*, TMaximumAliases>): 4 bytes [0 bytes dynamic allocation]
- * - _aliasCount (size_t): 4 bytes [0 bytes dynamic allocation]
- * - _defaultValue (std::optional<TValue>): align_up(sizeof(TValue) + 1-byte engaged flag, 4) [0 bytes dynamic allocation]
- * - _validator (function pointer): 4 bytes [0 bytes dynamic allocation]
- * - _minimum (std::optional<TValue>): align_up(sizeof(TValue) + 1-byte engaged flag, 4) [0 bytes dynamic allocation]
- * - _maximum (std::optional<TValue>): align_up(sizeof(TValue) + 1-byte engaged flag, 4) [0 bytes dynamic allocation]
- * Total Memory: 24 bytes known/aligned storage + align_up(sizeof(TValue) + 1-byte engaged flag, 4) + align_up(sizeof(TValue) + 1-byte engaged flag, 4) + align_up(sizeof(TValue) + 1-byte engaged flag, 4) [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
- * End ESPressio Memory Audit
- */
+
 template<typename TObject, typename TValue, size_t TMaximumAliases=4>
     class SerializationProperty {
         private:

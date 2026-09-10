@@ -7,13 +7,7 @@
 #include <vector>
 namespace ESPressio::Serializable {
 /// <summary>Reads and writes length-delimited stream frames protected by a CRC-32 payload checksum.</summary>
-/**
- * ESPressio Memory Audit
- * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
- * Total Memory: 1 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 class Crc32FramedStream {
  static uint32_t Crc(const uint8_t*d,size_t n){uint32_t c=0xFFFFFFFFu;for(size_t i=0;i<n;++i){c^=d[i];for(int b=0;b<8;++b)c=(c>>1)^(0xEDB88320u & (0u-(c&1u)));}return ~c;}
  static bool ReadExact(Stream&s,uint8_t*d,size_t n,uint32_t timeout){size_t p=0;uint32_t start=millis();while(p<n){while(s.available()&&p<n){int v=s.read();if(v>=0)d[p++]=uint8_t(v);}if(uint32_t(millis()-start)>=timeout)return false;yield();}return true;}

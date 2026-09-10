@@ -6,29 +6,14 @@
 
 using namespace ESPressio;
 
-/**
- * ESPressio Memory Audit
- * Underlying storage: 1 bytes
- * Total Memory: 1 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 enum
 class SensorMode : uint8_t {
     Disabled = 0,
     Active = 1
 };
 
-/**
- * ESPressio Memory Audit
- * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
- * Members:
- * - _y (float): 4 bytes [0 bytes dynamic allocation]
- * - _z (float): 4 bytes [0 bytes dynamic allocation]
- * Total Memory: 12 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 class Position final
     : public Serializable::Serializable<Position> {
 
@@ -47,15 +32,7 @@ class Position final
         )
 };
 
-/**
- * ESPressio Memory Audit
- * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
- * Members:
- * - _mode (SensorMode): 1 bytes [0 bytes dynamic allocation]
- * Total Memory: 2 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 class Sensor final
     : public Serializable::Serializable<Sensor> {
 
@@ -78,17 +55,7 @@ class Sensor final
         )
 };
 
-/**
- * ESPressio Memory Audit
- * Inherited Memory Total: 1 bytes [0 bytes dynamic allocation]
- * Members:
- * - _calibration (std::array<uint16_t, 3>): 6 bytes [0 bytes dynamic allocation]
- * - _sensors (std::vector<Sensor>): 12 bytes [Capacity * (2 bytes) element storage]
- * Total Memory: 20 bytes [_sensors: Capacity * (2 bytes) element storage]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * Confidence: medium; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
- * End ESPressio Memory Audit
- */
+
 class Device final
     : public Serializable::Serializable<Device> {
 

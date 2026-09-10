@@ -6,16 +6,7 @@
 namespace ESPressio::Serializable {
 
     /// <summary>Associates one enumeration value with its serialized symbolic name.</summary>
-/**
- * ESPressio Memory Audit
- * Members:
- * - Value (TEnum): sizeof(TEnum) [0 bytes dynamic allocation]
- * - Name (char*): 4 bytes [0 bytes dynamic allocation]
- * Total Memory: 4 bytes known/aligned storage + sizeof(TEnum) [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * Confidence: low; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
- * End ESPressio Memory Audit
- */
+
 template<typename TEnum>
     struct EnumMappingEntry {
         TEnum Value;
@@ -32,13 +23,7 @@ template<typename TEnum>
     }
 
     /// <summary>Customization point declaring symbolic serialization mappings for an enumeration type.</summary>
-/**
- * ESPressio Memory Audit
- * Members: none (standalone empty object occupies 1 byte; an eligible empty base may be optimized to 0 bytes).
- * Total Memory: 1 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 template<typename TEnum>
     struct EnumSerializationTraits {
         static constexpr bool Enabled = false;

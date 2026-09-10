@@ -11,28 +11,11 @@ namespace ESPressio::Serializable {
 
     /// <summary>Minimal string-backed reference archive used by examples and host tests.</summary>
     /// <remarks>This archive demonstrates the generic Serializable Read/Write contract and is intentionally independent of JSON, CBOR, NVS, or other production wire/storage formats.</remarks>
-/**
- * ESPressio Memory Audit
- * Members:
- * - _entries (std::vector<Entry>): 12 bytes [Capacity * (48 bytes) element storage; N live elements each: Name: Capacity + 1 bytes when capacity exceeds 15-byte SSO; N live elements each: Value: Capacity + 1 bytes when capacity exceeds 15-byte SSO]
- * Total Memory: 12 bytes [_entries: Capacity * (48 bytes) element storage; _entries: N live elements each: Name: Capacity + 1 bytes when capacity exceeds 15-byte SSO; _entries: N live elements each: Value: Capacity + 1 bytes when capacity exceeds 15-byte SSO]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * Confidence: medium; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
- * End ESPressio Memory Audit
- */
+
 class KeyValueArchive {
         public:
             /// <summary>One stored name/value pair.</summary>
-/**
- * ESPressio Memory Audit
- * Members:
- * - Name (std::string): 24 bytes [Capacity + 1 bytes when capacity exceeds 15-byte SSO]
- * - Value (std::string): 24 bytes [Capacity + 1 bytes when capacity exceeds 15-byte SSO]
- * Total Memory: 48 bytes [Name: Capacity + 1 bytes when capacity exceeds 15-byte SSO; Value: Capacity + 1 bytes when capacity exceeds 15-byte SSO]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * Confidence: medium; compile-time sizeof on the concrete target remains authoritative for ABI-sensitive/opaque members.
- * End ESPressio Memory Audit
- */
+
 struct Entry {
                 std::string Name;
                 std::string Value;

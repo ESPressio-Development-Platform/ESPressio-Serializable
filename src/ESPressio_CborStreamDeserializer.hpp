@@ -7,15 +7,7 @@
 #include "ESPressio_Serializable.hpp"
 namespace ESPressio::Serializable {
 /// <summary>Deserializes CBOR values directly from an Arduino <c>Stream</c> into ESPressio serializable objects.</summary>
-/**
- * ESPressio Memory Audit
- * Members:
- * - _in (Stream&): 4 bytes [0 bytes dynamic allocation]
- * - _maxDepth (size_t): 4 bytes [0 bytes dynamic allocation]
- * Total Memory: 8 bytes [0 bytes dynamic allocation]
- * Basis: ESP32/Xtensa ILP32 reference ABI (4-byte pointers/size_t); ESPressio stateful allocators/deleters included; ABI-sensitive STL/platform internals are identified explicitly.
- * End ESPressio Memory Audit
- */
+
 class CborStreamDeserializer {
     Stream& _in;
     size_t _maxDepth;
