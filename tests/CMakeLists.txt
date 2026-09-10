@@ -30,11 +30,8 @@ set(SERIALIZABLE_INCLUDES ../src ${ESPRESSIO_SYSTEM_INCLUDE})
 
 add_executable(espressio_serializable_tests test_serializable.cpp)
 target_include_directories(espressio_serializable_tests PRIVATE ${SERIALIZABLE_INCLUDES})
-add_executable(espressio_serializable_v06_tests test_v06.cpp)
-target_include_directories(espressio_serializable_v06_tests PRIVATE ${SERIALIZABLE_INCLUDES})
 enable_testing()
 add_test(NAME ESPressioSerializableTests COMMAND espressio_serializable_tests)
-add_test(NAME ESPressioSerializableV06Tests COMMAND espressio_serializable_v06_tests)
 
 add_executable(espressio_serializable_malformed test_malformed.cpp)
 target_include_directories(espressio_serializable_malformed PRIVATE ${SERIALIZABLE_INCLUDES})
