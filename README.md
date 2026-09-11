@@ -87,6 +87,8 @@ void boundedRoundTrip() {
 }
 ```
 
+`WriteCanonicalSchema<T>(sink)` streams the full normalized schema to a family-owned bounded sink. The sink supplies `Byte`, eight-byte little-endian `Integer`, and length-prefixed `Text` operations, all `noexcept`. Families use this stream directly in their full contract fingerprint; they must not expand the 64-bit `StructuralFingerprint` into a supposedly stronger digest. The stream includes the versioned format domain, sorted properties and aliases, value shapes, enum mappings, defaults and ranges. It never includes member addresses or compiler Type names.
+
 `BoundedSerializationResult` contains an error code and actual byte count. Its boolean conversion means success. Failed decoding leaves the destination unchanged; failed encoding leaves unpublished scratch bytes and reports zero bytes. The caller publishes a buffer only after success. No presentation redaction/omission policy is accepted by canonical codecs. Canonical reconstruction hydrates all semantic fields, including fields marked ReadOnly for general archive/tooling mutation. General archive deserialization retains its ReadOnly behavior.
 
 `MaximumSerializedSize<T, Format>` covers the complete object, including ESPB framing where applicable, explicit schema version, names (including longer accepted aliases), count/length/type tags, nested structures and worst-case JSON escaping. The owning family adds its fixed wire envelope; Radio/Mesh/security add their own overhead separately. Arithmetic overflow in a bound fails compilation. JSON emits compact round-trippable numbers, rejects nonfinite floating point and invalid UTF-8, and has no ArduinoJson dependency on its bounded path.

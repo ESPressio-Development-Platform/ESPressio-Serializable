@@ -58,9 +58,9 @@ namespace BoundedDetail {
             for (char c : value) Byte(static_cast<std::uint8_t>(c));
         }
     };
-    template<class T> constexpr void HashShape(StructuralHash& hash);
-    template<class T> constexpr void HashValue(StructuralHash& hash, const T& value);
-    template<class... T> constexpr void HashAlternatives(StructuralHash& hash, std::tuple<T...>*) {
+    template<class T,class Sink> constexpr void HashShape(Sink& hash);
+    template<class T,class Sink> constexpr void HashValue(Sink& hash, const T& value);
+    template<class Sink,class... T> constexpr void HashAlternatives(Sink& hash, std::tuple<T...>*) {
         (HashShape<T>(hash), ...);
     }
     template<class... T> constexpr auto AlternativeDescriptors(std::tuple<T...>*) {
@@ -87,7 +87,7 @@ namespace BoundedDetail {
         }
         for (auto index : order) VisitIndex(tuple, index, function, std::make_index_sequence<n>{});
     }
-    template<class T> constexpr void HashValue(StructuralHash& hash, const T& value) {
+    template<class T,class Sink> constexpr void HashValue(Sink& hash, const T& value) {
         using Traits = BoundedValueTraits<T>;
         constexpr auto kind = Traits::Kind;
         if constexpr (std::is_integral_v<T> || std::is_enum_v<T>) hash.Integer(static_cast<std::uint64_t>(value));
@@ -114,7 +114,7 @@ namespace BoundedDetail {
             }
         }
     }
-    template<class T> constexpr void HashShape(StructuralHash& hash) {
+    template<class T,class Sink> constexpr void HashShape(Sink& hash) {
         using Traits = BoundedValueTraits<T>;
         constexpr auto kind = Traits::Kind;
         hash.Byte(static_cast<std::uint8_t>(kind)); hash.Integer(Traits::Cardinality);
@@ -205,4 +205,18 @@ namespace BoundedDetail {
 }
 /// <summary>Returns static immutable schema metadata derived from the type's sole property tuple.</summary>
 template<class T> constexpr const StaticSchemaDescriptor& SchemaDescriptor() noexcept { return BoundedDetail::SchemaStorage<T>::Value; }
+/// <summary>Streams the complete canonical P3 schema semantics into a bounded family-owned hash sink.</summary>
+/// <remarks>The sink provides noexcept Byte(uint8_t), Integer(uint64_t) and Text(string_view),
+/// using eight-byte little-endian integers and length-prefixed text. It receives the same
+/// domain/version/format, sorted properties/aliases, enum mappings, defaults and ranges as
+/// StructuralFingerprint, without first reducing the input to that 64-bit digest. Families
+/// add their own domain and contracts and produce their required full fingerprint.</remarks>
+template<class T,class Sink> constexpr void WriteCanonicalSchema(Sink& sink) noexcept {
+    static_assert(IsBoundedSerializable<T>, "Canonical schema requires bounded Serializable metadata");
+    static_assert(noexcept(sink.Byte(std::uint8_t{})) && noexcept(sink.Integer(std::uint64_t{})) &&
+                  noexcept(sink.Text(std::string_view{})), "Canonical schema sink must be noexcept");
+    sink.Text("ESPressio bounded schema v1;ESPB2;CBOR;JSON");
+    BoundedDetail::HashShape<T>(sink);
+}
+
 }

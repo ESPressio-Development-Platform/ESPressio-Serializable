@@ -75,8 +75,24 @@ static_assert(IsBoundedSerializable<Sample>);
 static_assert(!BoundedValueTraits<BoundedVector<std::string,2>>::IsBounded);
 static_assert(MaximumSerializedSize<Sample,JSON> > MaximumSerializedSize<Sample,DirectBinary>);
 
+struct CanonicalBytes final {
+    std::array<std::uint8_t,2048> Bytes{};
+    std::size_t Size=0;
+    constexpr void Byte(std::uint8_t value) noexcept { if(Size==Bytes.size()) std::abort(); Bytes[Size++]=value; }
+    constexpr void Integer(std::uint64_t value) noexcept { for(unsigned i=0;i<8;++i) {Byte(static_cast<std::uint8_t>(value));value>>=8;} }
+    constexpr void Text(std::string_view value) noexcept { Integer(value.size()); for(char c:value) Byte(static_cast<std::uint8_t>(c)); }
+};
+constexpr auto CanonicalOrderA=[] {CanonicalBytes bytes;WriteCanonicalSchema<OrderA>(bytes);return bytes;}();
+static_assert(CanonicalOrderA.Size>32);
 int main() {
     heapForbidden = true;
+    CanonicalBytes canonicalB,canonicalDifferent;
+    WriteCanonicalSchema<OrderB>(canonicalB);WriteCanonicalSchema<DifferentDefault>(canonicalDifferent);
+    assert(CanonicalOrderA.Size==canonicalB.Size && CanonicalOrderA.Bytes==canonicalB.Bytes);
+    assert(CanonicalOrderA.Bytes!=canonicalDifferent.Bytes);
+    BoundedDetail::StructuralHash structural;
+    WriteCanonicalSchema<Sample>(structural);
+    assert(structural.Value==SchemaDescriptor<Sample>().StructuralFingerprint);
     BoundedVector<int,0> zero;
     assert(!zero.push_back(1) && zero.empty());
     BoundedString<4> text;
