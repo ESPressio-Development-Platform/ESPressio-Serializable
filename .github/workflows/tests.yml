@@ -78,9 +78,28 @@ jobs:
               )
           };
 
+          struct Bounded final : Serializable<Bounded> {
+              ESPRESSIO_SERIALIZABLE_TYPE(Bounded)
+              ESPRESSIO_SERIALIZABLE_SCHEMA_VERSION(1)
+              double Number = -0.0;
+              BoundedString<12> Text;
+              BoundedVector<int, 4> Values;
+              ESPRESSIO_SERIALIZABLE_PROPERTIES(
+                  ESPRESSIO_PROPERTY("number", Number).Default(-0.0),
+                  ESPRESSIO_PROPERTY("text", Text), ESPRESSIO_PROPERTY("values", Values))
+          };
+          static_assert(SchemaDescriptor<Bounded>().MaximumJsonBytes > 0);
           Parent parent{};
 
           void setup() {
+              Bounded bounded{}, restoredBounded{};
+              std::array<std::uint8_t, MaximumSerializedSize<Bounded, JSON>> bytes{};
+              auto json = SerializeBoundedJson(bounded, bytes.data(), bytes.size());
+              if (json) (void)DeserializeBoundedJson(bytes.data(), json.Bytes, restoredBounded);
+              auto cbor = SerializeBoundedCbor(bounded, bytes.data(), bytes.size());
+              if (cbor) (void)DeserializeBoundedCbor(bytes.data(), cbor.Bytes, restoredBounded);
+              auto binary = SerializeDirectBinary(bounded, bytes.data(), bytes.size());
+              if (binary) (void)DeserializeBoundedDirectBinary(bytes.data(), binary.Bytes, restoredBounded);
               parent.Children.emplace_back();
               BinaryArchive archive;
               parent.Serialize(archive);

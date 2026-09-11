@@ -3,6 +3,16 @@
 #include <array>
 #include <limits>
 #include <random>
+#include <cstdlib>
+#include <new>
+static bool heapForbidden = false;
+void* operator new(std::size_t size) {
+    if (heapForbidden) std::abort();
+    if (auto* value = std::malloc(size ? size : 1)) return value;
+    throw std::bad_alloc();
+}
+void operator delete(void* value) noexcept { std::free(value); }
+void operator delete(void* value, std::size_t) noexcept { std::free(value); }
 using namespace ESPressio::Serializable;
 
 struct Edge : Serializable<Edge> {
@@ -47,7 +57,18 @@ static void Check(const Edge& input) {
         assert(value->Number==input.Number && value->ReadOnly==input.ReadOnly);
     }
 }
+template<std::uint64_t Bits> struct FloatingDefault {
+    double Number{};
+    ESPRESSIO_SERIALIZABLE_TYPE(FloatingDefault)
+    ESPRESSIO_SERIALIZABLE_SCHEMA_VERSION(1)
+    ESPRESSIO_SERIALIZABLE_PROPERTIES(ESPRESSIO_PROPERTY("number",Number).Default(__builtin_bit_cast(double, Bits)))
+};
+static_assert(SchemaDescriptor<FloatingDefault<0>>().StructuralFingerprint !=
+              SchemaDescriptor<FloatingDefault<0x8000000000000000ull>>().StructuralFingerprint);
+static_assert(SchemaDescriptor<FloatingDefault<0x7ff8000000000001ull>>().StructuralFingerprint !=
+              SchemaDescriptor<FloatingDefault<0x7ff8000000000002ull>>().StructuralFingerprint);
 int main() {
+    heapForbidden = true; // Includes floating charconv, first use, malformed input and subnormals.
     Edge value;
     value.ReadOnly=std::numeric_limits<std::uint64_t>::max();
     Check(value);

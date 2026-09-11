@@ -92,20 +92,13 @@ namespace BoundedDetail {
         constexpr auto kind = Traits::Kind;
         if constexpr (std::is_integral_v<T> || std::is_enum_v<T>) hash.Integer(static_cast<std::uint64_t>(value));
         else if constexpr (std::is_floating_point_v<T>) {
-            // Portable numerical normalization, excluding ABI layout. All NaNs share one semantic marker.
-            if (value != value) { hash.Byte(3); return; }
-            if (value == 0) { hash.Byte(0); return; }
-            hash.Byte(value < 0 ? 2 : 1);
-            auto magnitude = value < 0 ? -value : value;
-            if (magnitude == std::numeric_limits<T>::infinity()) { hash.Byte(4); return; }
-            int exponent = 0;
-            while (magnitude >= 2) { magnitude /= 2; ++exponent; }
-            while (magnitude < 1) { magnitude *= 2; --exponent; }
-            hash.Integer(static_cast<std::uint64_t>(exponent));
-            for (int i = 0; i < std::numeric_limits<T>::digits; ++i) {
-                auto bit = magnitude >= 1; hash.Byte(bit ? 1 : 0);
-                magnitude = (magnitude - (bit ? 1 : 0)) * 2;
-            }
+            // Hash the IEEE wire bits in canonical integer order. Signed zero and
+            // NaN payloads are distinct defaults in the binary formats. The
+            // compiler intrinsic permits constant initialization in C++17.
+            static_assert(std::numeric_limits<T>::is_iec559 && (sizeof(T) == 4 || sizeof(T) == 8),
+                          "Bounded floating metadata requires IEEE binary32 or binary64");
+            if constexpr (sizeof(T) == 4) hash.Integer(__builtin_bit_cast(std::uint32_t, value));
+            else hash.Integer(__builtin_bit_cast(std::uint64_t, value));
         } else if constexpr (kind == SerializedValueKind::String) hash.Text(value.view());
         else if constexpr (kind == SerializedValueKind::Object) {
             SortedProperties(T::GetSerializableProperties(), [&](const auto& p) { HashValue(hash, p.GetValue(value)); });

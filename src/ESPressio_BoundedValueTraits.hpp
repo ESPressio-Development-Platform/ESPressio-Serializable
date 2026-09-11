@@ -95,7 +95,9 @@ template<class T> inline constexpr bool IsBoundedWireValue = BoundedValueTraits<
 
 template<class T>
 struct BoundedValueTraits<T, std::enable_if_t<std::is_arithmetic_v<T>>> {
-    static constexpr bool IsBounded = sizeof(T) <= 8 && !std::is_same_v<T, long double>;
+    static constexpr bool IsBounded = sizeof(T) <= 8 && !std::is_same_v<T, long double> &&
+        (!std::is_floating_point_v<T> || (std::numeric_limits<T>::is_iec559 &&
+         ((std::is_same_v<T, float> && sizeof(T) == 4) || (std::is_same_v<T, double> && sizeof(T) == 8))));
     static constexpr SerializedValueKind Kind = std::is_same_v<T, bool> ? SerializedValueKind::Boolean :
         std::is_same_v<T, float> ? SerializedValueKind::Float32 :
         std::is_same_v<T, double> ? SerializedValueKind::Float64 :
