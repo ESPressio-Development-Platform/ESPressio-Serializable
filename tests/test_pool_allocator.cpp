@@ -65,13 +65,14 @@ int main() {
     const std::size_t afterFirstProperties =
         provider.ExternalPreferredAllocations;
 
-    assert(afterFirstProperties > beforeProperties);
+    // P3 supersedes the lazy shared metadata allocation. Archives may still use System memory.
+    assert(afterFirstProperties == beforeProperties);
 
     const auto secondProperties = P::GetSerializableProperties();
     assert(provider.ExternalPreferredAllocations == afterFirstProperties);
     assert(
-        &std::get<0>(firstProperties) ==
-        &std::get<0>(secondProperties)
+        std::get<0>(firstProperties).GetMember() ==
+        std::get<0>(secondProperties).GetMember()
     );
 
     {

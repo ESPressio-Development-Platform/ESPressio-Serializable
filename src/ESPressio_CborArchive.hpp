@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "ESPressio_TreeArchive.hpp"
+#include "ESPressio_CborEncoding.hpp"
 
 namespace ESPressio::Serializable {
 
@@ -13,102 +14,6 @@ namespace ESPressio::Serializable {
 class CborArchive : public TreeArchive {
         private:
             bool _valid = true;
-
-            static void EncodeArgument(
-                std::vector<uint8_t>& output,
-                uint8_t majorType,
-                uint64_t value
-            ) {
-                const uint8_t prefix =
-                    static_cast<uint8_t>(
-                        majorType << 5u
-                    );
-
-                if (value < 24u) {
-                    output.push_back(
-                        static_cast<uint8_t>(
-                            prefix | value
-                        )
-                    );
-                } else if (value <= 0xFFu) {
-                    output.push_back(
-                        prefix | 24u
-                    );
-
-                    output.push_back(
-                        static_cast<uint8_t>(value)
-                    );
-                } else if (value <= 0xFFFFu) {
-                    output.push_back(
-                        prefix | 25u
-                    );
-
-                    output.push_back(
-                        static_cast<uint8_t>(
-                            (value >> 8u) & 0xFFu
-                        )
-                    );
-
-                    output.push_back(
-                        static_cast<uint8_t>(
-                            value & 0xFFu
-                        )
-                    );
-                } else if (
-                    value <= 0xFFFFFFFFull
-                ) {
-                    output.push_back(
-                        prefix | 26u
-                    );
-
-                    for (
-                        int shift = 24;
-                        shift >= 0;
-                        shift -= 8
-                    ) {
-                        output.push_back(
-                            static_cast<uint8_t>(
-                                (value >> shift) &
-                                0xFFu
-                            )
-                        );
-                    }
-                } else {
-                    output.push_back(
-                        prefix | 27u
-                    );
-
-                    for (
-                        int shift = 56;
-                        shift >= 0;
-                        shift -= 8
-                    ) {
-                        output.push_back(
-                            static_cast<uint8_t>(
-                                (value >> shift) &
-                                0xFFu
-                            )
-                        );
-                    }
-                }
-            }
-
-            static void EncodeText(
-                std::vector<uint8_t>& output,
-                std::string_view value
-            ) {
-                EncodeArgument(
-                    output,
-                    3u,
-                    value.size()
-                );
-
-                output.insert(
-                    output.end(),
-                    value.begin(),
-                    value.end()
-                );
-            }
 
             static void EncodeNode(
                 std::vector<uint8_t>& output,
@@ -120,7 +25,7 @@ class CborArchive : public TreeArchive {
                         break;
 
                     case SerializationNodeType::Object:
-                        EncodeArgument(
+                        CborDetail::Argument(
                             output,
                             5u,
                             node.ObjectChildren().size()
@@ -130,7 +35,7 @@ class CborArchive : public TreeArchive {
                             const auto& child :
                             node.ObjectChildren()
                         ) {
-                            EncodeText(
+                            CborDetail::Text(
                                 output,
                                 std::string_view(
                                     child.first.data(),
@@ -146,7 +51,7 @@ class CborArchive : public TreeArchive {
                         break;
 
                     case SerializationNodeType::Array:
-                        EncodeArgument(
+                        CborDetail::Argument(
                             output,
                             4u,
                             node.ArrayChildren().size()
@@ -175,7 +80,7 @@ class CborArchive : public TreeArchive {
                         if (
                             node.SignedIntegerValue() >= 0
                         ) {
-                            EncodeArgument(
+                            CborDetail::Argument(
                                 output,
                                 0u,
                                 static_cast<uint64_t>(
@@ -183,7 +88,7 @@ class CborArchive : public TreeArchive {
                                 )
                             );
                         } else {
-                            EncodeArgument(
+                            CborDetail::Argument(
                                 output,
                                 1u,
                                 static_cast<uint64_t>(
@@ -195,7 +100,7 @@ class CborArchive : public TreeArchive {
                         break;
 
                     case SerializationNodeType::UnsignedInteger:
-                        EncodeArgument(
+                        CborDetail::Argument(
                             output,
                             0u,
                             node.UnsignedIntegerValue()
@@ -259,7 +164,7 @@ class CborArchive : public TreeArchive {
                     }
 
                     case SerializationNodeType::String:
-                        EncodeText(
+                        CborDetail::Text(
                             output,
                             std::string_view(
                                 node.StringValue().data(),

@@ -8,7 +8,7 @@ include(FetchContent)
 FetchContent_Declare(
     ESPressioSystem
     GIT_REPOSITORY https://github.com/ESPressio-Development-Platform/ESPressio-System.git
-    GIT_TAG feature/1-system-memory-policy
+    GIT_TAG primitives_redesign
     GIT_SHALLOW TRUE
 )
 FetchContent_MakeAvailable(ESPressioSystem)
@@ -17,7 +17,7 @@ set(ESPRESSIO_SYSTEM_INCLUDE ${espressiosystem_SOURCE_DIR}/src)
 FetchContent_Declare(
     ESPressioSecurity
     GIT_REPOSITORY https://github.com/ESPressio-Development-Platform/ESPressio-Security.git
-    GIT_TAG optimisation/23-memory-policy-transient-buffers
+    GIT_TAG primitives_redesign
     GIT_SHALLOW TRUE
 )
 FetchContent_GetProperties(ESPressioSecurity)
@@ -76,3 +76,15 @@ add_test(NAME espressio_serializable_value_composition COMMAND espressio_seriali
 add_executable(espressio_serializable_security test_security_integration.cpp)
 target_include_directories(espressio_serializable_security PRIVATE ${SERIALIZABLE_INCLUDES} ${ESPRESSIO_SECURITY_INCLUDE})
 add_test(NAME espressio_serializable_security COMMAND espressio_serializable_security)
+
+add_executable(espressio_serializable_bounded test_bounded.cpp)
+target_include_directories(espressio_serializable_bounded PRIVATE ${SERIALIZABLE_INCLUDES})
+add_test(NAME espressio_serializable_bounded COMMAND espressio_serializable_bounded)
+
+add_executable(espressio_serializable_bounded_edges test_bounded_edge_cases.cpp)
+target_include_directories(espressio_serializable_bounded_edges PRIVATE ${SERIALIZABLE_INCLUDES})
+add_test(NAME espressio_serializable_bounded_edges COMMAND espressio_serializable_bounded_edges)
+
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
+add_test(NAME espressio_serializable_compile_contracts
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/check_compile_fail.py ${CMAKE_CXX_COMPILER})

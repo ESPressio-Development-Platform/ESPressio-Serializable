@@ -34,22 +34,112 @@ Representation-neutral archives
 
 The object's declaration remains authoritative.
 
+## Bounded Primitive serialization
+
+The `primitives_redesign` branch derives both general archive behavior and bounded Primitive metadata from `GetSerializableProperties()`. `IsSerializable<T>` still accepts general objects containing `std::string`, vectors and other dynamic fields. `IsBoundedSerializable<T>` additionally requires an explicit nonzero schema version, a finite property graph, unambiguous names/aliases and no tree-only serialization adapter.
+
+Property declarations no longer allocate a lazy shared tuple. Their builders and getters support constant evaluation; bounded schema declarations must be constant-evaluable. A bounded schema retains one constexpr immutable static property tuple and descriptor graph, with no first-use initialization lock. General types with dynamic defaults can still evaluate their declarations at runtime. `Required()`, `ReadOnly()`, `Sensitive()`, `Alias()`, `Default()`, `Range()` and `Validate()` remain the single metadata source. `IsMetadataValid()` detects alias requests that exceed the declared capacity. `HasMinimum()/GetMinimum()` and `HasMaximum()/GetMaximum()` expose explicit range metadata.
+
+```cpp
+#include <ESPressio_Serializable.hpp>
+#include <array>
+#include <cassert>
+using namespace ESPressio::Serializable;
+
+struct Reading : Serializable<Reading> {
+    BoundedString<24> Label;
+    BoundedVector<std::int16_t, 4> Samples;
+    ESPRESSIO_SERIALIZABLE_TYPE(Reading)
+    ESPRESSIO_SERIALIZABLE_SCHEMA_VERSION(1)
+    ESPRESSIO_SERIALIZABLE_PROPERTIES(
+        ESPRESSIO_PROPERTY("label", Label).Required().Sensitive(),
+        ESPRESSIO_PROPERTY("samples", Samples))
+};
+static_assert(IsSerializable<Reading> && IsBoundedSerializable<Reading>);
+static_assert(SerializationTraits<Reading>::MinimumReadableVersion == 1);
+
+void boundedRoundTrip() {
+    Reading reading;
+    assert(reading.Label.assign("room sensor"));
+    assert(reading.Samples.push_back(21));
+    std::array<std::uint8_t, MaximumSerializedSize<Reading, DirectBinary>> binary{};
+    std::array<std::uint8_t, MaximumSerializedSize<Reading, CBOR>> cbor{};
+    std::array<std::uint8_t, MaximumSerializedSize<Reading, JSON>> json{};
+    auto b = SerializeDirectBinary(reading, binary.data(), binary.size());
+    auto c = SerializeBoundedCbor(reading, cbor.data(), cbor.size());
+    auto j = SerializeBoundedJson(reading, json.data(), json.size());
+    assert(b && c && j);
+    Reading restored;
+    assert(DeserializeBoundedDirectBinary(binary.data(), b.Bytes, restored));
+    assert(DeserializeBoundedCbor(cbor.data(), c.Bytes, restored));
+    assert(DeserializeBoundedJson(json.data(), j.Bytes, restored));
+    const auto& schema = SchemaDescriptor<Reading>();
+    assert(schema.CurrentVersion == 1 && schema.PropertyCount == 2);
+    assert(schema.Properties[0].Name == "label");
+    assert(schema.Properties[0].Value->Cardinality == 24);
+    assert(schema.MaximumDirectBinaryBytes == binary.size());
+    // StructuralFingerprint is portable semantic metadata for the owning family contract.
+    assert(schema.StructuralFingerprint != 0);
+    const auto properties = Reading::GetSerializableProperties();
+    const auto& label = std::get<0>(properties);
+    assert(label.IsMetadataValid() && !label.HasMinimum() && !label.HasMaximum());
+    static_assert(IsBoundedWireValue<BoundedString<24>>);
+}
+```
+
+`BoundedSerializationResult` contains an error code and actual byte count. Its boolean conversion means success. Failed decoding leaves the destination unchanged; failed encoding leaves unpublished scratch bytes and reports zero bytes. The caller publishes a buffer only after success. No presentation redaction/omission policy is accepted by canonical codecs. Canonical reconstruction hydrates all semantic fields, including fields marked ReadOnly for general archive/tooling mutation. General archive deserialization retains its ReadOnly behavior.
+
+`MaximumSerializedSize<T, Format>` covers the complete object, including ESPB framing where applicable, explicit schema version, names (including longer accepted aliases), count/length/type tags, nested structures and worst-case JSON escaping. The owning family adds its fixed wire envelope; Radio/Mesh/security add their own overhead separately. Arithmetic overflow in a bound fails compilation. JSON emits compact round-trippable numbers, rejects nonfinite floating point and invalid UTF-8, and has no ArduinoJson dependency on its bounded path.
+
+Containers expose fixed inline storage and report capacity failure without growing:
+
+```cpp
+#include <ESPressio_BoundedContainers.hpp>
+#include <cassert>
+using namespace ESPressio::Serializable;
+void boundedContainers() {
+    BoundedString<8> text;
+    assert(text.assign("sensor") && text.push_back('1'));
+    assert(text.size() == 7 && text.capacity() == 8);
+    assert(text.view() == "sensor1" && text.c_str()[7] == 0);
+    BoundedBytes<2> bytes;
+    assert(bytes.push_back(1) && bytes.push_back(2) && !bytes.push_back(3));
+    assert(bytes.data()[0] == 1 && bytes[1] == 2);
+    for (auto byte : bytes) assert(byte != 0);
+    BoundedSet<int, 2> values;
+    assert(values.insert(7) && values.contains(7) && !values.insert(7));
+    BoundedMap<int, bool, 2> flags;
+    assert(flags.insert(7, true) && *flags.find(7));
+    assert(flags.find(8) == nullptr);
+    text.clear(); bytes.clear(); values.clear(); flags.clear();
+    assert(text.empty() && bytes.empty() && values.size() == 0 && flags.size() == 0);
+}
+```
+
+`BoundedVector<T,N>` and `BoundedBytes<N>` reserve all N value-initialized slots plus a count. `BoundedString<N>` reserves N+1 bytes and a count. Sets/maps use the same fixed sequence storage and linear lookup, with immutable iteration to preserve uniqueness. Duplicate set/map insertion fails. Clearing resets active slots without changing capacity. Element constructors/assignments retain their own C++ exception contract; Primitive qualification checks their serialized graph and does not certify opaque application code.
+
+Arrays, optional values, variants, enums and nested bounded schemas participate recursively. Variants encode an `index` and `value` object. A present optional containing another optional uses a one-field `value` object, so outer absence and inner absence remain distinct. There is no predecessor-format fallback. Older schema versions are not accepted by bounded codecs until a complete bounded migration path is provided; the general tree migration helpers remain available for general serialization.
+
+`SchemaDescriptor<T>()` exposes immutable properties, aliases, flags, kinds, cardinalities, per-format bounds, nested schemas and variant alternatives. Fingerprints include schema/readable versions, normalized types, bounds, aliases, defaults and range/required/read-only/sensitive semantics, and enum mappings. They exclude object layout, compiler names, member addresses, tuple declaration order and opaque validator addresses. Tree-backed SchemaInspector presentation helpers remain general conveniences; Primitive directory/binding consumers use the static descriptor.
+
+See [bounded validation and resource accounting](docs/BOUNDED_SERIALIZATION.md) for test classification and memory formulas.
+
 # Installation
 
 Core only:
 
 ```ini
 lib_deps =
-    https://github.com/ESPressio-Development-Platform/ESPressio-Serializable.git#main
+    https://github.com/ESPressio-Development-Platform/ESPressio-Serializable.git#primitives_redesign
 ```
 
-Protected serialization additionally requires ESPressio Security from `main`:
+Protected serialization additionally requires ESPressio Security from `primitives_redesign`:
 
 ```ini
 lib_deps =
-    https://github.com/ESPressio-Development-Platform/ESPressio-Serializable.git#main
-    https://github.com/ESPressio-Development-Platform/ESPressio-Security.git#main
-    https://github.com/ESPressio-Development-Platform/ESPressio-Observable.git#main
+    https://github.com/ESPressio-Development-Platform/ESPressio-Serializable.git#primitives_redesign
+    https://github.com/ESPressio-Development-Platform/ESPressio-Security.git#primitives_redesign
+    https://github.com/ESPressio-Development-Platform/ESPressio-Observable.git#primitives_redesign
 ```
 
 Use the core umbrella normally:

@@ -4,6 +4,7 @@
 #include <vector>
 #include <type_traits>
 #include "ESPressio_Serializable.hpp"
+#include "ESPressio_SchemaDescriptor.hpp"
 namespace ESPressio::Serializable {
 /// <summary>Describes one serializable property for schema-inspection output.</summary>
 
@@ -18,14 +19,41 @@ inline std::string CsvEscape(const std::string&s){std::string o="\"";for(char c:
 
 template<typename T> class SchemaInspector { public:
  /// <summary>Returns structured metadata for the type's declared serializable properties.</summary>
- static std::vector<PropertySchemaInfo> Properties(){ std::vector<PropertySchemaInfo> out; std::apply([&](const auto&... p){(( [&](){ PropertySchemaInfo i; i.Name=p.GetName()?p.GetName():""; i.Required=p.IsRequired(); i.ReadOnly=p.IsReadOnly(); i.Sensitive=p.IsSensitive(); i.HasDefault=p.HasDefault(); for(size_t x=0;x<p.GetAliasCount();++x) if(p.GetAlias(x)) i.Aliases.emplace_back(p.GetAlias(x)); i.Type=Detail::SchemaTypeName<typename std::decay_t<decltype(p)>::ValueType>(); out.push_back(std::move(i)); }() ),...);},T::GetSerializableProperties()); return out; }
+ static std::vector<PropertySchemaInfo> Properties(){ std::vector<PropertySchemaInfo> out;
+ if constexpr (IsBoundedSerializable<T>) {
+     const auto& schema=SchemaDescriptor<T>(); out.reserve(schema.PropertyCount);
+     for (std::size_t n=0;n<schema.PropertyCount;++n) {
+         const auto& p=schema.Properties[n]; PropertySchemaInfo i;
+         i.Name=std::string(p.Name); i.Required=HasFlag(p.Flags,SerializationPropertyFlags::Required);
+         i.ReadOnly=HasFlag(p.Flags,SerializationPropertyFlags::ReadOnly); i.Sensitive=HasFlag(p.Flags,SerializationPropertyFlags::Sensitive);
+         i.HasDefault=p.HasDefault;
+         for (std::size_t a=0;a<p.AliasCount;++a) i.Aliases.emplace_back(p.Alias(a));
+         switch (p.Value->Kind) {
+             case SerializedValueKind::Object: i.Type="object"; break;
+             case SerializedValueKind::Optional: i.Type="optional"; break;
+             case SerializedValueKind::Variant: i.Type="variant"; break;
+             case SerializedValueKind::Map: i.Type="map"; break;
+             case SerializedValueKind::Set: i.Type="set"; break;
+             case SerializedValueKind::Sequence: case SerializedValueKind::FixedArray: i.Type="array"; break;
+             case SerializedValueKind::String: i.Type="string"; break;
+             case SerializedValueKind::Boolean: i.Type="boolean"; break;
+             case SerializedValueKind::Enumeration: i.Type="enum"; break;
+             case SerializedValueKind::SignedInteger: case SerializedValueKind::UnsignedInteger: i.Type="integer"; break;
+             case SerializedValueKind::Float32: case SerializedValueKind::Float64: i.Type="number"; break;
+             default: i.Type="custom"; break;
+         }
+         out.push_back(std::move(i));
+     }
+     return out;
+ } else {
+std::apply([&](const auto&... p){(( [&](){ PropertySchemaInfo i; i.Name=p.GetName()?p.GetName():""; i.Required=p.IsRequired(); i.ReadOnly=p.IsReadOnly(); i.Sensitive=p.IsSensitive(); i.HasDefault=p.HasDefault(); for(size_t x=0;x<p.GetAliasCount();++x) if(p.GetAlias(x)) i.Aliases.emplace_back(p.GetAlias(x)); i.Type=Detail::SchemaTypeName<typename std::decay_t<decltype(p)>::ValueType>(); out.push_back(std::move(i)); }() ),...);},T::GetSerializableProperties()); return out; } }
  /// <summary>Returns the schema as a Markdown table.</summary>
- static std::string Markdown(){ std::ostringstream o; o<<"# Schema\n\nVersion: "<<T::GetSchemaVersion()<<"\n\n| Property | Type | Required | Read-only | Sensitive | Aliases |\n|---|---|---:|---:|---:|---|\n"; for(auto&i:Properties()){o<<"| "<<i.Name<<" | "<<i.Type<<" | "<<(i.Required?"yes":"no")<<" | "<<(i.ReadOnly?"yes":"no")<<" | "<<(i.Sensitive?"yes":"no")<<" | "; for(size_t x=0;x<i.Aliases.size();++x){if(x)o<<", ";o<<i.Aliases[x];} o<<" |\n";} return o.str(); }
+ static std::string Markdown(){ std::ostringstream o; o<<"# Schema\n\nVersion: "<<Detail::SchemaVersion<T>()<<"\n\n| Property | Type | Required | Read-only | Sensitive | Aliases |\n|---|---|---:|---:|---:|---|\n"; for(auto&i:Properties()){o<<"| "<<i.Name<<" | "<<i.Type<<" | "<<(i.Required?"yes":"no")<<" | "<<(i.ReadOnly?"yes":"no")<<" | "<<(i.Sensitive?"yes":"no")<<" | "; for(size_t x=0;x<i.Aliases.size();++x){if(x)o<<", ";o<<i.Aliases[x];} o<<" |\n";} return o.str(); }
  /// <summary>Returns the schema as a compact JSON document.</summary>
- static std::string Json(){std::ostringstream o;o<<"{\"version\":"<<T::GetSchemaVersion()<<",\"properties\":[";bool first=true;for(auto&i:Properties()){if(!first)o<<',';first=false;o<<"{\"name\":\""<<Detail::JsonEscape(i.Name)<<"\",\"type\":\""<<i.Type<<"\",\"required\":"<<(i.Required?"true":"false")<<",\"readOnly\":"<<(i.ReadOnly?"true":"false")<<",\"sensitive\":"<<(i.Sensitive?"true":"false")<<",\"hasDefault\":"<<(i.HasDefault?"true":"false")<<",\"aliases\":[";for(size_t x=0;x<i.Aliases.size();++x){if(x)o<<',';o<<'\"'<<Detail::JsonEscape(i.Aliases[x])<<'\"';}o<<"]}";}o<<"]}";return o.str();}
+ static std::string Json(){std::ostringstream o;o<<"{\"version\":"<<Detail::SchemaVersion<T>()<<",\"properties\":[";bool first=true;for(auto&i:Properties()){if(!first)o<<',';first=false;o<<"{\"name\":\""<<Detail::JsonEscape(i.Name)<<"\",\"type\":\""<<i.Type<<"\",\"required\":"<<(i.Required?"true":"false")<<",\"readOnly\":"<<(i.ReadOnly?"true":"false")<<",\"sensitive\":"<<(i.Sensitive?"true":"false")<<",\"hasDefault\":"<<(i.HasDefault?"true":"false")<<",\"aliases\":[";for(size_t x=0;x<i.Aliases.size();++x){if(x)o<<',';o<<'\"'<<Detail::JsonEscape(i.Aliases[x])<<'\"';}o<<"]}";}o<<"]}";return o.str();}
  /// <summary>Returns the schema as CSV rows.</summary>
  static std::string Csv(){std::ostringstream o;o<<"property,type,required,read_only,sensitive,has_default,aliases\n";for(auto&i:Properties()){std::string a;for(size_t x=0;x<i.Aliases.size();++x){if(x)a+=';';a+=i.Aliases[x];}o<<Detail::CsvEscape(i.Name)<<','<<Detail::CsvEscape(i.Type)<<','<<(i.Required?1:0)<<','<<(i.ReadOnly?1:0)<<','<<(i.Sensitive?1:0)<<','<<(i.HasDefault?1:0)<<','<<Detail::CsvEscape(a)<<"\n";}return o.str();}
  /// <summary>Returns a Mermaid class-diagram representation of the schema.</summary>
- static std::string Mermaid(){std::ostringstream o;o<<"classDiagram\nclass SerializableSchema {\n  +schemaVersion "<<T::GetSchemaVersion()<<"\n}\n";for(auto&i:Properties())o<<"SerializableSchema : +"<<i.Type<<" "<<i.Name<<(i.Required?" [required]":"")<<"\n";return o.str();}
+ static std::string Mermaid(){std::ostringstream o;o<<"classDiagram\nclass SerializableSchema {\n  +schemaVersion "<<Detail::SchemaVersion<T>()<<"\n}\n";for(auto&i:Properties())o<<"SerializableSchema : +"<<i.Type<<" "<<i.Name<<(i.Required?" [required]":"")<<"\n";return o.str();}
 };
 }

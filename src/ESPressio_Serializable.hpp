@@ -18,3 +18,7 @@
 #include "ESPressio_SchemaIntrospection.hpp"
 #include "ESPressio_DirectBinaryArchive.hpp"
 #include "ESPressio_BinaryArchiveTraversal.hpp"
+#include "ESPressio_SchemaDescriptor.hpp"
+#include "ESPressio_BoundedDeserializer.hpp"
+#include "ESPressio_BoundedCborArchive.hpp"
+#include "ESPressio_BoundedJsonArchive.hpp"

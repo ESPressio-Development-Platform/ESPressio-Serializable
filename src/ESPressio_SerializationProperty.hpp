@@ -38,43 +38,61 @@ template<typename TObject, typename TValue, size_t TMaximumAliases=4>
             SerializationPropertyFlags _flags=SerializationPropertyFlags::None;
             std::array<const char*, TMaximumAliases> _aliases{};
             size_t _aliasCount=0;
+            bool _metadataValid=true;
             std::optional<TValue> _defaultValue;
             bool (*_validator)(const TValue&)=nullptr;
             std::optional<TValue> _minimum;
             std::optional<TValue> _maximum;
 
+            constexpr SerializationProperty(const SerializationProperty& source,
+                std::optional<TValue> defaultValue, std::optional<TValue> minimum,
+                std::optional<TValue> maximum)
+                : _name(source._name), _member(source._member), _flags(source._flags),
+                  _aliases(source._aliases), _aliasCount(source._aliasCount),
+                  _metadataValid(source._metadataValid),
+                  _defaultValue(std::move(defaultValue)), _validator(source._validator),
+                  _minimum(std::move(minimum)), _maximum(std::move(maximum)) {}
+
         public:
             using ObjectType=TObject;
             using ValueType=TValue;
+            static constexpr std::size_t MaximumAliases = TMaximumAliases;
 
             /// <summary>Creates metadata for an object member under the supplied serialized name.</summary>
-            SerializationProperty(const char* name, TValue TObject::* member)
+            constexpr SerializationProperty(const char* name, TValue TObject::* member)
                 : _name(name), _member(member) {}
 
             /// <summary>Returns the primary serialized property name.</summary>
-            const char* GetName() const { return _name; }
+            constexpr const char* GetName() const { return _name; }
             /// <summary>Returns the pointer-to-member represented by this property.</summary>
-            TValue TObject::* GetMember() const { return _member; }
+            constexpr TValue TObject::* GetMember() const { return _member; }
             /// <summary>Returns the configured property flags.</summary>
-            SerializationPropertyFlags GetFlags() const { return _flags; }
+            constexpr SerializationPropertyFlags GetFlags() const { return _flags; }
             /// <summary>Indicates whether the property must be present when deserializing.</summary>
-            bool IsRequired() const { return HasFlag(_flags,SerializationPropertyFlags::Required); }
+            constexpr bool IsRequired() const { return HasFlag(_flags,SerializationPropertyFlags::Required); }
             /// <summary>Indicates whether deserialization must leave the member unchanged.</summary>
-            bool IsReadOnly() const { return HasFlag(_flags,SerializationPropertyFlags::ReadOnly); }
+            constexpr bool IsReadOnly() const { return HasFlag(_flags,SerializationPropertyFlags::ReadOnly); }
             /// <summary>Indicates whether serialization should apply the configured sensitive-property policy.</summary>
-            bool IsSensitive() const { return HasFlag(_flags,SerializationPropertyFlags::Sensitive); }
+            constexpr bool IsSensitive() const { return HasFlag(_flags,SerializationPropertyFlags::Sensitive); }
             /// <summary>Returns the number of accepted alternate property names.</summary>
-            size_t GetAliasCount() const { return _aliasCount; }
+            constexpr size_t GetAliasCount() const { return _aliasCount; }
+            /// <summary>Reports whether all requested aliases fit the explicitly bounded metadata.</summary>
+            constexpr bool IsMetadataValid() const { return _metadataValid; }
             /// <summary>Returns an alternate property name, or <c>nullptr</c> when the index is out of range.</summary>
-            const char* GetAlias(size_t i) const { return i<_aliasCount?_aliases[i]:nullptr; }
+            constexpr const char* GetAlias(size_t i) const { return i<_aliasCount?_aliases[i]:nullptr; }
             /// <summary>Indicates whether a default value is configured.</summary>
-            bool HasDefault() const { return _defaultValue.has_value(); }
+            constexpr bool HasDefault() const { return _defaultValue.has_value(); }
             /// <summary>Returns the configured default value.</summary>
-            const TValue& GetDefault() const { return *_defaultValue; }
+            constexpr const TValue& GetDefault() const { return *_defaultValue; }
             /// <summary>Indicates whether a custom validator is configured.</summary>
-            bool HasValidator() const { return _validator!=nullptr; }
+            constexpr bool HasValidator() const { return _validator!=nullptr; }
+            /// <summary>Exposes explicit numeric range metadata for normalized schema fingerprints.</summary>
+            constexpr bool HasMinimum() const { return _minimum.has_value(); }
+            constexpr bool HasMaximum() const { return _maximum.has_value(); }
+            constexpr const TValue& GetMinimum() const { return *_minimum; }
+            constexpr const TValue& GetMaximum() const { return *_maximum; }
             /// <summary>Validates a value against numeric range constraints and the optional custom validator.</summary>
-            bool ValidateValue(const TValue& value) const {
+            constexpr bool ValidateValue(const TValue& value) const {
                 if constexpr (std::is_arithmetic_v<TValue>) {
                     if (_minimum && value < *_minimum) return false;
                     if (_maximum && value > *_maximum) return false;
@@ -83,31 +101,31 @@ template<typename TObject, typename TValue, size_t TMaximumAliases=4>
             }
 
             /// <summary>Returns a copy configured as required when enabled.</summary>
-            SerializationProperty Required(bool enabled=true) const { auto c=*this; if(enabled)c._flags=c._flags|SerializationPropertyFlags::Required; return c; }
+            constexpr SerializationProperty Required(bool enabled=true) const { auto c=*this; if(enabled)c._flags=c._flags|SerializationPropertyFlags::Required; return c; }
             /// <summary>Returns a copy configured as read-only when enabled.</summary>
-            SerializationProperty ReadOnly(bool enabled=true) const { auto c=*this; if(enabled)c._flags=c._flags|SerializationPropertyFlags::ReadOnly; return c; }
+            constexpr SerializationProperty ReadOnly(bool enabled=true) const { auto c=*this; if(enabled)c._flags=c._flags|SerializationPropertyFlags::ReadOnly; return c; }
             /// <summary>Returns a copy configured as sensitive when enabled.</summary>
-            SerializationProperty Sensitive(bool enabled=true) const { auto c=*this; if(enabled)c._flags=c._flags|SerializationPropertyFlags::Sensitive; return c; }
-            /// <summary>Returns a copy accepting an additional serialized-name alias when capacity permits.</summary>
-            SerializationProperty Alias(const char* alias) const { auto c=*this; if(alias&&c._aliasCount<TMaximumAliases)c._aliases[c._aliasCount++]=alias; return c; }
+            constexpr SerializationProperty Sensitive(bool enabled=true) const { auto c=*this; if(enabled)c._flags=c._flags|SerializationPropertyFlags::Sensitive; return c; }
+            /// <summary>Returns a copy with another alias; invalid/full requests disqualify bounded schema use.</summary>
+            constexpr SerializationProperty Alias(const char* alias) const { auto c=*this; if(alias&&*alias&&c._aliasCount<TMaximumAliases)c._aliases[c._aliasCount++]=alias; else c._metadataValid=false; return c; }
             /// <summary>Returns a copy with a default value used when the property is absent.</summary>
-            SerializationProperty Default(TValue value) const { auto c=*this; c._defaultValue=std::move(value); return c; }
+            constexpr SerializationProperty Default(TValue value) const { return SerializationProperty(*this, std::optional<TValue>{std::move(value)}, _minimum, _maximum); }
             /// <summary>Returns a copy using the supplied value validator.</summary>
-            SerializationProperty Validate(bool (*validator)(const TValue&)) const { auto c=*this; c._validator=validator; return c; }
+            constexpr SerializationProperty Validate(bool (*validator)(const TValue&)) const { auto c=*this; c._validator=validator; return c; }
 
             /// <summary>Returns a copy constrained to the supplied inclusive arithmetic range.</summary>
             template<typename U=TValue, std::enable_if_t<std::is_arithmetic_v<U>,int> = 0>
-            SerializationProperty Range(U minimum, U maximum) const { auto c=*this; c._minimum=static_cast<TValue>(minimum); c._maximum=static_cast<TValue>(maximum); return c; }
+            constexpr SerializationProperty Range(U minimum, U maximum) const { return SerializationProperty(*this, _defaultValue, std::optional<TValue>{static_cast<TValue>(minimum)}, std::optional<TValue>{static_cast<TValue>(maximum)}); }
 
             /// <summary>Returns mutable access to the represented member of an object.</summary>
-            TValue& GetValue(TObject& object) const { return object.*_member; }
+            constexpr TValue& GetValue(TObject& object) const { return object.*_member; }
             /// <summary>Returns const access to the represented member of an object.</summary>
-            const TValue& GetValue(const TObject& object) const { return object.*_member; }
+            constexpr const TValue& GetValue(const TObject& object) const { return object.*_member; }
     };
 
     /// <summary>Creates serialization metadata for an object member.</summary>
     template<typename TObject, typename TValue>
-    auto MakeSerializationProperty(const char* name, TValue TObject::* member) {
+    constexpr auto MakeSerializationProperty(const char* name, TValue TObject::* member) {
         return SerializationProperty<TObject,TValue>(name,member);
     }
 }

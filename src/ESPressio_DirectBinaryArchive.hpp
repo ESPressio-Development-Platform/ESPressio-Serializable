@@ -25,6 +25,7 @@
 #include "ESPressio_SerializationNode.hpp"
 #include "ESPressio_SerializationResult.hpp"
 #include "ESPressio_SerializationTraits.hpp"
+#include "ESPressio_SerializationSchema.hpp"
 #include "ESPressio_SerializationTraversal.hpp"
 
 namespace ESPressio::Serializable {
@@ -380,7 +381,7 @@ namespace DirectBinaryDetail {
         );
         EncodeValue(
             output,
-            TObject::GetSchemaVersion()
+            Detail::SchemaVersion<TObject>()
         );
 
         std::apply(
@@ -434,12 +435,13 @@ namespace DirectBinaryDetail {
                     )
                 );
             } else {
-                EncodeValue(
-                    output,
-                    *value
-                );
+                if constexpr (Detail::IsStdOptional<typename T::value_type>::value) {
+                    output.push_back(static_cast<std::uint8_t>(SerializationNodeType::Object));
+                    AppendU16(output,1); AppendName(output,"value");
+                }
+                EncodeValue(output,*value);
             }
-        } else if constexpr (Detail::IsSequence<T>) {
+        } else if constexpr (Detail::IsSequence<T> || Detail::IsBoundedSequence<T>) {
             output.push_back(
                 static_cast<uint8_t>(
                     SerializationNodeType::Array
@@ -457,7 +459,7 @@ namespace DirectBinaryDetail {
                     item
                 );
             }
-        } else if constexpr (Detail::IsMapLike<T>) {
+        } else if constexpr (Detail::IsMapLike<T> || Detail::BoundedKind<T> == SerializedValueKind::Map) {
             output.push_back(
                 static_cast<uint8_t>(
                     SerializationNodeType::Array
@@ -499,6 +501,12 @@ namespace DirectBinaryDetail {
                     item.second
                 );
             }
+        } else if constexpr (Detail::BoundedKind<T> == SerializedValueKind::Variant) {
+            output.push_back(static_cast<std::uint8_t>(SerializationNodeType::Object));
+            AppendU16(output, 2); AppendName(output, "index");
+            EncodeValue(output, static_cast<std::uint32_t>(value.index()));
+            AppendName(output, "value");
+            std::visit([&](const auto& item) { EncodeValue(output,item); }, value);
         } else if constexpr (std::is_enum_v<T>) {
             if constexpr (HasEnumSerializationMapping<T>) {
                 const char* name =
@@ -614,7 +622,7 @@ namespace DirectBinaryDetail {
                 output,
                 raw
             );
-        } else if constexpr (Detail::IsStdString<T>) {
+        } else if constexpr (Detail::IsStdString<T> || Detail::BoundedKind<T> == SerializedValueKind::String) {
             output.push_back(
                 static_cast<uint8_t>(
                     SerializationNodeType::String
@@ -1249,6 +1257,13 @@ struct PropertySlice {
             }
 
             typename T::value_type decoded{};
+            if constexpr (Detail::IsStdOptional<typename T::value_type>::value) {
+                const auto* begin=cursor; auto* finish=cursor;
+                if (!SkipNode(finish,end)) return false;
+                ObjectReaderArchive archive(begin,finish);
+                if (!archive.IsValid() || !archive.Read("value",decoded)) return false;
+                value=std::move(decoded); cursor=finish; return true;
+            }
             if (
                 !DecodeValue(
                     cursor,

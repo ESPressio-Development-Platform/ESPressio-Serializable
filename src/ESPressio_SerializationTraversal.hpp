@@ -116,6 +116,22 @@ template<typename TKey, typename TValue, typename THash, typename TEqual, typena
             std::string
         >;
 
+    template<class T> inline constexpr auto BoundedKind = BoundedValueTraits<std::remove_cv_t<std::remove_reference_t<T>>>::Kind;
+    template<class T> inline constexpr bool IsBoundedSequence = BoundedKind<T> == SerializedValueKind::Sequence || BoundedKind<T> == SerializedValueKind::Set;
+    template<std::size_t I = 0, class T, class Decode>
+    bool DecodeVariantAlternative(std::size_t index, T& value, Decode decode) {
+        if constexpr (I == std::variant_size_v<T>) return false;
+        else {
+            if (index == I) {
+                std::variant_alternative_t<I,T> item{};
+                if (!decode(item)) return false;
+                value.template emplace<I>(std::move(item));
+                return true;
+            }
+            return DecodeVariantAlternative<I+1>(index, value, decode);
+        }
+    }
+
     class NodeWriterArchive;
     class NodeReaderArchive;
 
@@ -181,15 +197,17 @@ class NodeReaderArchive {
             if (!value.has_value()) {
                 node.SetType(SerializationNodeType::Null);
             } else {
-                return ToNode(*value);
+                if constexpr (IsStdOptional<typename T::value_type>::value) {
+                    node.SetType(SerializationNodeType::Object); node.Set("value",ToNode(*value));
+                } else return ToNode(*value);
             }
-        } else if constexpr (IsSequence<T>) {
+        } else if constexpr (IsSequence<T> || IsBoundedSequence<T>) {
             node.SetType(SerializationNodeType::Array);
             node.ReserveArray(value.size());
             for (const auto& item : value) {
                 node.Append(ToNode(item));
             }
-        } else if constexpr (IsMapLike<T>) {
+        } else if constexpr (IsMapLike<T> || BoundedKind<T> == SerializedValueKind::Map) {
             node.SetType(SerializationNodeType::Array);
             for (const auto& item : value) {
                 SerializationNode entry(SerializationNodeType::Object);
@@ -197,6 +215,13 @@ class NodeReaderArchive {
                 entry.Set("value", ToNode(item.second));
                 node.Append(std::move(entry));
             }
+        } else if constexpr (BoundedKind<T> == SerializedValueKind::Variant) {
+            node.SetType(SerializationNodeType::Object);
+            node.Set("index", ToNode(static_cast<std::uint32_t>(value.index())));
+            std::visit([&](const auto& item) { node.Set("value", ToNode(item)); }, value);
+        } else if constexpr (BoundedKind<T> == SerializedValueKind::String) {
+            node.SetType(SerializationNodeType::String);
+            node.StringValue().assign(value.data(), value.size());
         } else if constexpr (std::is_enum_v<T>) {
             if constexpr (HasEnumSerializationMapping<T>) {
                 const char* name = EnumToString(value);
@@ -276,6 +301,11 @@ class NodeReaderArchive {
                 return true;
             }
             typename T::value_type decoded{};
+            if constexpr (IsStdOptional<typename T::value_type>::value) {
+                const auto* nested=node.Find("value");
+                if (!nested || !FromNode(*nested,decoded)) return false;
+                value=std::move(decoded); return true;
+            }
             if (!FromNode(node, decoded)) {
                 return false;
             }
@@ -351,6 +381,28 @@ class NodeReaderArchive {
                 value.emplace(std::move(key), std::move(mapped));
             }
             return true;
+        } else if constexpr (IsBoundedSequence<T> || BoundedKind<T> == SerializedValueKind::Map) {
+            if (node.GetType() != SerializationNodeType::Array || node.ArrayChildren().size() > T::capacity()) return false;
+            T candidate{};
+            for (const auto& child : node.ArrayChildren()) {
+                if constexpr (BoundedKind<T> == SerializedValueKind::Map) {
+                    auto* key = child.Find("key"); auto* mapped = child.Find("value");
+                    typename T::key_type k{}; typename T::mapped_type v{};
+                    if (!key || !mapped || !FromNode(*key,k) || !FromNode(*mapped,v) || !candidate.insert(k,v)) return false;
+                } else {
+                    typename T::value_type item{};
+                    if (!FromNode(child,item)) return false;
+                    if constexpr (BoundedKind<T> == SerializedValueKind::Set) { if (!candidate.insert(item)) return false; }
+                    else if (!candidate.push_back(std::move(item))) return false;
+                }
+            }
+            value = std::move(candidate); return true;
+        } else if constexpr (BoundedKind<T> == SerializedValueKind::String) {
+            return node.GetType() == SerializationNodeType::String && value.assign({node.StringValue().data(), node.StringValue().size()});
+        } else if constexpr (BoundedKind<T> == SerializedValueKind::Variant) {
+            auto* index = node.Find("index"); auto* item = node.Find("value");
+            std::uint32_t i{};
+            return index && item && FromNode(*index,i) && DecodeVariantAlternative(i,value,[&](auto& v) { return FromNode(*item,v); });
         } else if constexpr (std::is_enum_v<T>) {
             if constexpr (HasEnumSerializationMapping<T>) {
                 if (node.GetType() == SerializationNodeType::String) {
@@ -466,6 +518,7 @@ class NodeReaderArchive {
             auto nested=value.DeserializeDetailed(archive,options); result.Merge(nested,path,options); return result;
         } else if constexpr (IsStdOptional<T>::value) {
             if(node.GetType()==SerializationNodeType::Null){value.reset();return result;}
+            if constexpr (IsStdOptional<typename T::value_type>::value) { if (!FromNode(node,value)) fail(); return result; }
             typename T::value_type item{}; auto nested=FromNodeDetailed(node,item,path,options); result.Merge(nested,"",options); if(nested)value=std::move(item); return result;
         } else if constexpr (IsStdVector<T>::value || IsStdDeque<T>::value || IsStdList<T>::value) {
             if(node.GetType()!=SerializationNodeType::Array){fail();return result;} value.clear(); if constexpr(IsStdVector<T>::value)value.reserve(node.ArrayChildren().size());
