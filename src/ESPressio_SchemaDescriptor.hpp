@@ -1,8 +1,18 @@
 #pragma once
 #include <array>
 #include <cstdint>
+#include <cstring>
 #include <string_view>
 #include "ESPressio_SerializationTraits.hpp"
+
+#if defined(__has_builtin)
+#  if __has_builtin(__builtin_bit_cast)
+#    define ESPRESSIO_SERIALIZABLE_HAS_BUILTIN_BIT_CAST 1
+#  endif
+#endif
+#ifndef ESPRESSIO_SERIALIZABLE_HAS_BUILTIN_BIT_CAST
+#  define ESPRESSIO_SERIALIZABLE_HAS_BUILTIN_BIT_CAST 0
+#endif
 
 namespace ESPressio::Serializable {
 struct StaticSchemaDescriptor;
@@ -87,18 +97,37 @@ namespace BoundedDetail {
         }
         for (auto index : order) VisitIndex(tuple, index, function, std::make_index_sequence<n>{});
     }
+    template<class T>
+    inline std::uint64_t FloatingBitsRuntime(const T& value) noexcept {
+        static_assert(std::numeric_limits<T>::is_iec559 && (sizeof(T) == 4 || sizeof(T) == 8),
+                      "Bounded floating metadata requires IEEE binary32 or binary64");
+        if constexpr (sizeof(T) == 4) {
+            std::uint32_t bits = 0;
+            std::memcpy(&bits, &value, sizeof(bits));
+            return bits;
+        } else {
+            std::uint64_t bits = 0;
+            std::memcpy(&bits, &value, sizeof(bits));
+            return bits;
+        }
+    }
     template<class T,class Sink> constexpr void HashValue(Sink& hash, const T& value) {
         using Traits = BoundedValueTraits<T>;
         constexpr auto kind = Traits::Kind;
         if constexpr (std::is_integral_v<T> || std::is_enum_v<T>) hash.Integer(static_cast<std::uint64_t>(value));
         else if constexpr (std::is_floating_point_v<T>) {
-            // Hash the IEEE wire bits in canonical integer order. Signed zero and
-            // NaN payloads are distinct defaults in the binary formats. The
-            // compiler intrinsic permits constant initialization in C++17.
+            // Hash the exact IEEE wire bits in canonical integer order. Signed zero and
+            // NaN payloads remain distinct schema defaults/ranges. Newer compilers can
+            // constant-evaluate the bit cast; older GCC retains the exact bits at static
+            // descriptor initialization through memcpy without changing the semantics.
             static_assert(std::numeric_limits<T>::is_iec559 && (sizeof(T) == 4 || sizeof(T) == 8),
                           "Bounded floating metadata requires IEEE binary32 or binary64");
+#if ESPRESSIO_SERIALIZABLE_HAS_BUILTIN_BIT_CAST
             if constexpr (sizeof(T) == 4) hash.Integer(__builtin_bit_cast(std::uint32_t, value));
             else hash.Integer(__builtin_bit_cast(std::uint64_t, value));
+#else
+            hash.Integer(FloatingBitsRuntime(value));
+#endif
         } else if constexpr (kind == SerializedValueKind::String) hash.Text(value.view());
         else if constexpr (kind == SerializedValueKind::Object) {
             SortedProperties(T::GetSerializableProperties(), [&](const auto& p) { HashValue(hash, p.GetValue(value)); });
@@ -195,7 +224,11 @@ namespace BoundedDetail {
             }, Tuple);
             return values;
         }();
+#if ESPRESSIO_SERIALIZABLE_HAS_BUILTIN_BIT_CAST
         inline static constexpr StaticSchemaDescriptor Value = [] {
+#else
+        inline static const StaticSchemaDescriptor Value = [] {
+#endif
             StructuralHash hash; hash.Text("ESPressio bounded schema v1;ESPB2;CBOR;JSON"); HashShape<T>(hash);
             return StaticSchemaDescriptor{SerializationTraits<T>::CurrentVersion, SerializationTraits<T>::MinimumReadableVersion,
                 SerializationTraits<T>::MaximumReadableVersion, Properties.size(), Properties.data(), hash.Value,
@@ -220,3 +253,5 @@ template<class T,class Sink> constexpr void WriteCanonicalSchema(Sink& sink) noe
 }
 
 }
+
+#undef ESPRESSIO_SERIALIZABLE_HAS_BUILTIN_BIT_CAST
