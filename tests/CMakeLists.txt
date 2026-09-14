@@ -85,6 +85,10 @@ add_executable(espressio_serializable_bounded_edges test_bounded_edge_cases.cpp)
 target_include_directories(espressio_serializable_bounded_edges PRIVATE ${SERIALIZABLE_INCLUDES})
 add_test(NAME espressio_serializable_bounded_edges COMMAND espressio_serializable_bounded_edges)
 
+add_executable(espressio_serializable_bounded_scratch test_bounded_scratch.cpp)
+target_include_directories(espressio_serializable_bounded_scratch PRIVATE ${SERIALIZABLE_INCLUDES})
+add_test(NAME espressio_serializable_bounded_scratch COMMAND espressio_serializable_bounded_scratch)
+
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
 add_test(NAME espressio_serializable_compile_contracts
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/check_compile_fail.py ${CMAKE_CXX_COMPILER})
