@@ -20,5 +20,6 @@
 #include "ESPressio_BinaryArchiveTraversal.hpp"
 #include "ESPressio_SchemaDescriptor.hpp"
 #include "ESPressio_BoundedDeserializer.hpp"
+#include "ESPressio_BoundedScratchDeserializer.hpp"
 #include "ESPressio_BoundedCborArchive.hpp"
 #include "ESPressio_BoundedJsonArchive.hpp"
