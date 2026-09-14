@@ -109,7 +109,8 @@ namespace ESPressio::Serializable::Migration {
             if(*p=='['){
                 ++p; size_t index=0; if(*p<'0'||*p>'9') return nullptr;
                 while(*p>='0'&&*p<='9'){ index=index*10+static_cast<size_t>(*p-'0'); ++p; }
-                if(*p!=']') return nullptr; ++p;
+                if(*p!=']') return nullptr;
+                ++p;
                 if(current->GetType()!=SerializationNodeType::Array) return nullptr;
                 if(index>=current->ArrayChildren().size()) return nullptr;
                 current=&current->ArrayChildren()[index];
@@ -119,14 +120,16 @@ namespace ESPressio::Serializable::Migration {
             if(current->GetType()!=SerializationNodeType::Object) return nullptr;
             auto* next=current->Find(token.c_str());
             if(next==nullptr && create){ current->Set(token.c_str(),SerializationNode(SerializationNodeType::Object)); next=current->Find(token.c_str()); }
-            if(next==nullptr) return nullptr; current=next;
+            if(next==nullptr) return nullptr;
+            current=next;
         }
         return current;
     }
 
     /// <summary>Removes the value addressed by a property/array path.</summary>
     inline bool RemoveAt(SerializationNode& root,const char* path) {
-        if(path==nullptr) return false; std::string p(path); auto dot=p.find_last_of('.'); auto bracket=p.find_last_of('[');
+        if(path==nullptr) return false;
+        std::string p(path); auto dot=p.find_last_of('.'); auto bracket=p.find_last_of('[');
         if(bracket!=std::string::npos && (dot==std::string::npos || bracket>dot)){
             auto close=p.find(']',bracket); if(close==std::string::npos || close!=p.size()-1) return false;
             size_t index=static_cast<size_t>(std::stoul(p.substr(bracket+1,close-bracket-1)));
@@ -140,9 +143,14 @@ namespace ESPressio::Serializable::Migration {
 
     /// <summary>Moves a value from an arbitrary source path into a destination object under a new name.</summary>
     inline bool MovePath(SerializationNode& root,const char* sourcePath,const char* destinationObjectPath,const char* destinationName,bool overwrite=false){
-        auto* source=ResolvePath(root,sourcePath); if(!source) return false; SerializationNode copy=*source;
-        auto* dest=ResolvePath(root,destinationObjectPath,true); if(!dest||dest->GetType()!=SerializationNodeType::Object) return false;
-        if(!overwrite&&dest->Find(destinationName)) return false; dest->Set(destinationName,std::move(copy)); return RemoveAt(root,sourcePath);
+        auto* source=ResolvePath(root,sourcePath);
+        if(!source) return false;
+        SerializationNode copy=*source;
+        auto* dest=ResolvePath(root,destinationObjectPath,true);
+        if(!dest||dest->GetType()!=SerializationNodeType::Object) return false;
+        if(!overwrite&&dest->Find(destinationName)) return false;
+        dest->Set(destinationName,std::move(copy));
+        return RemoveAt(root,sourcePath);
     }
 
 }
