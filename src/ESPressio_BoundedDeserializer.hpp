@@ -285,41 +285,48 @@ namespace DirectBinaryDetail {
                     if (version != SerializationTraits<T>::CurrentVersion) return Fail(SerializationErrorCode::UnsupportedSchemaVersion);
                     continue;
                 }
-                bool found = false; bool valid = true; std::size_t index = 0;
-                std::apply([&](const auto&... p) {
-                    auto read = [&](const auto& property) {
-                        auto i = index++; bool matches = NameEquals(name,property.GetName());
-                        for (std::size_t a = 0; a < property.GetAliasCount(); ++a) matches |= NameEquals(name,property.GetAlias(a));
-                        if (!matches) return;
-                        if (found || seen[i]) { valid = Fail(SerializationErrorCode::DuplicateValue); found = true; return; }
-                        found = true; seen[i] = true;
-                        using V = typename std::decay_t<decltype(property)>::ValueType;
-                        V candidate{};
-                        if (!Value(candidate)) { valid = false; return; }
-                        if (!property.ValidateValue(candidate)) { valid = Fail(SerializationErrorCode::ValidationFailed); return; }
-                        // Canonical wire reconstruction hydrates semantic data, including fields
-                        // that are read-only to presentation/tooling mutation. General archives
-                        // retain their existing ReadOnly mutation policy.
-                        property.GetValue(object) = std::move(candidate);
-                    };
-                    (read(p), ...);
-                }, properties);
+                bool found = false;
+                bool valid = true;
+                if constexpr (n != 0) {
+                    std::size_t index = 0;
+                    std::apply([&](const auto&... p) {
+                        auto read = [&](const auto& property) {
+                            auto i = index++; bool matches = NameEquals(name,property.GetName());
+                            for (std::size_t a = 0; a < property.GetAliasCount(); ++a) matches |= NameEquals(name,property.GetAlias(a));
+                            if (!matches) return;
+                            if (found || seen[i]) { valid = Fail(SerializationErrorCode::DuplicateValue); found = true; return; }
+                            found = true; seen[i] = true;
+                            using V = typename std::decay_t<decltype(property)>::ValueType;
+                            V candidate{};
+                            if (!Value(candidate)) { valid = false; return; }
+                            if (!property.ValidateValue(candidate)) { valid = Fail(SerializationErrorCode::ValidationFailed); return; }
+                            // Canonical wire reconstruction hydrates semantic data, including fields
+                            // that are read-only to presentation/tooling mutation. General archives
+                            // retain their existing ReadOnly mutation policy.
+                            property.GetValue(object) = std::move(candidate);
+                        };
+                        (read(p), ...);
+                    }, properties);
+                }
                 if (!found || !valid) return Fail();
             }
             if (!Close(true)) return false;
             if (!versionSeen) return Fail(SerializationErrorCode::UnsupportedSchemaVersion);
-            bool valid = true; std::size_t index = 0;
-            std::apply([&](const auto&... p) {
-                auto finish = [&](const auto& property) {
-                    auto i = index++;
-                    if (seen[i]) return;
-                    if (property.HasDefault()) {
-                        if (!property.ValidateValue(property.GetDefault())) { valid = Fail(SerializationErrorCode::ValidationFailed); return; }
-                        property.GetValue(object) = property.GetDefault();
-                    } else if (property.IsRequired()) valid = Fail(SerializationErrorCode::MissingRequiredProperty);
-                };
-                (finish(p), ...);
-            }, properties);
+            bool valid = true;
+            if constexpr (n != 0) {
+                std::size_t index = 0;
+                std::apply([&](const auto&... p) {
+                    auto finish = [&](const auto& property) {
+                        auto i = index++;
+                        if (seen[i]) return;
+                        if (property.HasDefault()) {
+                            if (!property.ValidateValue(property.GetDefault())) { valid = Fail(SerializationErrorCode::ValidationFailed); return; }
+                            property.GetValue(object) = property.GetDefault();
+                        } else if (property.IsRequired()) valid = Fail(SerializationErrorCode::MissingRequiredProperty);
+                    };
+                    (finish(p), ...);
+                }, properties);
+            }
             return valid;
         }
     };
