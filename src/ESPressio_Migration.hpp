@@ -101,56 +101,147 @@ namespace ESPressio::Serializable::Migration {
     }
 
     /// <summary>Resolves a property/array path such as <c>object.items[0]</c>, optionally creating missing object segments.</summary>
-    inline SerializationNode* ResolvePath(SerializationNode& root, const char* path, bool create=false) {
-        if(path==nullptr || *path=='\0') return &root;
-        SerializationNode* current=&root; const char* p=path;
-        while(*p){
-            if(*p=='.'){ ++p; continue; }
-            if(*p=='['){
-                ++p; size_t index=0; if(*p<'0'||*p>'9') return nullptr;
-                while(*p>='0'&&*p<='9'){ index=index*10+static_cast<size_t>(*p-'0'); ++p; }
-                if(*p!=']') return nullptr;
-                ++p;
-                if(current->GetType()!=SerializationNodeType::Array) return nullptr;
-                if(index>=current->ArrayChildren().size()) return nullptr;
-                current=&current->ArrayChildren()[index];
+    inline SerializationNode* ResolvePath(
+        SerializationNode& root,
+        const char* path,
+        bool create = false
+    ) {
+        if (path == nullptr || *path == '\0') {
+            return &root;
+        }
+
+        SerializationNode* current = &root;
+        const char* cursor = path;
+        while (*cursor) {
+            if (*cursor == '.') {
+                ++cursor;
                 continue;
             }
-            std::string token; while(*p && *p!='.' && *p!='[') token.push_back(*p++);
-            if(current->GetType()!=SerializationNodeType::Object) return nullptr;
-            auto* next=current->Find(token.c_str());
-            if(next==nullptr && create){ current->Set(token.c_str(),SerializationNode(SerializationNodeType::Object)); next=current->Find(token.c_str()); }
-            if(next==nullptr) return nullptr;
-            current=next;
+
+            if (*cursor == '[') {
+                ++cursor;
+                std::size_t index = 0;
+                if (*cursor < '0' || *cursor > '9') {
+                    return nullptr;
+                }
+                while (*cursor >= '0' && *cursor <= '9') {
+                    index = index * 10 + static_cast<std::size_t>(*cursor - '0');
+                    ++cursor;
+                }
+                if (*cursor != ']') {
+                    return nullptr;
+                }
+                ++cursor;
+                if (current->GetType() != SerializationNodeType::Array) {
+                    return nullptr;
+                }
+                if (index >= current->ArrayChildren().size()) {
+                    return nullptr;
+                }
+                current = &current->ArrayChildren()[index];
+                continue;
+            }
+
+            std::string token;
+            while (*cursor && *cursor != '.' && *cursor != '[') {
+                token.push_back(*cursor++);
+            }
+
+            if (current->GetType() != SerializationNodeType::Object) {
+                return nullptr;
+            }
+
+            auto* next = current->Find(token.c_str());
+            if (next == nullptr && create) {
+                current->Set(
+                    token.c_str(),
+                    SerializationNode(SerializationNodeType::Object)
+                );
+                next = current->Find(token.c_str());
+            }
+            if (next == nullptr) {
+                return nullptr;
+            }
+            current = next;
         }
         return current;
     }
 
     /// <summary>Removes the value addressed by a property/array path.</summary>
-    inline bool RemoveAt(SerializationNode& root,const char* path) {
-        if(path==nullptr) return false;
-        std::string p(path); auto dot=p.find_last_of('.'); auto bracket=p.find_last_of('[');
-        if(bracket!=std::string::npos && (dot==std::string::npos || bracket>dot)){
-            auto close=p.find(']',bracket); if(close==std::string::npos || close!=p.size()-1) return false;
-            size_t index=static_cast<size_t>(std::stoul(p.substr(bracket+1,close-bracket-1)));
-            std::string parent=p.substr(0,bracket); auto* node=ResolvePath(root,parent.c_str());
-            if(!node||node->GetType()!=SerializationNodeType::Array||index>=node->ArrayChildren().size()) return false;
-            node->ArrayChildren().erase(node->ArrayChildren().begin()+index); return true;
+    inline bool RemoveAt(
+        SerializationNode& root,
+        const char* path
+    ) {
+        if (path == nullptr) {
+            return false;
         }
-        std::string parent=dot==std::string::npos?"":p.substr(0,dot); std::string name=dot==std::string::npos?p:p.substr(dot+1);
-        auto* node=ResolvePath(root,parent.c_str()); return node&&node->Remove(name.c_str());
+
+        std::string pathText(path);
+        const auto dot = pathText.find_last_of('.');
+        const auto bracket = pathText.find_last_of('[');
+        if (
+            bracket != std::string::npos &&
+            (dot == std::string::npos || bracket > dot)
+        ) {
+            const auto close = pathText.find(']', bracket);
+            if (close == std::string::npos || close != pathText.size() - 1) {
+                return false;
+            }
+
+            const auto index = static_cast<std::size_t>(
+                std::stoul(pathText.substr(bracket + 1, close - bracket - 1))
+            );
+            const std::string parent = pathText.substr(0, bracket);
+            auto* node = ResolvePath(root, parent.c_str());
+            if (
+                node == nullptr ||
+                node->GetType() != SerializationNodeType::Array ||
+                index >= node->ArrayChildren().size()
+            ) {
+                return false;
+            }
+
+            node->ArrayChildren().erase(node->ArrayChildren().begin() + index);
+            return true;
+        }
+
+        const std::string parent = dot == std::string::npos
+            ? ""
+            : pathText.substr(0, dot);
+        const std::string name = dot == std::string::npos
+            ? pathText
+            : pathText.substr(dot + 1);
+        auto* node = ResolvePath(root, parent.c_str());
+        return node != nullptr && node->Remove(name.c_str());
     }
 
     /// <summary>Moves a value from an arbitrary source path into a destination object under a new name.</summary>
-    inline bool MovePath(SerializationNode& root,const char* sourcePath,const char* destinationObjectPath,const char* destinationName,bool overwrite=false){
-        auto* source=ResolvePath(root,sourcePath);
-        if(!source) return false;
-        SerializationNode copy=*source;
-        auto* dest=ResolvePath(root,destinationObjectPath,true);
-        if(!dest||dest->GetType()!=SerializationNodeType::Object) return false;
-        if(!overwrite&&dest->Find(destinationName)) return false;
-        dest->Set(destinationName,std::move(copy));
-        return RemoveAt(root,sourcePath);
+    inline bool MovePath(
+        SerializationNode& root,
+        const char* sourcePath,
+        const char* destinationObjectPath,
+        const char* destinationName,
+        bool overwrite = false
+    ) {
+        auto* source = ResolvePath(root, sourcePath);
+        if (source == nullptr) {
+            return false;
+        }
+
+        SerializationNode copy = *source;
+        auto* destination = ResolvePath(root, destinationObjectPath, true);
+        if (
+            destination == nullptr ||
+            destination->GetType() != SerializationNodeType::Object
+        ) {
+            return false;
+        }
+        if (!overwrite && destination->Find(destinationName) != nullptr) {
+            return false;
+        }
+
+        destination->Set(destinationName, std::move(copy));
+        return RemoveAt(root, sourcePath);
     }
 
 }
