@@ -81,21 +81,32 @@ namespace BoundedDetail {
     };
     template<class Tuple, class Function, std::size_t... I>
     constexpr void VisitIndex(const Tuple& tuple, std::size_t index, Function function, std::index_sequence<I...>) {
-        ((index == I ? (function(std::get<I>(tuple)), void()) : void()), ...);
+        if constexpr (sizeof...(I) != 0) {
+            ((index == I ? (function(std::get<I>(tuple)), void()) : void()), ...);
+        } else {
+            (void)tuple;
+            (void)index;
+            (void)function;
+        }
     }
     template<class Tuple, class Function>
     constexpr void SortedProperties(const Tuple& tuple, Function function) {
         constexpr auto n = std::tuple_size<Tuple>::value;
-        std::array<std::string_view, n> names{};
-        std::array<std::size_t, n> order{};
-        std::size_t i = 0;
-        std::apply([&](const auto&... p) { ((names[i] = p.GetName(), order[i] = i, ++i), ...); }, tuple);
-        for (std::size_t j = 1; j < n; ++j) {
-            auto key = order[j]; auto k = j;
-            while (k && names[order[k - 1]] > names[key]) { order[k] = order[k - 1]; --k; }
-            order[k] = key;
+        if constexpr (n == 0) {
+            (void)tuple;
+            (void)function;
+        } else {
+            std::array<std::string_view, n> names{};
+            std::array<std::size_t, n> order{};
+            std::size_t i = 0;
+            std::apply([&](const auto&... p) { ((names[i] = p.GetName(), order[i] = i, ++i), ...); }, tuple);
+            for (std::size_t j = 1; j < n; ++j) {
+                auto key = order[j]; auto k = j;
+                while (k && names[order[k - 1]] > names[key]) { order[k] = order[k - 1]; --k; }
+                order[k] = key;
+            }
+            for (auto index : order) VisitIndex(tuple, index, function, std::make_index_sequence<n>{});
         }
-        for (auto index : order) VisitIndex(tuple, index, function, std::make_index_sequence<n>{});
     }
     template<class T>
     inline std::uint64_t FloatingBitsRuntime(const T& value) noexcept {
@@ -211,17 +222,19 @@ namespace BoundedDetail {
         inline static constexpr auto Tuple = T::GetSerializableProperties();
         inline static constexpr auto Properties = [] {
             std::array<StaticPropertyDescriptor, std::tuple_size<decltype(Tuple)>::value> values{};
-            std::size_t i = 0;
-            std::apply([&](const auto&... p) {
-                auto add = [&](const auto& property) {
-                    using P = std::decay_t<decltype(property)>;
-                    values[i++] = {property.GetName(), property.GetFlags(), property.GetAliasCount(), &property,
-                        [](const void* p, std::size_t n) noexcept -> std::string_view {
-                            auto alias = static_cast<const P*>(p)->GetAlias(n); return alias ? alias : "";
-                        }, property.HasDefault(), &ValueStorage<typename P::ValueType>::Value};
-                };
-                (add(p), ...);
-            }, Tuple);
+            if constexpr (std::tuple_size<decltype(Tuple)>::value != 0) {
+                std::size_t i = 0;
+                std::apply([&](const auto&... p) {
+                    auto add = [&](const auto& property) {
+                        using P = std::decay_t<decltype(property)>;
+                        values[i++] = {property.GetName(), property.GetFlags(), property.GetAliasCount(), &property,
+                            [](const void* p, std::size_t n) noexcept -> std::string_view {
+                                auto alias = static_cast<const P*>(p)->GetAlias(n); return alias ? alias : "";
+                            }, property.HasDefault(), &ValueStorage<typename P::ValueType>::Value};
+                    };
+                    (add(p), ...);
+                }, Tuple);
+            }
             return values;
         }();
 #if ESPRESSIO_SERIALIZABLE_HAS_BUILTIN_BIT_CAST
