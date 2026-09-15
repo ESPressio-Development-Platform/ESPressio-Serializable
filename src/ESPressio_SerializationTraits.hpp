@@ -41,22 +41,26 @@ namespace BoundedDetail {
     }
     template<class T> constexpr bool ValidMetadata() {
         using Tuple = decltype(T::GetSerializableProperties());
-        std::array<std::string_view, NameSlots<Tuple>(std::make_index_sequence<std::tuple_size<Tuple>::value>{})> names{};
-        std::size_t count = 0;
-        bool valid = true;
-        auto add = [&](const char* name) {
-            if (!name || !*name || Length(name) > 65535 || std::string_view(name)=="__schemaVersion" || !ValidUtf8(name)) { valid=false; return; }
-            for (std::size_t i=0;i<count;++i) if (names[i]==name) { valid=false; return; }
-            names[count++]=name;
-        };
-        std::apply([&](const auto&... p) {
-            auto property = [&](const auto& item) {
-                valid &= item.IsMetadataValid(); add(item.GetName());
-                for (std::size_t i=0;i<item.GetAliasCount();++i) add(item.GetAlias(i));
+        if constexpr (std::tuple_size<Tuple>::value == 0) {
+            return true;
+        } else {
+            std::array<std::string_view, NameSlots<Tuple>(std::make_index_sequence<std::tuple_size<Tuple>::value>{})> names{};
+            std::size_t count = 0;
+            bool valid = true;
+            auto add = [&](const char* name) {
+                if (!name || !*name || Length(name) > 65535 || std::string_view(name)=="__schemaVersion" || !ValidUtf8(name)) { valid=false; return; }
+                for (std::size_t i=0;i<count;++i) if (names[i]==name) { valid=false; return; }
+                names[count++]=name;
             };
-            (property(p),...);
-        },T::GetSerializableProperties());
-        return valid;
+            std::apply([&](const auto&... p) {
+                auto property = [&](const auto& item) {
+                    valid &= item.IsMetadataValid(); add(item.GetName());
+                    for (std::size_t i=0;i<item.GetAliasCount();++i) add(item.GetAlias(i));
+                };
+                (property(p),...);
+            },T::GetSerializableProperties());
+            return valid;
+        }
     }
     template<class T, class = void> struct ExplicitVersion : std::false_type {};
     template<class T> struct ExplicitVersion<T, std::void_t<decltype(T::GetSerializableSchemaVersion())>> : std::true_type {};
@@ -86,17 +90,19 @@ namespace BoundedDetail {
             if constexpr (!IsBounded) return Overflow;
             else {
                 std::size_t total = Add(ObjectOverhead<F>(), Add(NameBytes<F>(15), BoundedValueTraits<std::uint32_t>::template MaximumEncodedBytes<F>));
-                std::apply([&](const auto&... property) {
-                    auto add = [&](const auto& p) {
-                        using V = typename std::decay_t<decltype(p)>::ValueType;
-                        // Aliases can be longer than the canonical spelling on accepted ingress.
-                        std::size_t name = Length(p.GetName());
-                        for (std::size_t i = 0; i < p.GetAliasCount(); ++i) name = std::max(name, Length(p.GetAlias(i)));
-                        if (name > 65535 || p.GetName() == nullptr) { total = Overflow; return; }
-                        total = Add(total, Add(NameBytes<F>(name), BoundedValueTraits<V>::template MaximumEncodedBytes<F>));
-                    };
-                    (add(property), ...);
-                }, T::GetSerializableProperties());
+                if constexpr (PropertyCount != 0) {
+                    std::apply([&](const auto&... property) {
+                        auto add = [&](const auto& p) {
+                            using V = typename std::decay_t<decltype(p)>::ValueType;
+                            // Aliases can be longer than the canonical spelling on accepted ingress.
+                            std::size_t name = Length(p.GetName());
+                            for (std::size_t i = 0; i < p.GetAliasCount(); ++i) name = std::max(name, Length(p.GetAlias(i)));
+                            if (name > 65535 || p.GetName() == nullptr) { total = Overflow; return; }
+                            total = Add(total, Add(NameBytes<F>(name), BoundedValueTraits<V>::template MaximumEncodedBytes<F>));
+                        };
+                        (add(property), ...);
+                    }, T::GetSerializableProperties());
+                }
                 return total;
             }
         }
